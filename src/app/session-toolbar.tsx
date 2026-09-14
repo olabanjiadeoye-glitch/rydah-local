@@ -96,6 +96,12 @@ export default function SessionToolbar() {
           >
             Earnings
           </a>
+          <a
+            href="/payouts"
+            className="rounded-xl border border-[#D4AF37]/30 px-4 py-2 text-sm font-bold text-[#D4AF37]"
+          >
+            Payouts
+          </a>
         </>
       )}
       {isAdmin && (
@@ -111,6 +117,12 @@ export default function SessionToolbar() {
             className="rounded-xl border border-emerald-500/30 px-4 py-2 text-sm font-bold text-emerald-300"
           >
             Finance
+          </a>
+          <a
+            href="/admin/payouts"
+            className="rounded-xl border border-emerald-500/30 px-4 py-2 text-sm font-bold text-emerald-300"
+          >
+            Payout Admin
           </a>
         </>
       )}
