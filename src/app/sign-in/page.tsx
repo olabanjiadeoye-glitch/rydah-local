@@ -1,13 +1,46 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { saveSession, signInWithPassword, signUpWithPassword, type AuthSession } from "@/lib/supabase";
 
 export default function SignInPage() {
-  const [submitted, setSubmitted] = useState(false);
+  const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
+  const [role, setRole] = useState<"customer" | "provider">("customer");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    try {
+      if (mode === "sign-in") {
+        const session = await signInWithPassword(email, password);
+        saveSession(session);
+        window.location.href = "/providers";
+        return;
+      }
+
+      const result = await signUpWithPassword({ email, password, fullName, role });
+      if (result.access_token && result.user) {
+        saveSession(result as AuthSession);
+        window.location.href = "/providers";
+        return;
+      }
+
+      setMessage("Account created. Check your email to confirm your account, then sign in.");
+      setMode("sign-in");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Authentication failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -21,38 +54,41 @@ export default function SignInPage() {
 
       <section className="mx-auto max-w-xl px-5 py-12">
         <div className="rounded-3xl border border-white/10 bg-[#121212] p-7">
-          <h1 className="text-3xl font-black">Sign in to Rydah Local</h1>
-          <p className="mt-3 text-zinc-400">
-            This MVP uses a demo sign-in screen until secure backend authentication is connected.
-          </p>
+          <h1 className="text-3xl font-black">{mode === "sign-in" ? "Sign in" : "Create account"}</h1>
+          <p className="mt-3 text-zinc-400">Secure authentication is connected to the Rydah Local backend.</p>
 
-          {submitted ? (
-            <div className="mt-6 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-5">
-              <p className="font-bold text-[#D4AF37]">Demo sign-in successful.</p>
-              <p className="mt-2 text-sm text-zinc-400">Authentication backend will be connected before production launch.</p>
-              <a href="/providers" className="mt-5 inline-block rounded-xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Continue</a>
-            </div>
-          ) : (
-            <form onSubmit={submit} className="mt-6">
-              <label className="block text-sm font-bold">Account type</label>
-              <select className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
-                <option>Customer</option>
-                <option>Service Provider</option>
-              </select>
+          <div className="mt-6 grid grid-cols-2 gap-2 rounded-2xl bg-[#1A1A1A] p-1">
+            <button type="button" onClick={() => setMode("sign-in")} className={`rounded-xl px-3 py-3 font-bold ${mode === "sign-in" ? "bg-[#D4AF37] text-black" : "text-zinc-400"}`}>Sign In</button>
+            <button type="button" onClick={() => setMode("sign-up")} className={`rounded-xl px-3 py-3 font-bold ${mode === "sign-up" ? "bg-[#D4AF37] text-black" : "text-zinc-400"}`}>Create Account</button>
+          </div>
 
-              <label className="mt-5 block text-sm font-bold">Email</label>
-              <input
-                required
-                type="email"
-                placeholder="you@example.com"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600"
-              />
+          <form onSubmit={submit} className="mt-6">
+            {mode === "sign-up" && (
+              <>
+                <label className="block text-sm font-bold">Account type</label>
+                <select value={role} onChange={(e) => setRole(e.target.value as "customer" | "provider")} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
+                  <option value="customer">Customer</option>
+                  <option value="provider">Service Provider</option>
+                </select>
 
-              <button type="submit" className="mt-6 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black">
-                Continue
-              </button>
-            </form>
-          )}
+                <label className="mt-5 block text-sm font-bold">Full name</label>
+                <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none" />
+              </>
+            )}
+
+            <label className="mt-5 block text-sm font-bold">Email</label>
+            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+
+            <label className="mt-5 block text-sm font-bold">Password</label>
+            <input required minLength={6} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+
+            {message && <div className="mt-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">{message}</div>}
+            {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
+
+            <button disabled={loading} type="submit" className="mt-6 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black disabled:opacity-60">
+              {loading ? "Please wait..." : mode === "sign-in" ? "Sign In" : "Create Account"}
+            </button>
+          </form>
         </div>
       </section>
     </main>
