@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { saveSession, signInWithPassword, signUpWithPassword, type AuthSession } from "@/lib/supabase";
 
 export default function SignInPage() {
@@ -12,6 +12,16 @@ export default function SignInPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("confirmed") === "1") {
+      setMessage("Email confirmed. You can sign in now.");
+      if (window.location.hash) {
+        window.history.replaceState({}, "", "/sign-in?confirmed=1");
+      }
+    }
+  }, []);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -27,7 +37,14 @@ export default function SignInPage() {
         return;
       }
 
-      const result = await signUpWithPassword({ email, password, fullName, role });
+      const result = await signUpWithPassword({
+        email,
+        password,
+        fullName,
+        role,
+        redirectTo: `${window.location.origin}/sign-in?confirmed=1`,
+      });
+
       if (result.access_token && result.user) {
         saveSession(result as AuthSession);
         window.location.href = "/providers";
