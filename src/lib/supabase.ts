@@ -82,12 +82,13 @@ export async function restInsert<T>(table: string, payload: unknown, token?: str
     method: "POST",
     headers: apiHeaders(token, {
       "Content-Type": "application/json",
-      Prefer: "return=representation",
+      Prefer: token ? "return=representation" : "return=minimal",
     }),
     body: JSON.stringify(payload),
   });
 
   if (!response.ok) throw new Error(await readError(response));
+  if (!token) return [] as T;
   return (await response.json()) as T;
 }
 
