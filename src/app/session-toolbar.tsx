@@ -2,11 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { clearSession, getStoredSession, restGet, type AuthSession } from "@/lib/supabase";
+import {
+  canAccessPath,
+  fallbackPathForRole,
+  resolveUserAccess,
+  type UserAccess,
+} from "@/lib/access";
+
+const baseLink = "rounded-xl border px-4 py-2 text-sm font-bold";
+const neutralLink = `${baseLink} border-white/15 text-white`;
+const goldLink = `${baseLink} border-[#D4AF37]/40 text-[#D4AF37]`;
+const adminLink = `${baseLink} border-emerald-500/30 text-emerald-300`;
 
 export default function SessionToolbar() {
   const [session, setSession] = useState<AuthSession | null>(null);
-  const [hasProviderProfile, setHasProviderProfile] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [access, setAccess] = useState<UserAccess | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -16,38 +26,27 @@ export default function SessionToolbar() {
     if (!currentSession) return;
 
     const detectAccess = async () => {
-      try {
-        const [providerRows, adminRows, unreadRows] = await Promise.all([
-          restGet<{ id: string }[]>(
-            `providers?user_id=eq.${currentSession.user.id}&select=id&limit=1`,
-            currentSession.access_token,
-          ),
-          restGet<{ user_id: string }[]>(
-            `admin_users?user_id=eq.${currentSession.user.id}&select=user_id&limit=1`,
-            currentSession.access_token,
-          ),
-          restGet<{ id: string }[]>(
-            "notifications?read_at=is.null&select=id&limit=99",
-            currentSession.access_token,
-          ),
-        ]);
-        setHasProviderProfile(providerRows.length > 0);
-        setIsAdmin(adminRows.length > 0);
-        setUnreadCount(unreadRows.length);
-      } catch {
-        setHasProviderProfile(false);
-        setIsAdmin(false);
-        setUnreadCount(0);
+      const [resolvedAccess, unreadRows] = await Promise.all([
+        resolveUserAccess(currentSession),
+        restGet<{ id: string }[]>(
+          "notifications?read_at=is.null&select=id&limit=99",
+          currentSession.access_token,
+        ).catch(() => []),
+      ]);
+
+      setAccess(resolvedAccess);
+      setUnreadCount(unreadRows.length);
+
+      const pathname = window.location.pathname;
+      if (!canAccessPath(resolvedAccess.role, pathname)) {
+        window.location.replace(fallbackPathForRole(resolvedAccess.role));
       }
     };
 
     void detectAccess();
   }, []);
 
-  if (!session) return null;
-
-  const role = String(session.user.user_metadata?.role ?? "customer");
-  const showProviderDashboard = role === "provider" || hasProviderProfile;
+  if (!session || !access) return null;
 
   const signOut = () => {
     clearSession();
@@ -57,82 +56,54 @@ export default function SessionToolbar() {
     window.location.assign("/sign-in");
   };
 
+  const notifications = (
+    <a href="/notifications" className={`relative ${neutralLink}`}>
+      Notifications
+      {unreadCount > 0 && (
+        <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-[#D4AF37] px-1.5 py-0.5 text-[11px] font-black text-black">
+          {unreadCount > 99 ? "99+" : unreadCount}
+        </span>
+      )}
+    </a>
+  );
+
   return (
     <div className="fixed bottom-5 right-5 z-[100] flex max-w-[calc(100vw-2.5rem)] flex-wrap items-center justify-end gap-2 rounded-2xl border border-white/10 bg-[#111]/95 p-2 shadow-2xl backdrop-blur">
-      <a
-        href="/notifications"
-        className="relative rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-white"
-      >
-        Notifications
-        {unreadCount > 0 && (
-          <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-[#D4AF37] px-1.5 py-0.5 text-[11px] font-black text-black">
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </span>
-        )}
-      </a>
-      <a
-        href="/my-jobs"
-        className="rounded-xl bg-[#D4AF37] px-4 py-2 text-sm font-bold text-black"
-      >
-        My Jobs
-      </a>
-      {showProviderDashboard && (
+      <span className="rounded-xl bg-white/5 px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-zinc-400">
+        {access.role}
+      </span>
+
+      {access.role === "customer" && (
         <>
-          <a
-            href="/provider-onboarding"
-            className="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-white"
-          >
-            Verify Profile
-          </a>
-          <a
-            href="/provider-dashboard"
-            className="rounded-xl border border-[#D4AF37]/50 px-4 py-2 text-sm font-bold text-[#D4AF37]"
-          >
-            Provider Dashboard
-          </a>
-          <a
-            href="/earnings"
-            className="rounded-xl border border-[#D4AF37]/30 px-4 py-2 text-sm font-bold text-[#D4AF37]"
-          >
-            Earnings
-          </a>
-          <a
-            href="/payouts"
-            className="rounded-xl border border-[#D4AF37]/30 px-4 py-2 text-sm font-bold text-[#D4AF37]"
-          >
-            Payouts
-          </a>
+          {notifications}
+          <a href="/providers" className={goldLink}>Marketplace</a>
+          <a href="/my-jobs" className="rounded-xl bg-[#D4AF37] px-4 py-2 text-sm font-bold text-black">My Jobs</a>
         </>
       )}
-      {isAdmin && (
+
+      {access.role === "provider" && (
         <>
-          <a
-            href="/admin-dashboard"
-            className="rounded-xl border border-emerald-500/30 px-4 py-2 text-sm font-bold text-emerald-300"
-          >
-            Admin Dashboard
-          </a>
-          <a
-            href="/admin/finance"
-            className="rounded-xl border border-emerald-500/30 px-4 py-2 text-sm font-bold text-emerald-300"
-          >
-            Finance
-          </a>
-          <a
-            href="/payout-admin"
-            className="rounded-xl border border-emerald-500/30 px-4 py-2 text-sm font-bold text-emerald-300"
-          >
-            Payout Admin
-          </a>
+          {notifications}
+          <a href="/provider-dashboard" className={goldLink}>Dashboard</a>
+          <a href="/provider-onboarding" className={neutralLink}>Verify Profile</a>
+          <a href="/earnings" className={goldLink}>Earnings</a>
+          <a href="/payouts" className={goldLink}>Payouts</a>
+          <a href="/providers" className={neutralLink}>Marketplace</a>
         </>
       )}
-      <button
-        type="button"
-        onClick={signOut}
-        className="rounded-xl border border-white/15 px-4 py-2 text-sm font-semibold text-white"
-      >
-        Sign Out
-      </button>
+
+      {access.role === "admin" && (
+        <>
+          {notifications}
+          <a href="/admin-dashboard" className={adminLink}>Admin Dashboard</a>
+          <a href="/admin/providers" className={adminLink}>Verification</a>
+          <a href="/admin/finance" className={adminLink}>Finance</a>
+          <a href="/payout-admin" className={adminLink}>Payout Admin</a>
+          <a href="/providers" className={neutralLink}>Marketplace</a>
+        </>
+      )}
+
+      <button type="button" onClick={signOut} className={neutralLink}>Sign Out</button>
     </div>
   );
 }
