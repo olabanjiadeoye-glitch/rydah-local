@@ -22,7 +22,16 @@ type PaymentRow = {
   status: "pending" | "paid" | "cash_due" | "failed" | "refunded";
   reference: string;
   is_test: boolean;
+  commission_rate_percent: number | string;
+  commission_amount_naira: number;
+  provider_net_naira: number;
+  commission_status: "pending" | "withheld" | "owed_by_provider" | "refunded";
   created_at: string;
+};
+
+type SettingRow = {
+  key: string;
+  value_numeric: number | string;
 };
 
 function naira(value: number) {
@@ -38,6 +47,7 @@ export default function PaymentsPage() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [job, setJob] = useState<JobRow | null>(null);
   const [payment, setPayment] = useState<PaymentRow | null>(null);
+  const [commissionRate, setCommissionRate] = useState(15);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -61,13 +71,21 @@ export default function PaymentsPage() {
       const jobId = params.get("job");
       if (!jobId) throw new Error("No job was selected for payment.");
 
-      const jobs = await restGet<JobRow[]>(
-        `jobs?id=eq.${encodeURIComponent(jobId)}&customer_id=eq.${currentSession.user.id}&select=id,provider_id,service_category,location,status,quoted_amount,payment_status,providers(business_name,starting_price)&limit=1`,
-        currentSession.access_token,
-      );
+      const [jobs, settings] = await Promise.all([
+        restGet<JobRow[]>(
+          `jobs?id=eq.${encodeURIComponent(jobId)}&customer_id=eq.${currentSession.user.id}&select=id,provider_id,service_category,location,status,quoted_amount,payment_status,providers(business_name,starting_price)&limit=1`,
+          currentSession.access_token,
+        ),
+        restGet<SettingRow[]>(
+          "platform_settings?key=eq.commission_rate_percent&select=key,value_numeric&limit=1",
+          currentSession.access_token,
+        ),
+      ]);
+
       const currentJob = jobs[0] ?? null;
       if (!currentJob) throw new Error("This job could not be found.");
       setJob(currentJob);
+      if (settings[0]) setCommissionRate(Number(settings[0].value_numeric));
 
       const payments = await restGet<PaymentRow[]>(
         `payments?job_id=eq.${currentJob.id}&customer_id=eq.${currentSession.user.id}&select=*&order=created_at.desc&limit=1`,
@@ -95,12 +113,13 @@ export default function PaymentsPage() {
       const created = rows[0];
       if (!created) throw new Error("Payment record was not returned.");
       setPayment(created);
+      setCommissionRate(Number(created.commission_rate_percent));
       setJob((current) => current ? { ...current, payment_status: created.status } : current);
       setMessage(
         created.status === "paid"
-          ? "Sandbox payment successful. No real money was charged."
+          ? "Sandbox payment successful. No real money was charged. Rydah commission has been recorded."
           : created.status === "cash_due"
-            ? "Cash payment selected. Pay the provider directly."
+            ? "Cash payment selected. The provider receives cash directly and the Rydah commission remains due from the provider."
             : "Test payment request created and is pending.",
       );
     } catch (caught) {
@@ -115,6 +134,9 @@ export default function PaymentsPage() {
   }
 
   const amount = job?.quoted_amount ?? job?.providers?.starting_price ?? 0;
+  const effectiveRate = payment ? Number(payment.commission_rate_percent) : commissionRate;
+  const commissionAmount = payment?.commission_amount_naira ?? Math.round(amount * effectiveRate / 100);
+  const providerNet = payment?.provider_net_naira ?? Math.max(0, amount - commissionAmount);
   const cashAllowed = amount > 0 && amount <= 5000;
 
   return (
@@ -146,10 +168,34 @@ export default function PaymentsPage() {
                 <p className="mt-2 text-zinc-400">{job.providers?.business_name ?? "Provider"} • {job.location}</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-zinc-500">Amount</p>
+                <p className="text-sm text-zinc-500">Customer total</p>
                 <p className="text-3xl font-black text-[#D4AF37]">{amount ? naira(amount) : "Not set"}</p>
               </div>
             </div>
+
+            {amount > 0 && (
+              <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl bg-[#1A1A1A] p-4">
+                  <p className="text-xs text-zinc-500">Rydah commission</p>
+                  <p className="mt-1 text-lg font-black">{effectiveRate}%</p>
+                  <p className="mt-1 text-sm text-[#D4AF37]">{naira(commissionAmount)}</p>
+                </div>
+                <div className="rounded-2xl bg-[#1A1A1A] p-4">
+                  <p className="text-xs text-zinc-500">Provider net</p>
+                  <p className="mt-1 text-lg font-black">{naira(providerNet)}</p>
+                  <p className="mt-1 text-xs text-zinc-500">After Rydah commission</p>
+                </div>
+                <div className="rounded-2xl bg-[#1A1A1A] p-4">
+                  <p className="text-xs text-zinc-500">Your charge</p>
+                  <p className="mt-1 text-lg font-black">{naira(amount)}</p>
+                  <p className="mt-1 text-xs text-zinc-500">No extra customer fee</p>
+                </div>
+              </div>
+            )}
+
+            <p className="mt-4 text-xs leading-5 text-zinc-500">
+              Rydah deducts {effectiveRate}% from the provider&apos;s earnings on every job. This does not increase the customer&apos;s job price.
+            </p>
 
             {payment ? (
               <div className="mt-6 rounded-2xl border border-white/10 bg-[#1A1A1A] p-5">
@@ -163,6 +209,8 @@ export default function PaymentsPage() {
                   </span>
                 </div>
                 <p className="mt-4 text-sm text-zinc-400">Reference: {payment.reference}</p>
+                <p className="mt-2 text-sm text-zinc-400">Rydah commission: {naira(payment.commission_amount_naira)} ({Number(payment.commission_rate_percent)}%)</p>
+                <p className="mt-1 text-sm text-zinc-400">Provider net: {naira(payment.provider_net_naira)}</p>
                 {payment.is_test && <p className="mt-2 text-xs text-amber-300">Sandbox record only — no real funds moved.</p>}
               </div>
             ) : (
