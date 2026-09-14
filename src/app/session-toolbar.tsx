@@ -43,18 +43,16 @@ export default function SessionToolbar() {
 
   return (
     <div className="fixed bottom-5 right-5 z-[100] flex flex-wrap items-center justify-end gap-2 rounded-2xl border border-white/10 bg-[#111]/95 p-2 shadow-2xl backdrop-blur">
-      {!showProviderDashboard && (
-        <a
-          href="/my-jobs"
-          className="rounded-xl bg-[#D4AF37] px-4 py-2 text-sm font-bold text-black"
-        >
-          My Jobs
-        </a>
-      )}
+      <a
+        href="/my-jobs"
+        className="rounded-xl bg-[#D4AF37] px-4 py-2 text-sm font-bold text-black"
+      >
+        My Jobs
+      </a>
       {showProviderDashboard && (
         <a
           href="/provider-dashboard"
-          className="rounded-xl bg-[#D4AF37] px-4 py-2 text-sm font-bold text-black"
+          className="rounded-xl border border-[#D4AF37]/50 px-4 py-2 text-sm font-bold text-[#D4AF37]"
         >
           Provider Dashboard
         </a>
