@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { clearSession, getStoredSession, restGet, type AuthSession } from "@/lib/supabase";
 import {
   canAccessPath,
-  fallbackPathForRole,
+  destinationForAccess,
   resolveUserAccess,
   type UserAccess,
 } from "@/lib/access";
@@ -39,7 +39,7 @@ export default function SessionToolbar() {
 
       const pathname = window.location.pathname;
       if (!canAccessPath(resolvedAccess.role, pathname)) {
-        window.location.replace(fallbackPathForRole(resolvedAccess.role));
+        window.location.replace(destinationForAccess(resolvedAccess));
       }
     };
 
