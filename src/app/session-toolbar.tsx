@@ -107,10 +107,10 @@ export default function SessionToolbar() {
       {isAdmin && (
         <>
           <a
-            href="/admin/providers"
+            href="/admin-dashboard"
             className="rounded-xl border border-emerald-500/30 px-4 py-2 text-sm font-bold text-emerald-300"
           >
-            Admin
+            Admin Dashboard
           </a>
           <a
             href="/admin/finance"
