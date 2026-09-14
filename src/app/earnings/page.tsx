@@ -16,6 +16,10 @@ type PaymentRow = {
   status: string;
   reference: string;
   is_test: boolean;
+  commission_rate_percent: number | string;
+  commission_amount_naira: number;
+  provider_net_naira: number;
+  commission_status: string;
   created_at: string;
   jobs: {
     service_category: string;
@@ -28,6 +32,12 @@ function naira(value: number) {
 }
 
 function paymentMethod(value: string) {
+  return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function commissionStatusLabel(value: string) {
+  if (value === "owed_by_provider") return "Commission owed to Rydah";
+  if (value === "withheld") return "Commission retained";
   return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
@@ -68,7 +78,7 @@ export default function EarningsPage() {
       }
 
       const paymentRows = await restGet<PaymentRow[]>(
-        `payments?provider_id=eq.${currentProvider.id}&select=id,job_id,amount_naira,method,status,reference,is_test,created_at,jobs(service_category,location)&order=created_at.desc`,
+        `payments?provider_id=eq.${currentProvider.id}&select=id,job_id,amount_naira,method,status,reference,is_test,commission_rate_percent,commission_amount_naira,provider_net_naira,commission_status,created_at,jobs(service_category,location)&order=created_at.desc`,
         currentSession.access_token,
       );
 
@@ -80,19 +90,36 @@ export default function EarningsPage() {
     }
   }
 
-  const paidPayments = useMemo(
-    () => payments.filter((payment) => payment.status === "paid"),
+  const settledPayments = useMemo(
+    () => payments.filter((payment) => ["paid", "cash_due"].includes(payment.status)),
     [payments],
   );
 
   const grossPaid = useMemo(
-    () => paidPayments.reduce((sum, payment) => sum + Number(payment.amount_naira || 0), 0),
-    [paidPayments],
+    () => settledPayments.reduce((sum, payment) => sum + Number(payment.amount_naira || 0), 0),
+    [settledPayments],
+  );
+
+  const rydahCommission = useMemo(
+    () => settledPayments.reduce((sum, payment) => sum + Number(payment.commission_amount_naira || 0), 0),
+    [settledPayments],
+  );
+
+  const providerNet = useMemo(
+    () => settledPayments.reduce((sum, payment) => sum + Number(payment.provider_net_naira || 0), 0),
+    [settledPayments],
+  );
+
+  const commissionOwed = useMemo(
+    () => settledPayments
+      .filter((payment) => payment.commission_status === "owed_by_provider")
+      .reduce((sum, payment) => sum + Number(payment.commission_amount_naira || 0), 0),
+    [settledPayments],
   );
 
   const testPaid = useMemo(
-    () => paidPayments.filter((payment) => payment.is_test).reduce((sum, payment) => sum + Number(payment.amount_naira || 0), 0),
-    [paidPayments],
+    () => settledPayments.filter((payment) => payment.is_test).reduce((sum, payment) => sum + Number(payment.amount_naira || 0), 0),
+    [settledPayments],
   );
 
   return (
@@ -124,30 +151,39 @@ export default function EarningsPage() {
             <div>
               <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">PROVIDER FINANCE</p>
               <h2 className="mt-1 text-3xl font-black">{provider.business_name}</h2>
-              <p className="mt-2 text-zinc-400">Track payments received for completed Rydah jobs.</p>
+              <p className="mt-2 text-zinc-400">Every completed Rydah job carries a 15% platform commission.</p>
             </div>
 
-            <div className="mt-7 grid gap-4 sm:grid-cols-3">
+            <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-3xl border border-white/10 bg-[#121212] p-6">
-                <p className="text-sm text-zinc-500">Gross paid</p>
-                <p className="mt-2 text-3xl font-black text-[#D4AF37]">{naira(grossPaid)}</p>
-                <p className="mt-2 text-xs text-zinc-500">Before future Rydah fees and payout rules.</p>
+                <p className="text-sm text-zinc-500">Gross job value</p>
+                <p className="mt-2 text-3xl font-black">{naira(grossPaid)}</p>
+                <p className="mt-2 text-xs text-zinc-500">Total customer payments.</p>
+              </div>
+              <div className="rounded-3xl border border-[#D4AF37]/25 bg-[#121212] p-6">
+                <p className="text-sm text-zinc-500">Rydah commission</p>
+                <p className="mt-2 text-3xl font-black text-[#D4AF37]">{naira(rydahCommission)}</p>
+                <p className="mt-2 text-xs text-zinc-500">15% retained by Rydah.</p>
+              </div>
+              <div className="rounded-3xl border border-emerald-500/20 bg-[#121212] p-6">
+                <p className="text-sm text-zinc-500">Your net earnings</p>
+                <p className="mt-2 text-3xl font-black text-emerald-400">{naira(providerNet)}</p>
+                <p className="mt-2 text-xs text-zinc-500">Gross less Rydah commission.</p>
               </div>
               <div className="rounded-3xl border border-white/10 bg-[#121212] p-6">
-                <p className="text-sm text-zinc-500">Paid jobs</p>
-                <p className="mt-2 text-3xl font-black">{paidPayments.length}</p>
-                <p className="mt-2 text-xs text-zinc-500">Successful payment records.</p>
+                <p className="text-sm text-zinc-500">Commission owed</p>
+                <p className="mt-2 text-3xl font-black">{naira(commissionOwed)}</p>
+                <p className="mt-2 text-xs text-zinc-500">Applies when cash is paid directly to you.</p>
               </div>
-              <div className="rounded-3xl border border-white/10 bg-[#121212] p-6">
-                <p className="text-sm text-zinc-500">Settlement</p>
-                <p className="mt-2 text-lg font-black">Not connected</p>
-                <p className="mt-2 text-xs text-zinc-500">No real provider payout is being sent yet.</p>
-              </div>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-white/10 bg-[#121212] p-4 text-sm text-zinc-400">
+              Example: on an ₦8,000 job, Rydah commission is ₦1,200 and provider net earnings are ₦6,800.
             </div>
 
             {testPaid > 0 && (
               <div className="mt-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">
-                TEST MODE: {naira(testPaid)} of the total above is sandbox payment data. No real money has moved.
+                TEST MODE: {naira(testPaid)} of the gross total above is sandbox payment data. No real money has moved.
               </div>
             )}
 
@@ -186,22 +222,35 @@ export default function EarningsPage() {
                           <p className="mt-3 text-sm text-zinc-500">{new Date(payment.created_at).toLocaleString()}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-black text-[#D4AF37]">{naira(payment.amount_naira)}</p>
-                          <span className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-black ${payment.status === "paid" ? "bg-emerald-500/15 text-emerald-400" : "bg-zinc-800 text-zinc-400"}`}>
-                            {payment.status.toUpperCase()}
+                          <p className="text-2xl font-black">{naira(payment.amount_naira)}</p>
+                          <span className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-black ${payment.status === "paid" ? "bg-emerald-500/15 text-emerald-400" : "bg-[#D4AF37]/15 text-[#D4AF37]"}`}>
+                            {payment.status.replaceAll("_", " ").toUpperCase()}
                           </span>
                         </div>
                       </div>
 
-                      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <div className="rounded-2xl bg-[#1A1A1A] p-4">
                           <p className="text-xs text-zinc-500">Method</p>
                           <p className="mt-1 font-bold">{paymentMethod(payment.method)}</p>
                         </div>
                         <div className="rounded-2xl bg-[#1A1A1A] p-4">
-                          <p className="text-xs text-zinc-500">Reference</p>
-                          <p className="mt-1 break-all text-sm font-bold">{payment.reference}</p>
+                          <p className="text-xs text-zinc-500">Rydah commission</p>
+                          <p className="mt-1 font-bold text-[#D4AF37]">{naira(payment.commission_amount_naira)} ({Number(payment.commission_rate_percent)}%)</p>
                         </div>
+                        <div className="rounded-2xl bg-[#1A1A1A] p-4">
+                          <p className="text-xs text-zinc-500">Provider net</p>
+                          <p className="mt-1 font-bold text-emerald-400">{naira(payment.provider_net_naira)}</p>
+                        </div>
+                        <div className="rounded-2xl bg-[#1A1A1A] p-4">
+                          <p className="text-xs text-zinc-500">Commission status</p>
+                          <p className="mt-1 text-sm font-bold">{commissionStatusLabel(payment.commission_status)}</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 rounded-2xl bg-[#1A1A1A] p-4">
+                        <p className="text-xs text-zinc-500">Reference</p>
+                        <p className="mt-1 break-all text-sm font-bold">{payment.reference}</p>
                       </div>
                     </article>
                   ))}
