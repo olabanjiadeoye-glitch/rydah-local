@@ -3,6 +3,10 @@
 import { FormEvent, useEffect, useState } from "react";
 import { saveSession, signInWithPassword, signUpWithPassword, type AuthSession } from "@/lib/supabase";
 
+function accountDestination(session: AuthSession) {
+  return session.user.user_metadata?.role === "provider" ? "/provider-dashboard" : "/providers";
+}
+
 export default function SignInPage() {
   const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
   const [role, setRole] = useState<"customer" | "provider">("customer");
@@ -33,7 +37,7 @@ export default function SignInPage() {
       if (mode === "sign-in") {
         const session = await signInWithPassword(email, password);
         saveSession(session);
-        window.location.href = "/providers";
+        window.location.href = accountDestination(session);
         return;
       }
 
@@ -46,8 +50,9 @@ export default function SignInPage() {
       });
 
       if (result.access_token && result.user) {
-        saveSession(result as AuthSession);
-        window.location.href = "/providers";
+        const session = result as AuthSession;
+        saveSession(session);
+        window.location.href = accountDestination(session);
         return;
       }
 
