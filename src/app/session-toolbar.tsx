@@ -119,7 +119,7 @@ export default function SessionToolbar() {
             Finance
           </a>
           <a
-            href="/admin/payouts"
+            href="/payout-admin"
             className="rounded-xl border border-emerald-500/30 px-4 py-2 text-sm font-bold text-emerald-300"
           >
             Payout Admin
