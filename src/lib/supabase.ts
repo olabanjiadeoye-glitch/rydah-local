@@ -106,6 +106,21 @@ export async function restInsertMinimal(table: string, payload: unknown, token?:
   if (!response.ok) throw new Error(await readError(response));
 }
 
+export async function restPatch<T>(table: string, query: string, payload: unknown, token: string): Promise<T> {
+  assertConfigured();
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
+    method: "PATCH",
+    headers: apiHeaders(token, {
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    }),
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) throw new Error(await readError(response));
+  return (await response.json()) as T;
+}
+
 export async function restDelete(table: string, query: string, token: string): Promise<void> {
   assertConfigured();
   const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
