@@ -6,6 +6,7 @@ import { clearSession, getStoredSession, restGet, type AuthSession } from "@/lib
 export default function SessionToolbar() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [hasProviderProfile, setHasProviderProfile] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const currentSession = getStoredSession();
@@ -13,19 +14,27 @@ export default function SessionToolbar() {
 
     if (!currentSession) return;
 
-    const detectProviderProfile = async () => {
+    const detectAccess = async () => {
       try {
-        const rows = await restGet<{ id: string }[]>(
-          `providers?user_id=eq.${currentSession.user.id}&select=id&limit=1`,
-          currentSession.access_token,
-        );
-        setHasProviderProfile(rows.length > 0);
+        const [providerRows, adminRows] = await Promise.all([
+          restGet<{ id: string }[]>(
+            `providers?user_id=eq.${currentSession.user.id}&select=id&limit=1`,
+            currentSession.access_token,
+          ),
+          restGet<{ user_id: string }[]>(
+            `admin_users?user_id=eq.${currentSession.user.id}&select=user_id&limit=1`,
+            currentSession.access_token,
+          ),
+        ]);
+        setHasProviderProfile(providerRows.length > 0);
+        setIsAdmin(adminRows.length > 0);
       } catch {
         setHasProviderProfile(false);
+        setIsAdmin(false);
       }
     };
 
-    void detectProviderProfile();
+    void detectAccess();
   }, []);
 
   if (!session) return null;
@@ -42,7 +51,7 @@ export default function SessionToolbar() {
   };
 
   return (
-    <div className="fixed bottom-5 right-5 z-[100] flex flex-wrap items-center justify-end gap-2 rounded-2xl border border-white/10 bg-[#111]/95 p-2 shadow-2xl backdrop-blur">
+    <div className="fixed bottom-5 right-5 z-[100] flex max-w-[calc(100vw-2.5rem)] flex-wrap items-center justify-end gap-2 rounded-2xl border border-white/10 bg-[#111]/95 p-2 shadow-2xl backdrop-blur">
       <a
         href="/my-jobs"
         className="rounded-xl bg-[#D4AF37] px-4 py-2 text-sm font-bold text-black"
@@ -50,11 +59,27 @@ export default function SessionToolbar() {
         My Jobs
       </a>
       {showProviderDashboard && (
+        <>
+          <a
+            href="/provider-onboarding"
+            className="rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-white"
+          >
+            Verify Profile
+          </a>
+          <a
+            href="/provider-dashboard"
+            className="rounded-xl border border-[#D4AF37]/50 px-4 py-2 text-sm font-bold text-[#D4AF37]"
+          >
+            Provider Dashboard
+          </a>
+        </>
+      )}
+      {isAdmin && (
         <a
-          href="/provider-dashboard"
-          className="rounded-xl border border-[#D4AF37]/50 px-4 py-2 text-sm font-bold text-[#D4AF37]"
+          href="/admin/providers"
+          className="rounded-xl border border-emerald-500/30 px-4 py-2 text-sm font-bold text-emerald-300"
         >
-          Provider Dashboard
+          Admin
         </a>
       )}
       <button
