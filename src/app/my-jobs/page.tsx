@@ -14,7 +14,9 @@ type JobRow = {
   is_urgent: boolean;
   status: JobStatus;
   created_at: string;
-  providers: { business_name: string } | null;
+  quoted_amount: number | null;
+  payment_status: "unpaid" | "pending" | "paid" | "cash_due" | "failed" | "refunded";
+  providers: { business_name: string; starting_price: number | null } | null;
 };
 
 type ReviewRow = {
@@ -24,14 +26,20 @@ type ReviewRow = {
   comment: string | null;
 };
 
-function label(status: JobStatus) {
-  return status.replace("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+function label(status: string) {
+  return status.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function statusStyle(status: JobStatus) {
   if (status === "completed") return "bg-emerald-500/15 text-emerald-400";
   if (status === "cancelled") return "bg-red-500/15 text-red-300";
   if (status === "in_progress") return "bg-blue-500/15 text-blue-300";
+  return "bg-[#D4AF37]/15 text-[#D4AF37]";
+}
+
+function paymentStyle(status: JobRow["payment_status"]) {
+  if (status === "paid") return "bg-emerald-500/15 text-emerald-400";
+  if (status === "failed") return "bg-red-500/15 text-red-300";
   return "bg-[#D4AF37]/15 text-[#D4AF37]";
 }
 
@@ -64,7 +72,7 @@ export default function MyJobsPage() {
     try {
       const [jobRows, reviewRows] = await Promise.all([
         restGet<JobRow[]>(
-          `jobs?select=id,provider_id,service_category,location,description,is_urgent,status,created_at,providers(business_name)&customer_id=eq.${currentSession.user.id}&order=created_at.desc`,
+          `jobs?select=id,provider_id,service_category,location,description,is_urgent,status,created_at,quoted_amount,payment_status,providers(business_name,starting_price)&customer_id=eq.${currentSession.user.id}&order=created_at.desc`,
           currentSession.access_token,
         ),
         restGet<ReviewRow[]>(
@@ -136,7 +144,7 @@ export default function MyJobsPage() {
           <div>
             <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">CUSTOMER DASHBOARD</p>
             <h2 className="mt-1 text-3xl font-black">Track your requests</h2>
-            <p className="mt-2 text-zinc-400">See provider progress and rate completed work.</p>
+            <p className="mt-2 text-zinc-400">See provider progress, manage payment and rate completed work.</p>
           </div>
           <button
             type="button"
@@ -163,6 +171,7 @@ export default function MyJobsPage() {
             {jobs.map((job) => {
               const review = reviewByJob.get(job.id);
               const providerName = job.providers?.business_name || (job.provider_id ? "Assigned provider" : "Matching in progress");
+              const amount = job.quoted_amount ?? job.providers?.starting_price ?? null;
 
               return (
                 <article key={job.id} className="rounded-3xl border border-white/10 bg-[#121212] p-6">
@@ -192,6 +201,24 @@ export default function MyJobsPage() {
                       <p className="mt-1 font-bold">{job.id.slice(0, 8)}</p>
                     </div>
                   </div>
+
+                  {job.status === "completed" && job.provider_id && (
+                    <div className="mt-5 rounded-2xl border border-white/10 bg-[#0D0D0D] p-5">
+                      <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-black text-[#D4AF37]">PAYMENT</p>
+                          <p className="mt-1 text-2xl font-black">{amount == null ? "Amount not set" : `₦${amount.toLocaleString()}`}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`rounded-full px-3 py-2 text-xs font-black ${paymentStyle(job.payment_status)}`}>{label(job.payment_status)}</span>
+                          <a href={`/payments?job=${job.id}`} className="rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">
+                            {job.payment_status === "paid" ? "View Payment" : "Pay / Test"}
+                          </a>
+                        </div>
+                      </div>
+                      <p className="mt-3 text-xs text-zinc-500">Payments are currently in sandbox mode for testing. No real money is charged.</p>
+                    </div>
+                  )}
 
                   {job.status === "completed" && job.provider_id && (
                     <div className="mt-5 rounded-2xl border border-[#D4AF37]/20 bg-[#0D0D0D] p-5">
