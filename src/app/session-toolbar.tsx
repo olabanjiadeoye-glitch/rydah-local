@@ -90,15 +90,29 @@ export default function SessionToolbar() {
           >
             Provider Dashboard
           </a>
+          <a
+            href="/earnings"
+            className="rounded-xl border border-[#D4AF37]/30 px-4 py-2 text-sm font-bold text-[#D4AF37]"
+          >
+            Earnings
+          </a>
         </>
       )}
       {isAdmin && (
-        <a
-          href="/admin/providers"
-          className="rounded-xl border border-emerald-500/30 px-4 py-2 text-sm font-bold text-emerald-300"
-        >
-          Admin
-        </a>
+        <>
+          <a
+            href="/admin/providers"
+            className="rounded-xl border border-emerald-500/30 px-4 py-2 text-sm font-bold text-emerald-300"
+          >
+            Admin
+          </a>
+          <a
+            href="/admin/finance"
+            className="rounded-xl border border-emerald-500/30 px-4 py-2 text-sm font-bold text-emerald-300"
+          >
+            Finance
+          </a>
+        </>
       )}
       <button
         type="button"
