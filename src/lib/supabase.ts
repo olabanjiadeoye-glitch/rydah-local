@@ -11,11 +11,13 @@ export type AuthSession = {
   access_token: string;
   refresh_token?: string;
   expires_in?: number;
+  expires_at?: number;
   token_type?: string;
   user: AuthUser;
 };
 
 const STORAGE_KEY = "rydah-local-session";
+let refreshPromise: Promise<AuthSession> | null = null;
 
 function assertConfigured() {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
@@ -64,13 +66,82 @@ async function readError(response: Response) {
   }
 }
 
+export async function refreshStoredSession(): Promise<AuthSession> {
+  assertConfigured();
+
+  if (refreshPromise) return refreshPromise;
+
+  refreshPromise = (async () => {
+    const current = getStoredSession();
+    if (!current?.refresh_token) {
+      clearSession();
+      throw new Error("Your session has expired. Please sign in again.");
+    }
+
+    const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: apiHeaders(undefined, { "Content-Type": "application/json" }),
+      body: JSON.stringify({ refresh_token: current.refresh_token }),
+    });
+
+    if (!response.ok) {
+      clearSession();
+      throw new Error("Your session has expired. Please sign in again.");
+    }
+
+    const refreshed = (await response.json()) as AuthSession;
+    const nextSession: AuthSession = {
+      ...current,
+      ...refreshed,
+      refresh_token: refreshed.refresh_token || current.refresh_token,
+      user: refreshed.user || current.user,
+    };
+
+    saveSession(nextSession);
+    return nextSession;
+  })().finally(() => {
+    refreshPromise = null;
+  });
+
+  return refreshPromise;
+}
+
+async function fetchWithOptionalRefresh(
+  url: string,
+  init: RequestInit,
+  token?: string,
+  extras?: Record<string, string>,
+): Promise<Response> {
+  const stored = token ? getStoredSession() : null;
+  let activeToken = stored?.access_token || token;
+
+  let response = await fetch(url, {
+    ...init,
+    headers: apiHeaders(activeToken, extras),
+  });
+
+  if (response.status === 401 && activeToken) {
+    const refreshed = await refreshStoredSession();
+    activeToken = refreshed.access_token;
+    response = await fetch(url, {
+      ...init,
+      headers: apiHeaders(activeToken, extras),
+    });
+  }
+
+  return response;
+}
+
 export async function restGet<T>(path: string, token?: string): Promise<T> {
   assertConfigured();
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-    method: "GET",
-    headers: apiHeaders(token),
-    cache: "no-store",
-  });
+  const response = await fetchWithOptionalRefresh(
+    `${SUPABASE_URL}/rest/v1/${path}`,
+    {
+      method: "GET",
+      cache: "no-store",
+    },
+    token,
+  );
 
   if (!response.ok) throw new Error(await readError(response));
   return (await response.json()) as T;
@@ -78,14 +149,18 @@ export async function restGet<T>(path: string, token?: string): Promise<T> {
 
 export async function restInsert<T>(table: string, payload: unknown, token?: string): Promise<T> {
   assertConfigured();
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-    method: "POST",
-    headers: apiHeaders(token, {
+  const response = await fetchWithOptionalRefresh(
+    `${SUPABASE_URL}/rest/v1/${table}`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    token,
+    {
       "Content-Type": "application/json",
       Prefer: token ? "return=representation" : "return=minimal",
-    }),
-    body: JSON.stringify(payload),
-  });
+    },
+  );
 
   if (!response.ok) throw new Error(await readError(response));
   if (!token) return [] as T;
@@ -94,28 +169,36 @@ export async function restInsert<T>(table: string, payload: unknown, token?: str
 
 export async function restInsertMinimal(table: string, payload: unknown, token?: string): Promise<void> {
   assertConfigured();
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-    method: "POST",
-    headers: apiHeaders(token, {
+  const response = await fetchWithOptionalRefresh(
+    `${SUPABASE_URL}/rest/v1/${table}`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    token,
+    {
       "Content-Type": "application/json",
       Prefer: "return=minimal",
-    }),
-    body: JSON.stringify(payload),
-  });
+    },
+  );
 
   if (!response.ok) throw new Error(await readError(response));
 }
 
 export async function restPatch<T>(table: string, query: string, payload: unknown, token: string): Promise<T> {
   assertConfigured();
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
-    method: "PATCH",
-    headers: apiHeaders(token, {
+  const response = await fetchWithOptionalRefresh(
+    `${SUPABASE_URL}/rest/v1/${table}?${query}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+    token,
+    {
       "Content-Type": "application/json",
       Prefer: "return=representation",
-    }),
-    body: JSON.stringify(payload),
-  });
+    },
+  );
 
   if (!response.ok) throw new Error(await readError(response));
   return (await response.json()) as T;
@@ -123,10 +206,11 @@ export async function restPatch<T>(table: string, query: string, payload: unknow
 
 export async function restDelete(table: string, query: string, token: string): Promise<void> {
   assertConfigured();
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
-    method: "DELETE",
-    headers: apiHeaders(token),
-  });
+  const response = await fetchWithOptionalRefresh(
+    `${SUPABASE_URL}/rest/v1/${table}?${query}`,
+    { method: "DELETE" },
+    token,
+  );
 
   if (!response.ok) throw new Error(await readError(response));
 }
