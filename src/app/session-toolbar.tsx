@@ -7,6 +7,7 @@ export default function SessionToolbar() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [hasProviderProfile, setHasProviderProfile] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     const currentSession = getStoredSession();
@@ -16,7 +17,7 @@ export default function SessionToolbar() {
 
     const detectAccess = async () => {
       try {
-        const [providerRows, adminRows] = await Promise.all([
+        const [providerRows, adminRows, unreadRows] = await Promise.all([
           restGet<{ id: string }[]>(
             `providers?user_id=eq.${currentSession.user.id}&select=id&limit=1`,
             currentSession.access_token,
@@ -25,12 +26,18 @@ export default function SessionToolbar() {
             `admin_users?user_id=eq.${currentSession.user.id}&select=user_id&limit=1`,
             currentSession.access_token,
           ),
+          restGet<{ id: string }[]>(
+            "notifications?read_at=is.null&select=id&limit=99",
+            currentSession.access_token,
+          ),
         ]);
         setHasProviderProfile(providerRows.length > 0);
         setIsAdmin(adminRows.length > 0);
+        setUnreadCount(unreadRows.length);
       } catch {
         setHasProviderProfile(false);
         setIsAdmin(false);
+        setUnreadCount(0);
       }
     };
 
@@ -52,6 +59,17 @@ export default function SessionToolbar() {
 
   return (
     <div className="fixed bottom-5 right-5 z-[100] flex max-w-[calc(100vw-2.5rem)] flex-wrap items-center justify-end gap-2 rounded-2xl border border-white/10 bg-[#111]/95 p-2 shadow-2xl backdrop-blur">
+      <a
+        href="/notifications"
+        className="relative rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-white"
+      >
+        Notifications
+        {unreadCount > 0 && (
+          <span className="ml-2 inline-flex min-w-5 items-center justify-center rounded-full bg-[#D4AF37] px-1.5 py-0.5 text-[11px] font-black text-black">
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+      </a>
       <a
         href="/my-jobs"
         className="rounded-xl bg-[#D4AF37] px-4 py-2 text-sm font-bold text-black"
