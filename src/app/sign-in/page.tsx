@@ -2,9 +2,11 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { saveSession, signInWithPassword, signUpWithPassword, type AuthSession } from "@/lib/supabase";
+import { destinationForAccess, resolveUserAccess } from "@/lib/access";
 
-function accountDestination(session: AuthSession) {
-  return session.user.user_metadata?.role === "provider" ? "/provider-dashboard" : "/providers";
+async function sendToCorrectArea(session: AuthSession) {
+  const access = await resolveUserAccess(session);
+  window.location.href = destinationForAccess(access);
 }
 
 export default function SignInPage() {
@@ -37,7 +39,7 @@ export default function SignInPage() {
       if (mode === "sign-in") {
         const session = await signInWithPassword(email, password);
         saveSession(session);
-        window.location.href = accountDestination(session);
+        await sendToCorrectArea(session);
         return;
       }
 
@@ -52,7 +54,7 @@ export default function SignInPage() {
       if (result.access_token && result.user) {
         const session = result as AuthSession;
         saveSession(session);
-        window.location.href = accountDestination(session);
+        await sendToCorrectArea(session);
         return;
       }
 
@@ -92,6 +94,12 @@ export default function SignInPage() {
                   <option value="customer">Customer</option>
                   <option value="provider">Service Provider</option>
                 </select>
+
+                <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-400">
+                  {role === "provider"
+                    ? "Provider accounts continue to profile verification before receiving jobs."
+                    : "Customer accounts continue to the Rydah marketplace after sign in."}
+                </div>
 
                 <label className="mt-5 block text-sm font-bold">Full name</label>
                 <input required value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none" />
