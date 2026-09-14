@@ -3,7 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 
-type ProviderLookup = { id: string };
+type ProviderLookup = { id: string; starting_price: number | null };
 type CreatedJob = { id: string };
 
 export default function PostJobPage() {
@@ -38,13 +38,15 @@ export default function PostJobPage() {
 
     try {
       let providerId: string | null = null;
+      let quotedAmount: number | null = null;
 
       if (provider) {
         const matches = await restGet<ProviderLookup[]>(
-          `providers?select=id&slug=eq.${encodeURIComponent(provider)}&limit=1`,
+          `providers?select=id,starting_price&slug=eq.${encodeURIComponent(provider)}&limit=1`,
           session?.access_token,
         );
         providerId = matches[0]?.id ?? null;
+        quotedAmount = matches[0]?.starting_price ?? null;
       }
 
       const rows = await restInsert<CreatedJob[]>(
@@ -60,6 +62,8 @@ export default function PostJobPage() {
           contact_name: contactName || null,
           contact_email: contactEmail,
           contact_phone: contactPhone || null,
+          quoted_amount: quotedAmount,
+          payment_status: "unpaid",
         },
         session?.access_token,
       );
