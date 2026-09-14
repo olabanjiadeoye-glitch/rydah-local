@@ -133,9 +133,11 @@ export async function signUpWithPassword(input: {
   password: string;
   fullName: string;
   role: "customer" | "provider";
+  redirectTo?: string;
 }): Promise<Partial<AuthSession> & { user?: AuthUser }> {
   assertConfigured();
-  const response = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+  const query = input.redirectTo ? `?redirect_to=${encodeURIComponent(input.redirectTo)}` : "";
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/signup${query}`, {
     method: "POST",
     headers: apiHeaders(undefined, { "Content-Type": "application/json" }),
     body: JSON.stringify({
