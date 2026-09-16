@@ -108,7 +108,21 @@ Deno.serve(async (req) => {
       const settings = await settingResponse.json() as Array<{ value_numeric: number | string }>;
       const subaccountCode = payoutAccounts[0]?.gateway_subaccount_code || null;
       const commissionRate = Number(settings[0]?.value_numeric ?? 15);
+
+      if (!Number.isFinite(commissionRate) || commissionRate < 0 || commissionRate >= 100) {
+        return json({ error: "Rydah commission configuration is invalid" }, 500);
+      }
+
+      // Fail closed in live mode. We never want a new real payment to silently fall back
+      // to manual provider payout once automatic settlement is expected.
+      if (!isTest && !subaccountCode) {
+        return json({
+          error: "Automatic provider settlement is not ready for this provider. The provider must connect and verify a live bank account before the customer can pay with Paystack.",
+        }, 409);
+      }
+
       const commissionNaira = Math.round(Number(job.quoted_amount) * commissionRate / 100);
+      const settlementMode = subaccountCode ? "split" : "manual";
 
       const initializePayload: Record<string, unknown> = {
         email,
@@ -121,11 +135,16 @@ Deno.serve(async (req) => {
           job_id: job.id,
           customer_id: user.id,
           provider_id: job.provider_id,
-          provider_settlement_mode: subaccountCode ? "split" : "manual",
+          provider_settlement_mode: settlementMode,
+          rydah_commission_rate_percent: commissionRate,
+          rydah_commission_naira: commissionNaira,
         }),
       };
 
       if (subaccountCode) {
+        // Paystack sends the remainder to the provider subaccount. transaction_charge
+        // guarantees Rydah's gross commission is exactly the configured amount.
+        // The main Rydah account bears Paystack's processing fee.
         initializePayload.subaccount = subaccountCode;
         initializePayload.transaction_charge = commissionNaira * 100;
         initializePayload.bearer = "account";
@@ -144,7 +163,7 @@ Deno.serve(async (req) => {
           method: "paystack",
           reference,
           is_test: isTest,
-          provider_settlement_mode: subaccountCode ? "split" : "manual",
+          provider_settlement_mode: settlementMode,
           provider_subaccount_code: subaccountCode,
         }),
       });
@@ -153,7 +172,9 @@ Deno.serve(async (req) => {
         authorization_url: initialized.data.authorization_url,
         access_code: initialized.data.access_code,
         reference,
-        provider_settlement_mode: subaccountCode ? "split" : "manual",
+        provider_settlement_mode: settlementMode,
+        commission_rate_percent: commissionRate,
+        commission_amount_naira: commissionNaira,
       });
     }
 
