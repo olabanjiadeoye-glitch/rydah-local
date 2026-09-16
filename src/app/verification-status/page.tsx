@@ -7,10 +7,6 @@ type StatusResponse = {
   ok?: boolean;
   configured?: boolean;
   environment?: string;
-  biometric_status?: string;
-  biometric_provider?: string | null;
-  biometric_result_text?: string | null;
-  biometric_verified_at?: string | null;
   error?: string;
 };
 
@@ -19,14 +15,14 @@ async function checkStatus(session: AuthSession) {
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
   if (!supabaseUrl || !publishableKey) throw new Error("Identity verification service is not configured.");
 
-  const response = await fetch(`${supabaseUrl}/functions/v1/identity-verification`, {
+  const response = await fetch(`${supabaseUrl}/functions/v1/identity-connection-status`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${session.access_token}`,
       apikey: publishableKey,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ action: "status" }),
+    body: JSON.stringify({}),
   });
 
   const result = (await response.json().catch(() => ({}))) as StatusResponse;
@@ -69,7 +65,6 @@ export default function VerificationStatusPage() {
               <div className="inline-flex rounded-full bg-emerald-500/15 px-4 py-2 text-sm font-black text-emerald-400">CONNECTED</div>
               <h2 className="mt-4 text-2xl font-black">Identity provider is connected</h2>
               <p className="mt-2 text-zinc-400">Environment: <span className="font-bold text-white">{result.environment || "unknown"}</span></p>
-              <p className="mt-2 text-zinc-400">Current biometric status: <span className="font-bold text-white">{(result.biometric_status || "not_started").replaceAll("_", " ")}</span></p>
               <a href="/provider-onboarding" className="mt-6 inline-block rounded-2xl bg-[#D4AF37] px-5 py-3 font-black text-black">Open Face & ID Verification</a>
             </>
           ) : (
