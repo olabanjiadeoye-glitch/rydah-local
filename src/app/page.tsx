@@ -95,7 +95,7 @@ export default function Home() {
           <p className="text-xs font-bold tracking-widest text-red-400">URGENT HELP</p>
           <h2 className="mt-3 text-3xl font-black">Need someone quickly?</h2>
           <p className="mt-3 max-w-2xl leading-7 text-zinc-400">
-            Post an urgent request and connect with suitable verified professionals in your area.
+            Post an urgent request and connect with suitable verified professionals in your area. Rydah Local is not an emergency service.
           </p>
           <a
             href="/post-job?urgent=1"
@@ -120,6 +120,12 @@ export default function Home() {
       <footer className="mt-10 border-t border-white/10 px-5 py-10 text-center">
         <p className="font-black">RYDAH <span className="text-[#D4AF37]">LOCAL</span></p>
         <p className="mt-3 text-sm text-zinc-600">Your Local Help, One Tap Away.</p>
+        <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm">
+          <a href="/support" className="text-[#D4AF37]">Support</a>
+          <a href="/privacy" className="text-zinc-400">Privacy</a>
+          <a href="/terms" className="text-zinc-400">Terms</a>
+          <a href="mailto:admin@rydahlocal.online" className="text-zinc-400">admin@rydahlocal.online</a>
+        </div>
         <p className="mt-5 text-sm text-zinc-700">© 2026 Rydah Local</p>
       </footer>
     </main>
