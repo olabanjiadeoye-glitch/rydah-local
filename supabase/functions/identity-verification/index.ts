@@ -4,6 +4,9 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const YOUVERIFY_SANDBOX_SAMPLE_IMAGE =
+  "https://cdn.youverify.co/1655466566309-lLSfNTlhElMTtbXW-QE-q.jpg";
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -73,6 +76,29 @@ function youverifyConfig() {
   return { token, environment, baseUrl };
 }
 
+function bytesToBase64(bytes: Uint8Array) {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + chunkSize, bytes.length)));
+  }
+  return btoa(binary);
+}
+
+async function sandboxSampleSelfieDataUrl() {
+  const response = await fetch(YOUVERIFY_SANDBOX_SAMPLE_IMAGE, { cache: "no-store" });
+  if (!response.ok) throw new Error("Unable to load the Youverify sandbox sample image");
+
+  const contentType = (response.headers.get("content-type") || "image/jpeg").split(";")[0].trim();
+  if (!contentType.startsWith("image/")) throw new Error("Youverify sandbox sample did not return an image");
+
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (bytes.length === 0) throw new Error("Youverify sandbox sample image was empty");
+  if (bytes.length > 5_000_000) throw new Error("Youverify sandbox sample image is too large");
+
+  return `data:${contentType};base64,${bytesToBase64(bytes)}`;
+}
+
 async function youverify(path: string, token: string, baseUrl: string, body: Record<string, unknown>) {
   const response = await fetch(`${baseUrl}${path}`, {
     method: "POST",
@@ -123,8 +149,18 @@ Deno.serve(async (req) => {
       }
 
       const idNumber = String(body.id_number || "").replace(/\s+/g, "").trim();
-      const selfie = String(body.selfie || "");
+      const useSandboxSample = body.use_sandbox_sample === true;
+      let selfie = String(body.selfie || "");
+
       if (idNumber.length < 5) return json({ error: "Enter the full ID number for this verification only" }, 400);
+
+      if (useSandboxSample) {
+        if (config.environment !== "sandbox") {
+          return json({ error: "The built-in test image is available only while Youverify is in sandbox mode" }, 400);
+        }
+        selfie = await sandboxSampleSelfieDataUrl();
+      }
+
       if (!/^data:image\/(jpeg|jpg|png|webp);base64,/i.test(selfie)) {
         return json({ error: "Take or upload a clear selfie image" }, 400);
       }
@@ -214,6 +250,7 @@ Deno.serve(async (req) => {
         status: faceMatched ? "verified" : "failed",
         result_text: String(reason).slice(0, 500),
         provider_id: provider.id,
+        sandbox_sample_used: useSandboxSample,
       }, faceMatched ? 200 : 422);
     }
 
