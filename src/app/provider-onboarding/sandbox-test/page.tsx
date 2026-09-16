@@ -11,14 +11,24 @@ type IdentityResponse = {
   biometric_status?: string;
   result_text?: string;
   error?: string;
+  message?: string;
+  msg?: string;
 };
 
-async function callIdentityBackend(session: AuthSession, payload: Record<string, unknown>) {
+function backendError(result: IdentityResponse, fallback: string) {
+  return result.error || result.message || result.msg || fallback;
+}
+
+async function callSupabaseFunction(
+  session: AuthSession,
+  functionName: string,
+  payload: Record<string, unknown>,
+) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
   if (!supabaseUrl || !publishableKey) throw new Error("Identity verification service is not configured.");
 
-  const response = await fetch(`${supabaseUrl}/functions/v1/identity-verification`, {
+  const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${session.access_token}`,
@@ -61,10 +71,15 @@ export default function SandboxFaceTestPage() {
     setSession(currentSession);
     void (async () => {
       try {
-        const { response, result } = await callIdentityBackend(currentSession, { action: "status" });
-        if (!response.ok) throw new Error(result.error || "Unable to check Youverify status.");
+        const { response, result } = await callSupabaseFunction(
+          currentSession,
+          "identity-connection-status",
+          {},
+        );
+        if (!response.ok) throw new Error(backendError(result, `Unable to check Youverify status (${response.status}).`));
         setEnvironment(result.environment || "");
         setConfigured(Boolean(result.configured));
+        setError("");
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "Unable to check Youverify status.");
       }
@@ -81,6 +96,10 @@ export default function SandboxFaceTestPage() {
       setError("This test is available only while Youverify is in sandbox mode.");
       return;
     }
+    if (!configured) {
+      setError("Youverify is not connected. Check the Supabase Youverify secret first.");
+      return;
+    }
 
     setBusy(true);
     setError("");
@@ -88,11 +107,14 @@ export default function SandboxFaceTestPage() {
 
     try {
       const imageResponse = await fetch("/api/youverify-sandbox-face", { cache: "no-store" });
-      if (!imageResponse.ok) throw new Error("Unable to load the Youverify sandbox face image.");
+      if (!imageResponse.ok) {
+        const imageError = await imageResponse.json().catch(() => ({}));
+        throw new Error(imageError?.error || "Unable to load the Youverify sandbox face image.");
+      }
       const selfie = await blobToDataUrl(await imageResponse.blob());
 
       setMessage("Sending the sandbox NIN and face to Youverify…");
-      const { response, result } = await callIdentityBackend(session, {
+      const { response, result } = await callSupabaseFunction(session, "identity-verification", {
         action: "verify_face_id",
         id_number: nin.trim(),
         selfie,
@@ -105,11 +127,11 @@ export default function SandboxFaceTestPage() {
       }
 
       if (response.status === 422) {
-        setMessage(`Sandbox request reached Youverify and completed with a non-match result: ${result.error || result.result_text || "face did not match"}. This still confirms the connection is working.`);
+        setMessage(`Sandbox request reached Youverify and completed with a non-match result: ${backendError(result, "face did not match")}. This still confirms the connection is working.`);
         return;
       }
 
-      throw new Error(result.error || "Unable to complete the sandbox Face & ID test.");
+      throw new Error(backendError(result, `Unable to complete the sandbox Face & ID test (${response.status}).`));
     } catch (caught) {
       setMessage("");
       setError(caught instanceof Error ? caught.message : "Unable to complete the sandbox Face & ID test.");
