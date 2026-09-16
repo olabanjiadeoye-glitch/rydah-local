@@ -383,9 +383,9 @@ export default function ProviderOnboardingPage() {
                       </label>
 
                       <label className="block md:col-span-2">
-                        <span className="text-sm font-bold">Live selfie / clear face photo</span>
-                        <input required type="file" accept="image/*" capture="user" onChange={(e) => setSelfie(e.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-sm text-zinc-300" />
-                        <span className="mt-2 block text-xs text-zinc-500">Use a recent, clear, front-facing image with good lighting and no sunglasses.</span>
+                        <span className="text-sm font-bold">Selfie / clear face photo</span>
+                        <input required type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setSelfie(e.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-sm text-zinc-300" />
+                        <span className="mt-2 block text-xs text-zinc-500">Choose a clear front-facing image from your gallery/files for sandbox testing. Before live launch, Rydah will require a live selfie/liveness check.</span>
                       </label>
 
                       <label className="md:col-span-2 flex items-start gap-3 rounded-2xl border border-white/10 p-4 text-sm text-zinc-300">
