@@ -9,7 +9,7 @@ import {
   type UserAccess,
 } from "@/lib/access";
 
-const baseLink = "rounded-xl border px-4 py-2 text-sm font-bold";
+const baseLink = "shrink-0 rounded-xl border px-4 py-2 text-sm font-bold";
 const neutralLink = `${baseLink} border-white/15 text-white`;
 const goldLink = `${baseLink} border-[#D4AF37]/40 text-[#D4AF37]`;
 const adminLink = `${baseLink} border-emerald-500/30 text-emerald-300`;
@@ -68,8 +68,8 @@ export default function SessionToolbar() {
   );
 
   return (
-    <div className="fixed bottom-5 right-5 z-[100] flex max-w-[calc(100vw-2.5rem)] flex-wrap items-center justify-end gap-2 rounded-2xl border border-white/10 bg-[#111]/95 p-2 shadow-2xl backdrop-blur">
-      <span className="rounded-xl bg-white/5 px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-zinc-400">
+    <div className="fixed bottom-3 left-3 right-3 z-[100] flex flex-nowrap items-center gap-2 overflow-x-auto rounded-2xl border border-white/10 bg-[#111]/95 p-2 shadow-2xl backdrop-blur md:bottom-5 md:left-auto md:right-5 md:max-w-[calc(100vw-2.5rem)]">
+      <span className="shrink-0 rounded-xl bg-white/5 px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-zinc-400">
         {access.role}
       </span>
 
@@ -77,7 +77,7 @@ export default function SessionToolbar() {
         <>
           {notifications}
           <a href="/providers" className={goldLink}>Marketplace</a>
-          <a href="/my-jobs" className="rounded-xl bg-[#D4AF37] px-4 py-2 text-sm font-bold text-black">My Jobs</a>
+          <a href="/my-jobs" className="shrink-0 rounded-xl bg-[#D4AF37] px-4 py-2 text-sm font-bold text-black">My Jobs</a>
         </>
       )}
 
