@@ -11,6 +11,7 @@ type JobRow = {
   status: string;
   quoted_amount: number | null;
   payment_status: string;
+  quote_status: string;
   providers: { business_name: string; starting_price: number | null } | null;
 };
 
@@ -18,10 +19,12 @@ type PaymentRow = {
   id: string;
   job_id: string;
   amount_naira: number;
-  method: "card" | "bank_transfer" | "wallet" | "cash";
-  status: "pending" | "paid" | "cash_due" | "failed" | "refunded";
+  method: "paystack" | "cash" | "sandbox_card";
+  status: "pending" | "paid" | "cash_due" | "failed" | "refunded" | "cancelled";
   reference: string;
   is_test: boolean;
+  gateway: string;
+  gateway_channel: string | null;
   commission_rate_percent: number | string;
   commission_amount_naira: number;
   provider_net_naira: number;
@@ -34,13 +37,47 @@ type SettingRow = {
   value_numeric: number | string;
 };
 
+type BackendResponse = {
+  authorization_url?: string;
+  reference?: string;
+  status?: string;
+  ok?: boolean;
+  error?: string;
+};
+
 function naira(value: number) {
   return `₦${value.toLocaleString()}`;
 }
 
-function methodLabel(method: PaymentRow["method"]) {
-  if (method === "bank_transfer") return "Bank transfer";
-  return method.charAt(0).toUpperCase() + method.slice(1);
+function methodLabel(payment: PaymentRow) {
+  if (payment.method === "paystack") {
+    return payment.gateway_channel ? `Paystack • ${payment.gateway_channel}` : "Paystack";
+  }
+  if (payment.method === "cash") return "Cash";
+  return "Sandbox card";
+}
+
+async function callPaymentBackend(session: AuthSession, payload: Record<string, unknown>) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
+
+  if (!supabaseUrl || !publishableKey) {
+    throw new Error("Payment service is not configured.");
+  }
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/paystack-payment`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      apikey: publishableKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const result = (await response.json().catch(() => ({}))) as BackendResponse;
+  if (!response.ok) throw new Error(result.error || "Unable to process payment.");
+  return result;
 }
 
 export default function PaymentsPage() {
@@ -59,21 +96,40 @@ export default function PaymentsPage() {
       window.location.href = "/sign-in";
       return;
     }
+
     setSession(currentSession);
-    void load(currentSession);
+    void load(currentSession, true);
   }, []);
 
-  async function load(currentSession: AuthSession) {
+  async function load(currentSession: AuthSession, verifyCallback = false) {
     setLoading(true);
     setError("");
+
     try {
       const params = new URLSearchParams(window.location.search);
       const jobId = params.get("job");
       if (!jobId) throw new Error("No job was selected for payment.");
 
+      if (verifyCallback) {
+        const reference = params.get("reference") || params.get("trxref");
+        if (reference) {
+          setMessage("Confirming your payment with Paystack…");
+          try {
+            const verified = await callPaymentBackend(currentSession, { action: "verify", reference });
+            if (verified.status === "paid") {
+              setMessage("Payment confirmed successfully.");
+            }
+          } catch (caught) {
+            setMessage("");
+            setError(caught instanceof Error ? caught.message : "We could not verify this payment yet.");
+          }
+          window.history.replaceState({}, "", `/payments?job=${encodeURIComponent(jobId)}`);
+        }
+      }
+
       const [jobs, settings] = await Promise.all([
         restGet<JobRow[]>(
-          `jobs?id=eq.${encodeURIComponent(jobId)}&customer_id=eq.${currentSession.user.id}&select=id,provider_id,service_category,location,status,quoted_amount,payment_status,providers(business_name,starting_price)&limit=1`,
+          `jobs?id=eq.${encodeURIComponent(jobId)}&customer_id=eq.${currentSession.user.id}&select=id,provider_id,service_category,location,status,quoted_amount,payment_status,quote_status,providers(business_name,starting_price)&limit=1`,
           currentSession.access_token,
         ),
         restGet<SettingRow[]>(
@@ -99,38 +155,73 @@ export default function PaymentsPage() {
     }
   }
 
-  async function createPayment(method: PaymentRow["method"]) {
+  async function startPaystackPayment() {
+    if (!session || !job) return;
+    setSaving(true);
+    setError("");
+    setMessage("Opening secure Paystack checkout…");
+
+    try {
+      const callbackUrl = `${window.location.origin}/payments?job=${encodeURIComponent(job.id)}`;
+      const result = await callPaymentBackend(session, {
+        action: "initialize",
+        job_id: job.id,
+        callback_url: callbackUrl,
+      });
+
+      if (!result.authorization_url) throw new Error("Paystack did not return a checkout link.");
+      window.location.assign(result.authorization_url);
+    } catch (caught) {
+      setMessage("");
+      setError(caught instanceof Error ? caught.message : "Unable to start Paystack checkout.");
+      setSaving(false);
+    }
+  }
+
+  async function verifyLatestPayment() {
+    if (!session || !payment || payment.method !== "paystack") return;
+    setSaving(true);
+    setError("");
+    setMessage("Checking payment status…");
+
+    try {
+      const result = await callPaymentBackend(session, { action: "verify", reference: payment.reference });
+      if (result.status === "paid") setMessage("Payment confirmed successfully.");
+      await load(session, false);
+    } catch (caught) {
+      setMessage("");
+      setError(caught instanceof Error ? caught.message : "Payment has not been confirmed yet.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function selectCash() {
     if (!session || !job) return;
     setSaving(true);
     setError("");
     setMessage("");
+
     try {
       const rows = await restInsert<PaymentRow[]>(
         "payments",
-        { job_id: job.id, method },
+        { job_id: job.id, method: "cash" },
         session.access_token,
       );
       const created = rows[0];
-      if (!created) throw new Error("Payment record was not returned.");
+      if (!created) throw new Error("Cash payment record was not returned.");
       setPayment(created);
-      setCommissionRate(Number(created.commission_rate_percent));
       setJob((current) => current ? { ...current, payment_status: created.status } : current);
-      setMessage(
-        created.status === "paid"
-          ? "Sandbox payment successful. No real money was charged. Rydah commission has been recorded."
-          : created.status === "cash_due"
-            ? "Cash payment selected. The provider receives cash directly and the Rydah commission remains due from the provider."
-            : "Test payment request created and is pending.",
-      );
+      setMessage("Cash selected. Pay the provider directly when the job is settled.");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to create payment.");
+      setError(caught instanceof Error ? caught.message : "Unable to select cash payment.");
     } finally {
       setSaving(false);
     }
   }
 
   if (loading) {
-    return <main className="min-h-screen bg-[#080808] p-8 text-zinc-400">Loading payment...</main>;
+    return <main className="min-h-screen bg-[#080808] p-8 text-zinc-400">Loading payment…</main>;
   }
 
   const amount = job?.quoted_amount ?? job?.providers?.starting_price ?? 0;
@@ -138,6 +229,8 @@ export default function PaymentsPage() {
   const commissionAmount = payment?.commission_amount_naira ?? Math.round(amount * effectiveRate / 100);
   const providerNet = payment?.provider_net_naira ?? Math.max(0, amount - commissionAmount);
   const cashAllowed = amount > 0 && amount <= 5000;
+  const isSettled = payment?.status === "paid" || payment?.status === "cash_due";
+  const canPay = Boolean(job && job.status === "completed" && job.quote_status === "accepted" && amount > 0 && !isSettled);
 
   return (
     <main className="min-h-screen bg-[#080808] text-white">
@@ -152,8 +245,8 @@ export default function PaymentsPage() {
       </header>
 
       <section className="mx-auto max-w-3xl px-5 py-10">
-        <div className="mb-5 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-300">
-          TEST MODE — this screen does not charge a real card, bank account or wallet.
+        <div className="mb-5 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-4 text-sm text-[#E7C85A]">
+          Secure checkout is handled by Paystack. Rydah never asks you to enter card details directly on this page.
         </div>
 
         {error && <div className="mb-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
@@ -188,49 +281,57 @@ export default function PaymentsPage() {
                 <div className="rounded-2xl bg-[#1A1A1A] p-4">
                   <p className="text-xs text-zinc-500">Your charge</p>
                   <p className="mt-1 text-lg font-black">{naira(amount)}</p>
-                  <p className="mt-1 text-xs text-zinc-500">No extra customer fee</p>
+                  <p className="mt-1 text-xs text-zinc-500">No extra Rydah fee</p>
                 </div>
               </div>
             )}
 
             <p className="mt-4 text-xs leading-5 text-zinc-500">
-              Rydah deducts {effectiveRate}% from the provider&apos;s earnings on every job. This does not increase the customer&apos;s job price.
+              Rydah deducts {effectiveRate}% from provider earnings. This does not increase the customer&apos;s agreed job price.
             </p>
 
-            {payment ? (
+            {payment && (
               <div className="mt-6 rounded-2xl border border-white/10 bg-[#1A1A1A] p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <p className="text-xs text-zinc-500">Latest payment</p>
-                    <p className="mt-1 text-lg font-black">{methodLabel(payment.method)}</p>
+                    <p className="mt-1 text-lg font-black">{methodLabel(payment)}</p>
                   </div>
-                  <span className={`rounded-full px-3 py-2 text-xs font-black ${payment.status === "paid" ? "bg-emerald-500/15 text-emerald-400" : "bg-[#D4AF37]/15 text-[#D4AF37]"}`}>
+                  <span className={`rounded-full px-3 py-2 text-xs font-black ${payment.status === "paid" ? "bg-emerald-500/15 text-emerald-400" : payment.status === "failed" ? "bg-red-500/15 text-red-300" : "bg-[#D4AF37]/15 text-[#D4AF37]"}`}>
                     {payment.status.replace("_", " ").toUpperCase()}
                   </span>
                 </div>
-                <p className="mt-4 text-sm text-zinc-400">Reference: {payment.reference}</p>
+                <p className="mt-4 break-all text-sm text-zinc-400">Reference: {payment.reference}</p>
                 <p className="mt-2 text-sm text-zinc-400">Rydah commission: {naira(payment.commission_amount_naira)} ({Number(payment.commission_rate_percent)}%)</p>
                 <p className="mt-1 text-sm text-zinc-400">Provider net: {naira(payment.provider_net_naira)}</p>
-                {payment.is_test && <p className="mt-2 text-xs text-amber-300">Sandbox record only — no real funds moved.</p>}
+                {payment.is_test && <p className="mt-2 text-xs text-amber-300">Paystack test transaction — no real funds moved.</p>}
               </div>
-            ) : (
+            )}
+
+            {!canPay && !isSettled && (
+              <div className="mt-6 rounded-2xl border border-white/10 bg-[#1A1A1A] p-4 text-sm text-zinc-400">
+                Payment becomes available after the provider has completed the job and you have accepted the agreed quote.
+              </div>
+            )}
+
+            {canPay && (
               <div className="mt-7 grid gap-3 sm:grid-cols-2">
-                <button disabled={saving || !amount} onClick={() => void createPayment("card")} className="rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-50">
-                  Test Card Payment
+                <button disabled={saving} onClick={() => void startPaystackPayment()} className="rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-50">
+                  {saving ? "Please wait…" : `Pay ${naira(amount)} with Paystack`}
                 </button>
-                <button disabled={saving || !amount} onClick={() => void createPayment("bank_transfer")} className="rounded-2xl border border-white/10 px-5 py-4 font-bold disabled:opacity-50">
-                  Bank Transfer
-                </button>
-                <button disabled={saving || !amount} onClick={() => void createPayment("wallet")} className="rounded-2xl border border-white/10 px-5 py-4 font-bold disabled:opacity-50">
-                  Rydah Wallet
-                </button>
-                <button disabled={saving || !cashAllowed} onClick={() => void createPayment("cash")} className="rounded-2xl border border-white/10 px-5 py-4 font-bold disabled:opacity-35">
+                <button disabled={saving || !cashAllowed} onClick={() => void selectCash()} className="rounded-2xl border border-white/10 px-5 py-4 font-bold disabled:opacity-35">
                   Cash {cashAllowed ? "" : "(Not available)"}
                 </button>
               </div>
             )}
 
-            {!cashAllowed && amount > 5000 && (
+            {payment?.method === "paystack" && payment.status === "pending" && (
+              <button disabled={saving} onClick={() => void verifyLatestPayment()} className="mt-3 w-full rounded-2xl border border-[#D4AF37]/40 px-5 py-4 font-bold text-[#D4AF37] disabled:opacity-50">
+                Check Paystack payment status
+              </button>
+            )}
+
+            {!cashAllowed && amount > 5000 && !isSettled && (
               <p className="mt-4 text-sm text-zinc-500">Cash is disabled for jobs above ₦5,000 under the Rydah payment policy.</p>
             )}
           </div>
