@@ -227,6 +227,29 @@ export async function signInWithPassword(email: string, password: string): Promi
   return (await response.json()) as AuthSession;
 }
 
+export async function requestPasswordReset(email: string, redirectTo: string): Promise<void> {
+  assertConfigured();
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/recover?redirect_to=${encodeURIComponent(redirectTo)}`, {
+    method: "POST",
+    headers: apiHeaders(undefined, { "Content-Type": "application/json" }),
+    body: JSON.stringify({ email }),
+  });
+
+  if (!response.ok) throw new Error(await readError(response));
+}
+
+export async function updatePasswordWithRecoveryToken(accessToken: string, password: string): Promise<AuthUser> {
+  assertConfigured();
+  const response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    method: "PUT",
+    headers: apiHeaders(accessToken, { "Content-Type": "application/json" }),
+    body: JSON.stringify({ password }),
+  });
+
+  if (!response.ok) throw new Error(await readError(response));
+  return (await response.json()) as AuthUser;
+}
+
 export async function signUpWithPassword(input: {
   email: string;
   password: string;
