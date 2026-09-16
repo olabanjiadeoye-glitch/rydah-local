@@ -10,6 +10,8 @@ import {
 } from "@/lib/supabase";
 import { destinationForAccess, resolveUserAccess } from "@/lib/access";
 
+const PRODUCTION_ORIGIN = "https://rydahlocal.online";
+
 async function sendToCorrectArea(session: AuthSession) {
   const access = await resolveUserAccess(session);
   window.location.href = destinationForAccess(access);
@@ -46,8 +48,8 @@ export default function SignInPage() {
 
     try {
       if (mode === "forgot") {
-        await requestPasswordReset(email.trim(), `${window.location.origin}/reset-password`);
-        setMessage("Password reset email sent. Open the email and tap the reset link.");
+        await requestPasswordReset(email.trim(), `${PRODUCTION_ORIGIN}/reset-password`);
+        setMessage("Password reset email sent. Open the newest email and tap the reset link.");
         return;
       }
 
@@ -63,7 +65,7 @@ export default function SignInPage() {
         password,
         fullName,
         role,
-        redirectTo: `${window.location.origin}/sign-in?confirmed=1`,
+        redirectTo: `${PRODUCTION_ORIGIN}/sign-in?confirmed=1`,
       });
 
       if (result.access_token && result.user) {
