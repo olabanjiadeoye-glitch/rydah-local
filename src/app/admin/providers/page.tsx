@@ -16,6 +16,10 @@ type VerificationRow = {
   admin_notes: string | null;
   submitted_at: string | null;
   reviewed_at: string | null;
+  biometric_status: "not_started" | "pending" | "verified" | "failed" | "review_required";
+  biometric_provider: string | null;
+  biometric_result_text: string | null;
+  biometric_verified_at: string | null;
 };
 
 type ProviderRow = {
@@ -25,6 +29,13 @@ type ProviderRow = {
   location: string;
   is_verified: boolean;
 };
+
+function biometricBadge(status: VerificationRow["biometric_status"]) {
+  if (status === "verified") return "bg-emerald-500/15 text-emerald-400";
+  if (status === "failed") return "bg-red-500/15 text-red-300";
+  if (status === "pending" || status === "review_required") return "bg-[#D4AF37]/15 text-[#D4AF37]";
+  return "bg-zinc-800 text-zinc-400";
+}
 
 export default function ProviderAdminPage() {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -87,7 +98,13 @@ export default function ProviderAdminPage() {
   async function review(row: VerificationRow, status: "approved" | "rejected") {
     if (!session) return;
 
-    let adminNotes = status === "approved" ? "Approved by Rydah admin." : "Verification rejected by Rydah admin.";
+    if (status === "approved" && row.biometric_status !== "verified") {
+      setError("Face & ID Match must be VERIFIED before a new provider can be approved.");
+      setMessage("");
+      return;
+    }
+
+    let adminNotes = status === "approved" ? "Approved by Rydah admin after Face & ID Match." : "Verification rejected by Rydah admin.";
     if (status === "rejected") {
       const reason = window.prompt("Reason for rejection (shown to the provider):", adminNotes);
       if (reason === null) return;
@@ -142,9 +159,10 @@ export default function ProviderAdminPage() {
           </div>
         ) : (
           <>
-            <div className="mb-7 grid gap-4 sm:grid-cols-3">
+            <div className="mb-7 grid gap-4 sm:grid-cols-4">
               <div className="rounded-2xl border border-white/10 bg-[#121212] p-5"><p className="text-sm text-zinc-500">Submissions</p><p className="mt-2 text-3xl font-black">{verifications.length}</p></div>
               <div className="rounded-2xl border border-white/10 bg-[#121212] p-5"><p className="text-sm text-zinc-500">Pending</p><p className="mt-2 text-3xl font-black text-[#D4AF37]">{verifications.filter((row) => row.status === "pending").length}</p></div>
+              <div className="rounded-2xl border border-white/10 bg-[#121212] p-5"><p className="text-sm text-zinc-500">Face verified</p><p className="mt-2 text-3xl font-black text-emerald-400">{verifications.filter((row) => row.biometric_status === "verified").length}</p></div>
               <div className="rounded-2xl border border-white/10 bg-[#121212] p-5"><p className="text-sm text-zinc-500">Approved</p><p className="mt-2 text-3xl font-black text-emerald-400">{verifications.filter((row) => row.status === "approved").length}</p></div>
             </div>
 
@@ -176,12 +194,27 @@ export default function ProviderAdminPage() {
                         <div className="rounded-2xl bg-[#1A1A1A] p-4"><p className="text-xs text-zinc-500">ID check</p><p className="mt-1 font-bold">{row.id_type} ••••{row.id_last4}</p></div>
                       </div>
 
+                      <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <p className="text-xs text-zinc-500">Face & ID Match</p>
+                            <p className="mt-1 text-sm font-bold">{row.biometric_provider ? `Provider: ${row.biometric_provider}` : "Not run yet"}</p>
+                          </div>
+                          <span className={`rounded-full px-3 py-2 text-xs font-black ${biometricBadge(row.biometric_status || "not_started")}`}>
+                            {(row.biometric_status || "not_started").replaceAll("_", " ").toUpperCase()}
+                          </span>
+                        </div>
+                        {row.biometric_result_text && <p className="mt-3 text-sm text-zinc-300">{row.biometric_result_text}</p>}
+                        {row.biometric_verified_at && <p className="mt-2 text-xs text-zinc-500">Verified {new Date(row.biometric_verified_at).toLocaleString()}</p>}
+                      </div>
+
                       {row.admin_notes && <div className="mt-4 rounded-2xl border border-white/10 p-4 text-sm text-zinc-300">Admin note: {row.admin_notes}</div>}
 
                       {row.status === "pending" && (
                         <div className="mt-5 flex flex-wrap gap-3">
-                          <button disabled={savingId === row.id} onClick={() => void review(row, "approved")} className="rounded-2xl bg-[#D4AF37] px-5 py-3 font-black text-black disabled:opacity-50">Approve Provider</button>
+                          <button disabled={savingId === row.id || row.biometric_status !== "verified"} onClick={() => void review(row, "approved")} className="rounded-2xl bg-[#D4AF37] px-5 py-3 font-black text-black disabled:cursor-not-allowed disabled:opacity-35">Approve Provider</button>
                           <button disabled={savingId === row.id} onClick={() => void review(row, "rejected")} className="rounded-2xl border border-red-500/30 px-5 py-3 font-black text-red-300 disabled:opacity-50">Reject</button>
+                          {row.biometric_status !== "verified" && <p className="w-full text-xs text-zinc-500">Approval is locked until Face & ID Match is verified.</p>}
                         </div>
                       )}
                     </article>
