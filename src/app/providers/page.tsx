@@ -27,7 +27,7 @@ type DbProvider = {
   starting_price: number | null;
 };
 
-const categories = ["All", "Electrician", "Plumber", "AC Technician", "Generator", "Cleaning", "Mechanic"];
+const launchCategories = ["Electrician", "Plumber", "AC Technician", "Generator", "Cleaning", "Mechanic"];
 const LOCAL_FAVOURITES = "rydah-local-favourites";
 const money = (value: number) => `₦${value.toLocaleString("en-NG")}`;
 
@@ -47,7 +47,7 @@ export default function ProvidersPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const requested = params.get("category");
-    if (requested && categories.includes(requested)) setCategory(requested);
+    if (requested) setCategory(requested);
 
     const storedSession = getStoredSession();
     setSession(storedSession);
@@ -96,10 +96,20 @@ export default function ProvidersPage() {
     void load();
   }, []);
 
+  const categories = useMemo(() => {
+    const discovered = providers.map((provider) => provider.category).filter(Boolean);
+    return ["All", ...Array.from(new Set([...launchCategories, ...discovered])).sort((a, b) => a.localeCompare(b))];
+  }, [providers]);
+
+  const locations = useMemo(() => {
+    const discovered = providers.map((provider) => provider.area).filter(Boolean);
+    return ["All Lagos", ...Array.from(new Set(discovered)).sort((a, b) => a.localeCompare(b))];
+  }, [providers]);
+
   const visibleProviders = useMemo(() => {
     let result = providers.filter((provider) => {
       const search = activeSearch.trim().toLowerCase();
-      const matchesSearch = !search || provider.name.toLowerCase().includes(search) || provider.category.toLowerCase().includes(search) || provider.area.toLowerCase().includes(search);
+      const matchesSearch = !search || provider.name.toLowerCase().includes(search) || provider.category.toLowerCase().includes(search) || provider.area.toLowerCase().includes(search) || provider.bio.toLowerCase().includes(search);
       const matchesLocation = location === "All Lagos" || provider.area === location;
       const matchesCategory = category === "All" || provider.category === category;
       return matchesSearch && matchesLocation && matchesCategory;
@@ -152,10 +162,10 @@ export default function ProvidersPage() {
             <p className="text-xs font-bold tracking-widest text-zinc-500">SEARCH VERIFIED PROFESSIONALS</p>
             <p className="text-xs text-zinc-600">{status}</p>
           </div>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && setActiveSearch(query)} placeholder="What service do you need?" className="mt-3 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && setActiveSearch(query)} placeholder="Search electrician, carpenter, cleaner, area or provider..." className="mt-3 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <select value={location} onChange={(e) => setLocation(e.target.value)} className="rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
-              <option>All Lagos</option><option>Lekki, Lagos</option><option>Victoria Island, Lagos</option><option>Ikeja, Lagos</option>
+              {locations.map((item) => <option key={item}>{item}</option>)}
             </select>
             <select value={sort} onChange={(e) => setSort(e.target.value)} className="rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
               <option>Recommended</option><option>Highest Rated</option><option>Lowest Starting Price</option>
@@ -182,7 +192,7 @@ export default function ProvidersPage() {
         {visibleProviders.length === 0 ? (
           <div className="rounded-3xl border border-white/10 bg-[#121212] p-8 text-center">
             <p className="text-xl font-bold">No available verified providers found</p>
-            <p className="mt-2 text-zinc-500">Try another service or area, or post a job for automatic matching.</p>
+            <p className="mt-2 text-zinc-500">Try another service or area. Rydah only shows providers who are verified and currently available.</p>
             <a href="/post-job" className="mt-5 inline-block rounded-xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Post a Job</a>
           </div>
         ) : (
@@ -214,6 +224,17 @@ export default function ProvidersPage() {
         )}
       </section>
 
+      <section className="mx-auto max-w-6xl px-5 pb-6">
+        <div className="rounded-3xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
+          <div>
+            <p className="text-xs font-black tracking-widest text-[#D4AF37]">PROVIDERS</p>
+            <h3 className="mt-2 text-xl font-black">Your profession isn&apos;t listed?</h3>
+            <p className="mt-2 text-sm text-zinc-400">Service providers can register a genuine profession for Rydah marketplace review instead of choosing the wrong category.</p>
+          </div>
+          <a href="/provider-interest" className="mt-4 inline-block shrink-0 rounded-xl bg-white px-5 py-3 font-black text-black sm:mt-0">Add Your Profession</a>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-6xl px-5 pb-10">
         <div className="rounded-3xl border border-red-500/20 bg-red-950/20 p-6">
           <p className="text-xs font-bold tracking-widest text-red-400">NEED URGENT HELP?</p>
@@ -235,7 +256,8 @@ export default function ProvidersPage() {
               <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">Jobs</p><p className="mt-1 font-bold">{selectedProvider.jobs}</p></div>
               <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">From</p><p className="mt-1 font-bold">{money(selectedProvider.price)}</p></div>
             </div>
-            <a href={`/post-job?provider=${encodeURIComponent(selectedProvider.slug)}`} className="mt-6 block rounded-2xl bg-[#D4AF37] px-5 py-4 text-center font-bold text-black">Request Service</a>
+            <div className="mt-5 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-4 text-xs leading-5 text-zinc-400">For safety, request and pay through Rydah. Provider profile descriptions cannot include off-platform contact details.</div>
+            <a href={`/post-job?provider=${encodeURIComponent(selectedProvider.slug)}`} className="mt-4 block rounded-2xl bg-[#D4AF37] px-5 py-4 text-center font-bold text-black">Request Service</a>
           </div>
         </div>
       )}
