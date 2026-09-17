@@ -84,6 +84,7 @@ export default function SessionToolbar() {
         <>
           {notifications}
           <a href="/providers" className={goldLink}>Marketplace</a>
+          <a href="/arrival-check" className={neutralLink}>Safety Check</a>
           <a href="/my-jobs" className="shrink-0 rounded-xl bg-[#D4AF37] px-4 py-2 text-sm font-bold text-black">My Jobs</a>
         </>
       )}
