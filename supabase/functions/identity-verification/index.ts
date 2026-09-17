@@ -76,31 +76,16 @@ function youverifyConfig() {
   return { token, environment, baseUrl };
 }
 
-function bytesToBase64(bytes: Uint8Array) {
-  let binary = "";
-  const chunkSize = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(i, Math.min(i + chunkSize, bytes.length)));
+function resolveYouverifyUrl(baseUrl: string, path: string) {
+  const cleanBase = baseUrl.replace(/\/+$/, "");
+  if (cleanBase.endsWith("/v2/api") && path.startsWith("/v2/api/")) {
+    return `${cleanBase}${path.slice("/v2/api".length)}`;
   }
-  return btoa(binary);
-}
-
-async function sandboxSampleSelfieDataUrl() {
-  const response = await fetch(YOUVERIFY_SANDBOX_SAMPLE_IMAGE, { cache: "no-store" });
-  if (!response.ok) throw new Error("Unable to load the Youverify sandbox sample image");
-
-  const contentType = (response.headers.get("content-type") || "image/jpeg").split(";")[0].trim();
-  if (!contentType.startsWith("image/")) throw new Error("Youverify sandbox sample did not return an image");
-
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  if (bytes.length === 0) throw new Error("Youverify sandbox sample image was empty");
-  if (bytes.length > 5_000_000) throw new Error("Youverify sandbox sample image is too large");
-
-  return `data:${contentType};base64,${bytesToBase64(bytes)}`;
+  return `${cleanBase}${path}`;
 }
 
 async function youverify(path: string, token: string, baseUrl: string, body: Record<string, unknown>) {
-  const response = await fetch(`${baseUrl}${path}`, {
+  const response = await fetch(resolveYouverifyUrl(baseUrl, path), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -110,7 +95,7 @@ async function youverify(path: string, token: string, baseUrl: string, body: Rec
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload?.message || `Identity provider request failed (${response.status})`);
+    throw new Error(payload?.message || payload?.error || `Identity provider request failed (${response.status})`);
   }
   return payload;
 }
@@ -150,7 +135,7 @@ Deno.serve(async (req) => {
 
       const idNumber = String(body.id_number || "").replace(/\s+/g, "").trim();
       const useSandboxSample = body.use_sandbox_sample === true;
-      let selfie = String(body.selfie || "");
+      let selfie = String(body.selfie_url || body.selfie || "").trim();
 
       if (idNumber.length < 5) return json({ error: "Enter the full ID number for this verification only" }, 400);
 
@@ -158,52 +143,69 @@ Deno.serve(async (req) => {
         if (config.environment !== "sandbox") {
           return json({ error: "The built-in test image is available only while Youverify is in sandbox mode" }, 400);
         }
-        selfie = await sandboxSampleSelfieDataUrl();
+        selfie = YOUVERIFY_SANDBOX_SAMPLE_IMAGE;
       }
 
-      if (!/^data:image\/(jpeg|jpg|png|webp);base64,/i.test(selfie)) {
+      const isImageUrl = /^https:\/\//i.test(selfie);
+      const isImageData = /^data:image\/(jpeg|jpg|png|webp);base64,/i.test(selfie);
+      if (!isImageUrl && !isImageData) {
         return json({ error: "Take or upload a clear selfie image" }, 400);
       }
-      if (selfie.length > 8_000_000) return json({ error: "Selfie image is too large. Please use a smaller image." }, 413);
+      if (isImageData && selfie.length > 8_000_000) {
+        return json({ error: "Selfie image is too large. Please use a smaller image." }, 413);
+      }
 
       const idType = String(verification.id_type || "");
-      let verificationType = "";
-      if (idType === "NIN") verificationType = "nin_facial";
-      if (idType === "International Passport") verificationType = "passport_facial";
-      if (!verificationType) {
+      let endpoint = "";
+      let resultCodePrefix = "";
+      const requestBody: Record<string, unknown> = {
+        id: idNumber,
+        isSubjectConsent: true,
+        validations: {
+          selfie: {
+            image: selfie,
+          },
+        },
+        metadata: {
+          source: "rydah-local",
+          providerId: provider.id,
+        },
+      };
+
+      if (idType === "NIN") {
+        endpoint = "/v2/api/identity/ng/nin";
+        resultCodePrefix = "nin_facial";
+      } else if (idType === "International Passport") {
+        endpoint = "/v2/api/identity/ng/passport";
+        resultCodePrefix = "passport_facial";
+        const nameParts = String(verification.legal_name || "").trim().split(/\s+/).filter(Boolean);
+        const lastName = nameParts.at(-1) || "";
+        if (lastName) requestBody.lastName = lastName;
+      } else {
         return json({
           error: "Automatic face-to-ID matching currently requires NIN or International Passport. Change the selected ID type and resubmit your identity details.",
         }, 409);
       }
 
-      const nameParts = String(verification.legal_name || "").trim().split(/\s+/).filter(Boolean);
-      const lastName = nameParts.at(-1) || "";
-      const requestBody: Record<string, unknown> = {
-        report_type: "identity",
-        type: verificationType,
-        reference: idNumber,
-        image: selfie,
-        subject_consent: true,
-      };
-      if (verificationType === "passport_facial" && lastName) requestBody.last_name = lastName;
-
+      const now = new Date().toISOString();
       await supabaseRequest(`provider_verifications?id=eq.${encodeURIComponent(verification.id)}`, {
         method: "PATCH",
         headers: { Prefer: "return=minimal" },
         body: JSON.stringify({
           biometric_status: "pending",
           biometric_provider: "youverify",
-          biometric_consent_at: new Date().toISOString(),
-          biometric_updated_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          biometric_consent_at: now,
+          biometric_updated_at: now,
+          updated_at: now,
           id_last4: idNumber.slice(-4).toUpperCase(),
         }),
       });
 
       let payload: any;
       try {
-        payload = await youverify("/v1/identities/candidates/check", config.token, config.baseUrl, requestBody);
+        payload = await youverify(endpoint, config.token, config.baseUrl, requestBody);
       } catch (error) {
+        const failedAt = new Date().toISOString();
         await supabaseRequest(`provider_verifications?id=eq.${encodeURIComponent(verification.id)}`, {
           method: "PATCH",
           headers: { Prefer: "return=minimal" },
@@ -211,25 +213,50 @@ Deno.serve(async (req) => {
             biometric_status: "failed",
             biometric_result_code: "provider_error",
             biometric_result_text: error instanceof Error ? error.message : "Identity provider error",
-            biometric_updated_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
+            biometric_updated_at: failedAt,
+            updated_at: failedAt,
           }),
         });
         throw error;
       }
 
       const data = payload?.data || {};
-      const responseData = data?.response || {};
-      const face = responseData?.face_details || {};
-      const confidence = Number(face?.confidence ?? 0);
-      const threshold = Number(face?.threshold ?? 0);
-      const found = String(data?.status || "").toLowerCase() === "found";
-      const faceMatched = found && threshold > 0 && confidence >= threshold;
-      const reason = faceMatched
-        ? `Face matched the ${idType} record (${confidence}% confidence; threshold ${threshold}%).`
-        : (data?.reason || responseData?.reason || `Face match failed (${confidence}% confidence; threshold ${threshold}%).`);
+      const providerStatus = String(data?.status || "").toLowerCase();
+      const selfieVerification = data?.validations?.selfie?.selfieVerification || {};
+      const faceMatched = providerStatus === "found" && selfieVerification?.match === true;
+      const confidence = Number(selfieVerification?.confidenceLevel ?? 0);
+      const validationMessage = String(data?.validations?.validationMessages || "").trim();
 
-      const now = new Date().toISOString();
+      if (providerStatus === "pending") {
+        const pendingAt = new Date().toISOString();
+        const pendingReason = String(data?.reason || validationMessage || "Youverify verification is pending.").slice(0, 500);
+        await supabaseRequest(`provider_verifications?id=eq.${encodeURIComponent(verification.id)}`, {
+          method: "PATCH",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({
+            biometric_status: "pending",
+            biometric_provider: "youverify",
+            biometric_job_id: data?.id ? String(data.id) : null,
+            biometric_result_code: `${resultCodePrefix}:pending`,
+            biometric_result_text: pendingReason,
+            biometric_updated_at: pendingAt,
+            updated_at: pendingAt,
+          }),
+        });
+        return json({
+          ok: true,
+          status: "pending",
+          result_text: pendingReason,
+          provider_id: provider.id,
+          sandbox_sample_used: useSandboxSample,
+        }, 202);
+      }
+
+      const reason = faceMatched
+        ? `Face matched the ${idType} record${Number.isFinite(confidence) ? ` (${confidence}% confidence)` : ""}.`
+        : String(data?.reason || validationMessage || `Face match failed${Number.isFinite(confidence) ? ` (${confidence}% confidence)` : ""}.`);
+
+      const completedAt = new Date().toISOString();
       await supabaseRequest(`provider_verifications?id=eq.${encodeURIComponent(verification.id)}`, {
         method: "PATCH",
         headers: { Prefer: "return=minimal" },
@@ -237,18 +264,18 @@ Deno.serve(async (req) => {
           biometric_status: faceMatched ? "verified" : "failed",
           biometric_provider: "youverify",
           biometric_job_id: data?.id ? String(data.id) : null,
-          biometric_result_code: `${verificationType}:${data?.status || "unknown"}`,
-          biometric_result_text: String(reason).slice(0, 500),
-          biometric_verified_at: faceMatched ? now : null,
-          biometric_updated_at: now,
-          updated_at: now,
+          biometric_result_code: `${resultCodePrefix}:${providerStatus || "unknown"}`,
+          biometric_result_text: reason.slice(0, 500),
+          biometric_verified_at: faceMatched ? completedAt : null,
+          biometric_updated_at: completedAt,
+          updated_at: completedAt,
         }),
       });
 
       return json({
         ok: faceMatched,
         status: faceMatched ? "verified" : "failed",
-        result_text: String(reason).slice(0, 500),
+        result_text: reason.slice(0, 500),
         provider_id: provider.id,
         sandbox_sample_used: useSandboxSample,
       }, faceMatched ? 200 : 422);
