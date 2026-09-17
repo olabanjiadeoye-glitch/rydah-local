@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession } from "@/lib/supabase";
+import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
 
 type ProviderLookup = {
   id: string;
@@ -97,7 +98,7 @@ export default function PostJobPage() {
   );
 
   const liveServices = useMemo(
-    () => [...new Set(availability.filter((row) => row.location === location).map((row) => row.service_category))],
+    () => [...new Set(availability.filter((row) => row.location === location).map((row) => row.service_category))].sort(),
     [availability, location],
   );
 
@@ -110,6 +111,12 @@ export default function PostJobPage() {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!session) return;
+
+    if (containsOffPlatformContact(description)) {
+      setError(offPlatformContactMessage);
+      return;
+    }
+
     setSubmitting(true);
     setError("");
 
@@ -141,7 +148,7 @@ export default function PostJobPage() {
           provider_id: providerId,
           service_category: service,
           location,
-          description,
+          description: description.trim(),
           is_urgent: urgent,
           status: "open",
           contact_name: contactName.trim(),
@@ -192,6 +199,10 @@ export default function PostJobPage() {
           </div>
         ) : (
           <form onSubmit={submit} className="rounded-3xl border border-white/10 bg-[#121212] p-6">
+            <div className="mb-5 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-4 text-sm leading-6 text-zinc-300">
+              <strong className="text-[#D4AF37]">Keep the booking on Rydah.</strong> Put your contact number only in the Phone field below. Job descriptions cannot contain phone numbers, email addresses, WhatsApp details or external links.
+            </div>
+
             {selectedProvider && (
               <div className="mb-5 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">
                 Provider selected: <strong>{selectedProvider.business_name}</strong> • {selectedProvider.service_category} • {selectedProvider.location}
@@ -241,7 +252,8 @@ export default function PostJobPage() {
             )}
 
             <label className="mt-5 block text-sm font-bold">Describe the job</label>
-            <textarea required minLength={10} rows={5} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Tell the provider what you need..." className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+            <textarea required minLength={10} rows={5} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Tell the provider what you need. Do not include contact or payment details." className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+            <p className="mt-2 text-xs text-zinc-500">Rydah blocks contact details and external links in descriptions to reduce off-platform booking and protect the service record.</p>
 
             <label className="mt-5 flex items-center gap-3 rounded-2xl border border-white/10 bg-[#1A1A1A] p-4">
               <input type="checkbox" checked={urgent} onChange={(event) => setUrgent(event.target.checked)} />
