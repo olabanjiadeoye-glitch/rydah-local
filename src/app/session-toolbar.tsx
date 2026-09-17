@@ -94,6 +94,7 @@ export default function SessionToolbar() {
           {notifications}
           <a href="/provider-dashboard" className={goldLink}>Dashboard</a>
           <a href="/provider-onboarding" className={neutralLink}>Verify Profile</a>
+          <a href="/provider-interest" className={neutralLink}>Add Profession</a>
           <a href="/earnings" className={goldLink}>Earnings</a>
           <a href="/payouts" className={goldLink}>Payouts</a>
           <a href="/providers" className={neutralLink}>Marketplace</a>
@@ -105,6 +106,7 @@ export default function SessionToolbar() {
           {notifications}
           <a href="/admin-dashboard" className={adminLink}>Admin Dashboard</a>
           <a href="/admin/providers" className={adminLink}>Verification</a>
+          <a href="/admin/service-interests" className={adminLink}>New Professions</a>
           <a href="/admin/finance" className={adminLink}>Finance</a>
           <a href="/payout-admin" className={adminLink}>Payout Admin</a>
           <a href="/providers" className={neutralLink}>Marketplace</a>
