@@ -304,7 +304,15 @@ export default function PaymentsPage() {
                 <p className="mt-4 break-all text-sm text-zinc-400">Reference: {payment.reference}</p>
                 <p className="mt-2 text-sm text-zinc-400">Rydah commission: {naira(payment.commission_amount_naira)} ({Number(payment.commission_rate_percent)}%)</p>
                 <p className="mt-1 text-sm text-zinc-400">Provider net: {naira(payment.provider_net_naira)}</p>
-                {payment.is_test && <p className="mt-2 text-xs text-amber-300">Paystack test transaction — no real funds moved.</p>}
+                {payment.is_test && payment.method === "paystack" && (
+                  <p className="mt-2 text-xs text-amber-300">Paystack test transaction — no real funds moved.</p>
+                )}
+                {payment.is_test && payment.method === "cash" && (
+                  <p className="mt-2 text-xs text-amber-300">Rydah test cash record — no real cash is being treated as received.</p>
+                )}
+                {payment.is_test && payment.method === "sandbox_card" && (
+                  <p className="mt-2 text-xs text-amber-300">Sandbox card transaction — no real funds moved.</p>
+                )}
               </div>
             )}
 
