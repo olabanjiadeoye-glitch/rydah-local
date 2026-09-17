@@ -139,7 +139,8 @@ Deno.serve(async (req) => {
 
       if (idNumber.length < 5) return json({ error: "Enter the full ID number for this verification only" }, 400);
 
-      if (useSandboxSample) {
+      const isSandboxTestNin = config.environment === "sandbox" && idNumber === "11111111111";
+      if (useSandboxSample || isSandboxTestNin) {
         if (config.environment !== "sandbox") {
           return json({ error: "The built-in test image is available only while Youverify is in sandbox mode" }, 400);
         }
@@ -248,7 +249,7 @@ Deno.serve(async (req) => {
           status: "pending",
           result_text: pendingReason,
           provider_id: provider.id,
-          sandbox_sample_used: useSandboxSample,
+          sandbox_sample_used: useSandboxSample || isSandboxTestNin,
         }, 202);
       }
 
@@ -277,7 +278,7 @@ Deno.serve(async (req) => {
         status: faceMatched ? "verified" : "failed",
         result_text: reason.slice(0, 500),
         provider_id: provider.id,
-        sandbox_sample_used: useSandboxSample,
+        sandbox_sample_used: useSandboxSample || isSandboxTestNin,
       }, faceMatched ? 200 : 422);
     }
 
