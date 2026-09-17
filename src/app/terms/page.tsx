@@ -4,7 +4,7 @@ export default function TermsPage() {
       <article className="mx-auto max-w-3xl">
         <a href="/" className="text-sm font-black tracking-[0.2em] text-[#D4AF37]">RYDAH LOCAL</a>
         <h1 className="mt-4 text-4xl font-black">Terms of Use</h1>
-        <p className="mt-3 text-sm text-zinc-500">Effective: 16 September 2026</p>
+        <p className="mt-3 text-sm text-zinc-500">Effective: 17 September 2026</p>
 
         <div className="mt-8 space-y-8 text-sm leading-7 text-zinc-300">
           <section>
@@ -18,18 +18,23 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-black text-white">Jobs and agreements</h2>
-            <p className="mt-2">Customers and providers are responsible for confirming the scope, timing, price, access requirements, materials, and other job details before work begins. Users should not use Rydah Local for unlawful, dangerous, or prohibited activities.</p>
+            <h2 className="text-xl font-black text-white">Jobs, contact details, and on-platform booking</h2>
+            <p className="mt-2">Customers and providers are responsible for confirming the scope, timing, price, access requirements, materials, and other job details before work begins. Rydah may restrict contact details and external links until appropriate stages of a booking. Users must not use Rydah primarily to obtain leads and then deliberately move the same job off-platform to avoid Rydah fees, safety controls, records, or commission. Users should not use Rydah Local for unlawful, dangerous, or prohibited activities.</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-black text-white">Payments and commission</h2>
-            <p className="mt-2">Where online payment is offered, payments are processed through Paystack. Rydah Local currently applies a 15% platform commission to eligible provider earnings. The customer-facing job price and the provider settlement amount are shown before payment where applicable. Payment processor fees, reversals, refunds, disputes, chargebacks, and settlement timing may affect final amounts and availability.</p>
+            <h2 className="text-xl font-black text-white">Payments, cash, and commission</h2>
+            <p className="mt-2">Where online payment is offered, payments are processed through Paystack. Rydah Local currently applies a 15% platform commission to eligible provider earnings. The customer-facing job price and provider settlement amount are shown where applicable. When an eligible customer selects cash, the related Rydah commission remains payable by the provider. Rydah may temporarily restrict new job acceptance when a provider reaches a stated unpaid cash-commission threshold until that commission is settled. Payment processor fees, reversals, refunds, disputes, chargebacks, and settlement timing may affect final amounts and availability.</p>
           </section>
 
           <section>
-            <h2 className="text-xl font-black text-white">Safety</h2>
-            <p className="mt-2">Use reasonable judgment when meeting or admitting another user to a property. Rydah Local is not an emergency service. If there is an immediate threat to life, safety, or property, contact the appropriate emergency services rather than relying on the marketplace.</p>
+            <h2 className="text-xl font-black text-white">Arrival and safety checks</h2>
+            <p className="mt-2">Rydah may provide one-time arrival codes and identity or face-matching checks to help confirm that the assigned provider is the person who arrived. These controls reduce risk but cannot eliminate it. Use reasonable judgment when meeting or admitting another user to a property. Rydah Local is not an emergency service. If there is an immediate threat to life, safety, or property, contact the appropriate emergency services rather than relying on the marketplace.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-black text-white">Rydah Care assistant</h2>
+            <p className="mt-2">Rydah Care provides general navigation and customer-support guidance. It may use automated or AI-assisted responses. It does not replace human review for payment disputes, refunds, identity concerns, emergencies, or legal matters. Users should never submit passwords, one-time passwords, card PINs, full payment-card details, API keys, NINs, passport numbers, or other secrets through the assistant.</p>
           </section>
 
           <section>
