@@ -3,6 +3,14 @@
 import { FormEvent, useEffect, useState } from "react";
 import { updatePasswordWithRecoveryToken } from "@/lib/supabase";
 
+function strongPasswordError(password: string) {
+  if (password.length < 8) return "Password must be at least 8 characters.";
+  if (!/[a-z]/.test(password)) return "Password must include a lowercase letter.";
+  if (!/[A-Z]/.test(password)) return "Password must include an uppercase letter.";
+  if (!/\d/.test(password)) return "Password must include a number.";
+  return "";
+}
+
 export default function ResetPasswordPage() {
   const [accessToken, setAccessToken] = useState("");
   const [password, setPassword] = useState("");
@@ -34,8 +42,9 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+    const passwordError = strongPasswordError(password);
+    if (passwordError) {
+      setError(passwordError);
       return;
     }
 
@@ -70,14 +79,14 @@ export default function ResetPasswordPage() {
       <section className="mx-auto max-w-xl px-5 py-12">
         <div className="rounded-3xl border border-white/10 bg-[#121212] p-7">
           <h1 className="text-3xl font-black">Choose a new password</h1>
-          <p className="mt-3 text-zinc-400">Set a new password for your Rydah account.</p>
+          <p className="mt-3 text-zinc-400">Use at least 8 characters with uppercase, lowercase and a number.</p>
 
           <form onSubmit={submit} className="mt-6">
             <label className="block text-sm font-bold">New password</label>
-            <input required minLength={6} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+            <input required minLength={8} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="8+ chars, upper/lowercase & number" autoComplete="new-password" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
 
             <label className="mt-5 block text-sm font-bold">Confirm new password</label>
-            <input required minLength={6} type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat new password" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+            <input required minLength={8} type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat new password" autoComplete="new-password" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
 
             {message && <div className="mt-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">{message}</div>}
             {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
