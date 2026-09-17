@@ -1,14 +1,27 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 
-type ProviderLookup = { id: string };
+type ProviderLookup = {
+  id: string;
+  business_name: string;
+  slug: string | null;
+  service_category: string;
+  location: string;
+};
 type CreatedJob = { id: string };
+
+type AvailabilityRow = {
+  service_category: string;
+  location: string;
+};
 
 export default function PostJobPage() {
   const [urgent, setUrgent] = useState(false);
   const [provider, setProvider] = useState("");
+  const [selectedProvider, setSelectedProvider] = useState<ProviderLookup | null>(null);
+  const [availability, setAvailability] = useState<AvailabilityRow[]>([]);
   const [session, setSession] = useState<AuthSession | null>(null);
   const [ready, setReady] = useState(false);
   const [contactName, setContactName] = useState("");
@@ -24,8 +37,9 @@ export default function PostJobPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const requestedProvider = params.get("provider") ?? "";
     setUrgent(params.get("urgent") === "1");
-    setProvider(params.get("provider") ?? "");
+    setProvider(requestedProvider);
 
     const storedSession = getStoredSession();
     if (!storedSession) {
@@ -40,8 +54,58 @@ export default function PostJobPage() {
 
     setSession(storedSession);
     if (storedSession.user.email) setContactEmail(storedSession.user.email);
-    setReady(true);
+
+    const initialise = async () => {
+      try {
+        if (requestedProvider) {
+          const rows = await restGet<ProviderLookup[]>(
+            `providers?select=id,business_name,slug,service_category,location&slug=eq.${encodeURIComponent(requestedProvider)}&user_id=not.is.null&is_verified=eq.true&is_available=eq.true&limit=1`,
+            storedSession.access_token,
+          );
+          const match = rows[0] ?? null;
+          if (!match) {
+            setError("This provider is not currently available. Please return to the marketplace and choose another verified provider.");
+          } else {
+            setSelectedProvider(match);
+            setService(match.service_category);
+            setLocation(match.location);
+          }
+        } else {
+          const rows = await restGet<AvailabilityRow[]>(
+            "providers?select=service_category,location&user_id=not.is.null&is_verified=eq.true&is_available=eq.true",
+            storedSession.access_token,
+          );
+          setAvailability(rows);
+          if (rows.length > 0) {
+            const firstLocation = rows.some((row) => row.location === "Lekki, Lagos") ? "Lekki, Lagos" : rows[0].location;
+            setLocation(firstLocation);
+          }
+        }
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "Unable to load live provider availability.");
+      } finally {
+        setReady(true);
+      }
+    };
+
+    void initialise();
   }, []);
+
+  const liveLocations = useMemo(
+    () => [...new Set(availability.map((row) => row.location))],
+    [availability],
+  );
+
+  const liveServices = useMemo(
+    () => [...new Set(availability.filter((row) => row.location === location).map((row) => row.service_category))],
+    [availability, location],
+  );
+
+  const changeLocation = (nextLocation: string) => {
+    setLocation(nextLocation);
+    const servicesThere = availability.filter((row) => row.location === nextLocation).map((row) => row.service_category);
+    if (!servicesThere.includes(service)) setService("");
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -52,16 +116,18 @@ export default function PostJobPage() {
     try {
       let providerId: string | null = null;
 
-      if (provider) {
+      if (selectedProvider) {
+        providerId = selectedProvider.id;
+      } else if (provider) {
         const matches = await restGet<ProviderLookup[]>(
-          `providers?select=id&slug=eq.${encodeURIComponent(provider)}&user_id=not.is.null&is_verified=eq.true&is_available=eq.true&limit=1`,
+          `providers?select=id,business_name,slug,service_category,location&slug=eq.${encodeURIComponent(provider)}&user_id=not.is.null&is_verified=eq.true&is_available=eq.true&limit=1`,
           session.access_token,
         );
         providerId = matches[0]?.id ?? null;
         if (!providerId) throw new Error("This provider is not currently available. Please choose another verified provider.");
       } else {
         const matches = await restGet<ProviderLookup[]>(
-          `providers?select=id&user_id=not.is.null&service_category=eq.${encodeURIComponent(service)}&location=eq.${encodeURIComponent(location)}&is_verified=eq.true&is_available=eq.true&order=rating.desc&limit=1`,
+          `providers?select=id,business_name,slug,service_category,location&user_id=not.is.null&service_category=eq.${encodeURIComponent(service)}&location=eq.${encodeURIComponent(location)}&is_verified=eq.true&is_available=eq.true&order=rating.desc&limit=1`,
           session.access_token,
         );
         providerId = matches[0]?.id ?? null;
@@ -126,8 +192,16 @@ export default function PostJobPage() {
           </div>
         ) : (
           <form onSubmit={submit} className="rounded-3xl border border-white/10 bg-[#121212] p-6">
-            {provider && <div className="mb-5 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">Provider selected: {provider.replaceAll("-", " ")}</div>}
-            {!provider && <div className="mb-5 rounded-2xl border border-white/10 bg-[#1A1A1A] p-4 text-sm text-zinc-400">Rydah will automatically match this request with an available verified provider for the selected service and area.</div>}
+            {selectedProvider && (
+              <div className="mb-5 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">
+                Provider selected: <strong>{selectedProvider.business_name}</strong> • {selectedProvider.service_category} • {selectedProvider.location}
+              </div>
+            )}
+            {!provider && (
+              <div className="mb-5 rounded-2xl border border-white/10 bg-[#1A1A1A] p-4 text-sm text-zinc-400">
+                Only services with a genuine verified provider currently online are shown below. Rydah will match your request automatically.
+              </div>
+            )}
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -144,22 +218,27 @@ export default function PostJobPage() {
             <input required value={contactEmail} onChange={(event) => setContactEmail(event.target.value)} type="email" placeholder="you@example.com" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
 
             <label className="mt-5 block text-sm font-bold">What service do you need?</label>
-            <select required value={service} onChange={(event) => setService(event.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
-              <option value="">Choose a service</option>
-              <option>Electrician</option>
-              <option>Plumber</option>
-              <option>AC Technician</option>
-              <option>Generator</option>
-              <option>Cleaning</option>
-              <option>Mechanic</option>
-            </select>
+            {selectedProvider ? (
+              <div className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-zinc-200">{selectedProvider.service_category}</div>
+            ) : (
+              <select required value={service} onChange={(event) => setService(event.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
+                <option value="">Choose an available service</option>
+                {liveServices.map((item) => <option key={item}>{item}</option>)}
+              </select>
+            )}
 
             <label className="mt-5 block text-sm font-bold">Location</label>
-            <select required value={location} onChange={(event) => setLocation(event.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
-              <option>Lekki, Lagos</option>
-              <option>Victoria Island, Lagos</option>
-              <option>Ikeja, Lagos</option>
-            </select>
+            {selectedProvider ? (
+              <div className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-zinc-200">{selectedProvider.location}</div>
+            ) : (
+              <select required value={location} onChange={(event) => changeLocation(event.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
+                {liveLocations.map((item) => <option key={item}>{item}</option>)}
+              </select>
+            )}
+
+            {!selectedProvider && availability.length === 0 && (
+              <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-950/20 p-4 text-sm text-amber-200">No real verified providers are currently online. Please check back shortly.</div>
+            )}
 
             <label className="mt-5 block text-sm font-bold">Describe the job</label>
             <textarea required minLength={10} rows={5} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Tell the provider what you need..." className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
@@ -171,7 +250,7 @@ export default function PostJobPage() {
 
             {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
-            <button disabled={submitting} type="submit" className="mt-6 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black disabled:opacity-60">{submitting ? "Sending request..." : "Submit Job Request"}</button>
+            <button disabled={submitting || (!selectedProvider && availability.length === 0)} type="submit" className="mt-6 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black disabled:opacity-60">{submitting ? "Sending request..." : "Submit Job Request"}</button>
           </form>
         )}
       </section>
