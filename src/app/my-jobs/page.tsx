@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { getStoredSession, restGet, restInsert, restPatch, type AuthSession } from "@/lib/supabase";
+import { getStoredSession, restGet, restInsert, restPatch, restRpc, type AuthSession } from "@/lib/supabase";
 
 type JobStatus = "open" | "matched" | "accepted" | "in_progress" | "completed" | "cancelled";
 type QuoteStatus = "not_sent" | "pending" | "accepted" | "rejected";
@@ -19,7 +19,8 @@ type JobRow = {
   quote_status: QuoteStatus;
   quote_accepted_at: string | null;
   payment_status: "unpaid" | "pending" | "paid" | "cash_due" | "failed" | "refunded";
-  providers: { business_name: string; starting_price: number | null } | null;
+  arrival_verified_at: string | null;
+  providers: { business_name: string; starting_price: number | null; is_verified: boolean } | null;
 };
 
 type ReviewRow = {
@@ -56,6 +57,7 @@ export default function MyJobsPage() {
   const [message, setMessage] = useState("");
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [comments, setComments] = useState<Record<string, string>>({});
+  const [arrivalPins, setArrivalPins] = useState<Record<string, string>>({});
 
   const reviewByJob = useMemo(() => new Map(reviews.map((review) => [review.job_id, review])), [reviews]);
 
@@ -75,7 +77,7 @@ export default function MyJobsPage() {
     try {
       const [jobRows, reviewRows] = await Promise.all([
         restGet<JobRow[]>(
-          `jobs?select=id,provider_id,service_category,location,description,is_urgent,status,created_at,quoted_amount,quote_status,quote_accepted_at,payment_status,providers(business_name,starting_price)&customer_id=eq.${currentSession.user.id}&order=created_at.desc`,
+          `jobs?select=id,provider_id,service_category,location,description,is_urgent,status,created_at,quoted_amount,quote_status,quote_accepted_at,payment_status,arrival_verified_at,providers(business_name,starting_price,is_verified)&customer_id=eq.${currentSession.user.id}&order=created_at.desc`,
           currentSession.access_token,
         ),
         restGet<ReviewRow[]>(
@@ -108,9 +110,25 @@ export default function MyJobsPage() {
       setJobs((current) => current.map((item) => (
         item.id === job.id ? { ...item, ...updated[0], providers: item.providers } : item
       )));
-      setMessage(decision === "accepted" ? "Quote accepted. The provider can now start the job." : "Quote rejected. The provider can send you a revised quote.");
+      setMessage(decision === "accepted" ? "Quote accepted. When the provider arrives, generate the Arrival PIN before work starts." : "Quote rejected. The provider can send you a revised quote.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to respond to the quote.");
+    } finally {
+      setSavingJobId("");
+    }
+  }
+
+  async function issueArrivalPin(job: JobRow) {
+    if (!session) return;
+    setSavingJobId(job.id);
+    setError("");
+    setMessage("");
+    try {
+      const pin = await restRpc<string>("issue_arrival_code", { p_job_id: job.id }, session.access_token);
+      setArrivalPins((current) => ({ ...current, [job.id]: pin }));
+      setMessage("Arrival PIN generated. Only give it to the provider who is physically with you. It expires in 30 minutes.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to generate the arrival PIN.");
     } finally {
       setSavingJobId("");
     }
@@ -193,7 +211,7 @@ export default function MyJobsPage() {
           <div>
             <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">CUSTOMER DASHBOARD</p>
             <h2 className="mt-1 text-3xl font-black">Track your requests</h2>
-            <p className="mt-2 text-zinc-400">Review quotes, follow provider progress and pay completed jobs.</p>
+            <p className="mt-2 text-zinc-400">Review quotes, verify provider arrival, follow progress and pay completed jobs.</p>
           </div>
           <button type="button" onClick={() => session && void loadData(session)} className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-bold text-zinc-300">Refresh Status</button>
         </div>
@@ -217,6 +235,7 @@ export default function MyJobsPage() {
               const amount = job.quoted_amount ?? null;
               const busy = savingJobId === job.id;
               const canCancel = ["open", "matched", "accepted"].includes(job.status);
+              const arrivalPin = arrivalPins[job.id] || "";
 
               return (
                 <article key={job.id} className="rounded-3xl border border-white/10 bg-[#121212] p-6">
@@ -225,6 +244,7 @@ export default function MyJobsPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="text-2xl font-black">{job.service_category}</h3>
                         {job.is_urgent && <span className="rounded-full bg-red-500/15 px-3 py-1 text-xs font-black text-red-300">URGENT</span>}
+                        {job.providers?.is_verified && <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-400">✓ RYDAH VERIFIED</span>}
                       </div>
                       <p className="mt-2 text-zinc-400">{job.location}</p>
                       <p className="mt-4 text-zinc-300">{job.description}</p>
@@ -253,8 +273,32 @@ export default function MyJobsPage() {
                           </div>
                         )}
                       </div>
-                      {job.quote_status === "accepted" && <p className="mt-3 text-sm text-emerald-300">Quote accepted. The provider may now start the job.</p>}
+                      {job.quote_status === "accepted" && <p className="mt-3 text-sm text-emerald-300">Quote accepted. Verify the provider on arrival before work begins.</p>}
                       {job.quote_status === "rejected" && <p className="mt-3 text-sm text-amber-300">Quote rejected. Wait for the provider to send a revised amount.</p>}
+                    </div>
+                  )}
+
+                  {job.status === "accepted" && job.quote_status === "accepted" && job.provider_id && (
+                    <div className={`mt-5 rounded-2xl border p-5 ${job.arrival_verified_at ? "border-emerald-500/25 bg-emerald-500/10" : "border-[#D4AF37]/25 bg-[#D4AF37]/5"}`}>
+                      <p className={`text-sm font-black ${job.arrival_verified_at ? "text-emerald-400" : "text-[#D4AF37]"}`}>PROVIDER ARRIVAL SAFETY CHECK</p>
+                      {job.arrival_verified_at ? (
+                        <>
+                          <p className="mt-2 text-xl font-black text-emerald-300">✓ Arrival PIN verified</p>
+                          <p className="mt-2 text-sm text-zinc-300">The assigned provider confirmed the one-time code from your account. Work can now begin.</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="mt-2 text-sm leading-6 text-zinc-300">Wait until the provider is physically with you, then generate a one-time 6-digit PIN. Do not share it by phone or message before they arrive.</p>
+                          <button disabled={busy} onClick={() => void issueArrivalPin(job)} className="mt-4 rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black disabled:opacity-50">{arrivalPin ? "Generate New PIN" : "Generate Arrival PIN"}</button>
+                          {arrivalPin && (
+                            <div className="mt-4 rounded-2xl border border-white/10 bg-black/30 p-5 text-center">
+                              <p className="text-xs font-black tracking-[0.2em] text-zinc-500">TELL THE PROVIDER THIS PIN</p>
+                              <p className="mt-2 text-4xl font-black tracking-[0.25em] text-[#D4AF37]">{arrivalPin}</p>
+                              <p className="mt-3 text-xs text-zinc-500">Expires in 30 minutes. A new PIN invalidates the previous one.</p>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
                   )}
 
