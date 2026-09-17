@@ -7,6 +7,7 @@ import {
   restGet,
   restInsert,
   restPatch,
+  restRpc,
   type AuthSession,
 } from "@/lib/supabase";
 
@@ -43,6 +44,7 @@ type JobRow = {
   quote_status: QuoteStatus;
   quote_accepted_at: string | null;
   payment_status: string;
+  arrival_verified_at: string | null;
 };
 
 const categories = ["Electrician", "Plumber", "AC Technician", "Generator", "Cleaning", "Mechanic"];
@@ -66,6 +68,7 @@ export default function ProviderDashboardPage() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [quoteDrafts, setQuoteDrafts] = useState<Record<string, string>>({});
+  const [arrivalCodes, setArrivalCodes] = useState<Record<string, string>>({});
 
   const [businessName, setBusinessName] = useState("");
   const [category, setCategory] = useState("Electrician");
@@ -219,6 +222,29 @@ export default function ProviderDashboardPage() {
     }
   }
 
+  async function verifyArrivalPin(job: JobRow) {
+    if (!session) return;
+    const code = (arrivalCodes[job.id] || "").trim();
+    if (!/^\d{6}$/.test(code)) {
+      setError("Enter the 6-digit Arrival PIN shown on the customer's Rydah account.");
+      return;
+    }
+
+    setSavingJobId(job.id);
+    setError("");
+    setMessage("");
+    try {
+      await restRpc<boolean>("verify_job_arrival", { p_job_id: job.id, p_code: code }, session.access_token);
+      setArrivalCodes((current) => ({ ...current, [job.id]: "" }));
+      setMessage("Arrival PIN verified. The customer has confirmed you are at the correct job. You can now start work.");
+      await loadDashboard(session);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to verify the Arrival PIN.");
+    } finally {
+      setSavingJobId("");
+    }
+  }
+
   function signOut() {
     clearSession();
     window.location.href = "/";
@@ -317,7 +343,8 @@ export default function ProviderDashboardPage() {
                   {jobs.map((job) => {
                     const busy = savingJobId === job.id;
                     const quoteEditable = ["open", "matched", "accepted"].includes(job.status) && job.payment_status !== "paid";
-                    const canStart = job.status === "accepted" && job.quote_status === "accepted";
+                    const canStart = job.status === "accepted" && job.quote_status === "accepted" && Boolean(job.arrival_verified_at);
+                    const needsArrivalPin = job.status === "accepted" && job.quote_status === "accepted" && !job.arrival_verified_at;
                     return (
                       <article key={job.id} className="rounded-3xl border border-white/10 bg-[#121212] p-6">
                         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -354,10 +381,25 @@ export default function ProviderDashboardPage() {
                           </div>
                         )}
 
+                        {needsArrivalPin && (
+                          <div className="mt-5 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 p-5">
+                            <p className="text-sm font-black text-[#D4AF37]">ARRIVAL PIN REQUIRED</p>
+                            <p className="mt-2 text-sm leading-6 text-zinc-300">When you are physically with the customer, ask them to open My Jobs and generate their one-time 6-digit Arrival PIN. Enter it below before starting work.</p>
+                            <div className="mt-4 flex flex-wrap gap-3">
+                              <input inputMode="numeric" pattern="[0-9]*" maxLength={6} value={arrivalCodes[job.id] ?? ""} onChange={(e) => setArrivalCodes((current) => ({ ...current, [job.id]: e.target.value.replace(/\D/g, "").slice(0, 6) }))} placeholder="6-digit PIN" className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1A1A1A] px-4 py-3 text-center text-lg font-black tracking-[0.18em] outline-none" />
+                              <button disabled={busy || (arrivalCodes[job.id] || "").length !== 6} onClick={() => void verifyArrivalPin(job)} className="rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black disabled:opacity-50">Verify Arrival</button>
+                            </div>
+                          </div>
+                        )}
+
+                        {job.arrival_verified_at && job.status === "accepted" && (
+                          <div className="mt-5 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm text-emerald-300">✓ Customer Arrival PIN verified. You may start the job.</div>
+                        )}
+
                         {!['completed', 'cancelled'].includes(job.status) && (
                           <div className="mt-5 flex flex-wrap gap-2">
                             {['open', 'matched'].includes(job.status) && <button disabled={busy} onClick={() => void updateJobStatus(job, 'accepted')} className="rounded-xl bg-[#D4AF37] px-4 py-3 text-sm font-black text-black disabled:opacity-50">Accept Job</button>}
-                            {job.status === 'accepted' && !canStart && <span className="rounded-xl border border-white/10 px-4 py-3 text-sm text-zinc-400">Customer must accept your quote before work starts</span>}
+                            {job.status === 'accepted' && job.quote_status !== 'accepted' && <span className="rounded-xl border border-white/10 px-4 py-3 text-sm text-zinc-400">Customer must accept your quote before work starts</span>}
                             {canStart && <button disabled={busy} onClick={() => void updateJobStatus(job, 'in_progress')} className="rounded-xl bg-[#D4AF37] px-4 py-3 text-sm font-black text-black disabled:opacity-50">Start Job</button>}
                             {job.status === 'in_progress' && <button disabled={busy} onClick={() => void updateJobStatus(job, 'completed')} className="rounded-xl border border-white/10 px-4 py-3 text-sm font-black disabled:opacity-50">Mark Completed</button>}
                           </div>
