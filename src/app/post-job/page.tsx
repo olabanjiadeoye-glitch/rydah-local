@@ -54,14 +54,14 @@ export default function PostJobPage() {
 
       if (provider) {
         const matches = await restGet<ProviderLookup[]>(
-          `providers?select=id&slug=eq.${encodeURIComponent(provider)}&is_verified=eq.true&is_available=eq.true&limit=1`,
+          `providers?select=id&slug=eq.${encodeURIComponent(provider)}&user_id=not.is.null&is_verified=eq.true&is_available=eq.true&limit=1`,
           session.access_token,
         );
         providerId = matches[0]?.id ?? null;
         if (!providerId) throw new Error("This provider is not currently available. Please choose another verified provider.");
       } else {
         const matches = await restGet<ProviderLookup[]>(
-          `providers?select=id&service_category=eq.${encodeURIComponent(service)}&location=eq.${encodeURIComponent(location)}&is_verified=eq.true&is_available=eq.true&order=rating.desc&limit=1`,
+          `providers?select=id&user_id=not.is.null&service_category=eq.${encodeURIComponent(service)}&location=eq.${encodeURIComponent(location)}&is_verified=eq.true&is_available=eq.true&order=rating.desc&limit=1`,
           session.access_token,
         );
         providerId = matches[0]?.id ?? null;
