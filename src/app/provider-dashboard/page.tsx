@@ -117,10 +117,7 @@ export default function ProviderDashboardPage() {
       }
 
       const [jobRows, verificationRows] = await Promise.all([
-        restGet<JobRow[]>(
-          `jobs?provider_id=eq.${currentProvider.id}&select=*&order=created_at.desc`,
-          currentSession.access_token,
-        ),
+        restRpc<JobRow[]>("provider_job_feed", {}, currentSession.access_token),
         restGet<ProviderVerificationRow[]>(
           `provider_verifications?provider_id=eq.${currentProvider.id}&select=biometric_status,biometric_job_id&limit=1`,
           currentSession.access_token,
@@ -200,15 +197,13 @@ export default function ProviderDashboardPage() {
     setError("");
     setMessage("");
     try {
-      const updated = await restPatch<JobRow[]>(
-        "jobs",
-        `id=eq.${job.id}`,
-        { status },
+      await restRpc<Record<string, unknown>>(
+        "provider_set_job_status",
+        { p_job_id: job.id, p_status: status },
         session.access_token,
       );
-      if (!updated[0]) throw new Error("The updated job was not returned.");
-      setJobs((current) => current.map((item) => (item.id === job.id ? updated[0] : item)));
       setMessage(`Job marked as ${label(status)}.`);
+      await loadDashboard(session);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to update job.");
     } finally {
@@ -228,16 +223,13 @@ export default function ProviderDashboardPage() {
     setError("");
     setMessage("");
     try {
-      const updated = await restPatch<JobRow[]>(
-        "jobs",
-        `id=eq.${job.id}`,
-        { quoted_amount: Math.round(amount) },
+      await restRpc<Record<string, unknown>>(
+        "provider_send_job_quote",
+        { p_job_id: job.id, p_amount: Math.round(amount) },
         session.access_token,
       );
-      if (!updated[0]) throw new Error("The quote update was not returned.");
-      setJobs((current) => current.map((item) => (item.id === job.id ? updated[0] : item)));
-      setQuoteDrafts((current) => ({ ...current, [job.id]: String(updated[0].quoted_amount ?? amount) }));
-      setMessage(`Quote of ${naira(updated[0].quoted_amount ?? amount)} sent to the customer.`);
+      setMessage(`Quote of ${naira(Math.round(amount))} sent to the customer.`);
+      await loadDashboard(session);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to send quote.");
     } finally {
@@ -361,7 +353,7 @@ export default function ProviderDashboardPage() {
             </div>
 
             <div className="mt-6 rounded-3xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5 text-sm leading-6 text-zinc-300">
-              <strong className="text-[#D4AF37]">Keep Rydah jobs on-platform.</strong> Customer phone and email are released after the customer accepts your quote. Quotes, arrival checks and payments should remain inside Rydah so the job and commission record stay protected.
+              <strong className="text-[#D4AF37]">Keep Rydah jobs on-platform.</strong> Customer phone and email are released only after the customer accepts your quote. Direct provider access to hidden contact fields is blocked by the Rydah backend, not just hidden on screen.
             </div>
 
             <div className="mt-8">
@@ -436,9 +428,7 @@ export default function ProviderDashboardPage() {
                         )}
 
                         {pinVerified && job.status === "accepted" && !needsArrivalFace && (
-                          <div className="mt-5 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm text-emerald-300">
-                            ✓ Arrival safety checks complete. You may start the job.
-                          </div>
+                          <div className="mt-5 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm text-emerald-300">✓ Arrival safety checks complete. You may start the job.</div>
                         )}
 
                         {faceVerified && (
