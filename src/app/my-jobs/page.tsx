@@ -105,7 +105,9 @@ export default function MyJobsPage() {
         session.access_token,
       );
       if (!updated[0]) throw new Error("The quote response was not returned.");
-      setJobs((current) => current.map((item) => (item.id === job.id ? updated[0] : item)));
+      setJobs((current) => current.map((item) => (
+        item.id === job.id ? { ...item, ...updated[0], providers: item.providers } : item
+      )));
       setMessage(decision === "accepted" ? "Quote accepted. The provider can now start the job." : "Quote rejected. The provider can send you a revised quote.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to respond to the quote.");
@@ -127,7 +129,9 @@ export default function MyJobsPage() {
         session.access_token,
       );
       if (!updated[0]) throw new Error("The cancellation was not returned.");
-      setJobs((current) => current.map((item) => (item.id === job.id ? updated[0] : item)));
+      setJobs((current) => current.map((item) => (
+        item.id === job.id ? { ...item, ...updated[0], providers: item.providers } : item
+      )));
       setMessage("Job cancelled.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to cancel this job.");
@@ -269,7 +273,7 @@ export default function MyJobsPage() {
                         </div>
                         <div className="flex items-center gap-3">
                           <span className={`rounded-full px-3 py-2 text-xs font-black ${paymentStyle(job.payment_status)}`}>{label(job.payment_status)}</span>
-                          <a href={`/payments?job=${job.id}`} className="rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">{job.payment_status === "paid" ? "View Payment" : "Pay Securely"}</a>
+                          <a href={`/payments?job=${job.id}`} className="rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">{["paid", "cash_due"].includes(job.payment_status) ? "View Payment" : "Pay Securely"}</a>
                         </div>
                       </div>
                       <p className="mt-3 text-xs text-zinc-500">Online checkout is handled securely by Paystack. Only pay after you are satisfied the job is complete.</p>
