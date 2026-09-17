@@ -10,6 +10,7 @@ import {
   restRpc,
   type AuthSession,
 } from "@/lib/supabase";
+import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
 
 type ProviderRow = {
   id: string;
@@ -23,6 +24,11 @@ type ProviderRow = {
   starting_price: number | null;
   is_verified: boolean;
   is_available: boolean;
+};
+
+type ProviderVerificationRow = {
+  biometric_status: string | null;
+  biometric_job_id: string | null;
 };
 
 type JobStatus = "open" | "matched" | "accepted" | "in_progress" | "completed" | "cancelled";
@@ -45,6 +51,7 @@ type JobRow = {
   quote_accepted_at: string | null;
   payment_status: string;
   arrival_verified_at: string | null;
+  arrival_face_verified_at: string | null;
 };
 
 const categories = ["Electrician", "Plumber", "AC Technician", "Generator", "Cleaning", "Mechanic"];
@@ -62,6 +69,7 @@ export default function ProviderDashboardPage() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [provider, setProvider] = useState<ProviderRow | null>(null);
   const [jobs, setJobs] = useState<JobRow[]>([]);
+  const [biometricArrivalRequired, setBiometricArrivalRequired] = useState(false);
   const [loading, setLoading] = useState(true);
   const [savingJobId, setSavingJobId] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
@@ -104,14 +112,24 @@ export default function ProviderDashboardPage() {
 
       if (!currentProvider) {
         setJobs([]);
+        setBiometricArrivalRequired(false);
         return;
       }
 
-      const jobRows = await restGet<JobRow[]>(
-        `jobs?provider_id=eq.${currentProvider.id}&select=*&order=created_at.desc`,
-        currentSession.access_token,
-      );
+      const [jobRows, verificationRows] = await Promise.all([
+        restGet<JobRow[]>(
+          `jobs?provider_id=eq.${currentProvider.id}&select=*&order=created_at.desc`,
+          currentSession.access_token,
+        ),
+        restGet<ProviderVerificationRow[]>(
+          `provider_verifications?provider_id=eq.${currentProvider.id}&select=biometric_status,biometric_job_id&limit=1`,
+          currentSession.access_token,
+        ).catch(() => []),
+      ]);
+
       setJobs(jobRows);
+      const verification = verificationRows[0];
+      setBiometricArrivalRequired(Boolean(verification?.biometric_status === "verified" && verification?.biometric_job_id));
       setQuoteDrafts(Object.fromEntries(jobRows.map((job) => [job.id, job.quoted_amount ? String(job.quoted_amount) : ""])));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to load provider dashboard.");
@@ -123,6 +141,11 @@ export default function ProviderDashboardPage() {
   async function createProviderProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!session) return;
+    if (containsOffPlatformContact(description)) {
+      setError(offPlatformContactMessage);
+      return;
+    }
+
     setSavingProfile(true);
     setError("");
     setMessage("");
@@ -236,7 +259,9 @@ export default function ProviderDashboardPage() {
     try {
       await restRpc<boolean>("verify_job_arrival", { p_job_id: job.id, p_code: code }, session.access_token);
       setArrivalCodes((current) => ({ ...current, [job.id]: "" }));
-      setMessage("Arrival PIN verified. The customer has confirmed you are at the correct job. You can now start work.");
+      setMessage(biometricArrivalRequired
+        ? "Arrival PIN verified. Ask the customer to complete the Rydah camera face match before you start work."
+        : "Arrival PIN verified. The customer has confirmed you are at the correct job. You can now start work.");
       await loadDashboard(session);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to verify the Arrival PIN.");
@@ -293,6 +318,7 @@ export default function ProviderDashboardPage() {
               <label className="block">
                 <span className="text-sm font-bold">Service category</span>
                 <select value={category} onChange={(e) => setCategory(e.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">{categories.map((item) => <option key={item}>{item}</option>)}</select>
+                <a href="/provider-interest" className="mt-2 inline-block text-xs font-bold text-[#D4AF37]">Profession not listed? Register it for review →</a>
               </label>
               <label className="block">
                 <span className="text-sm font-bold">Location</span>
@@ -305,6 +331,7 @@ export default function ProviderDashboardPage() {
               <label className="block md:col-span-2">
                 <span className="text-sm font-bold">About your service</span>
                 <textarea required minLength={20} value={description} onChange={(e) => setDescription(e.target.value)} className="mt-2 min-h-32 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none" />
+                <span className="mt-2 block text-xs text-zinc-500">Do not include phone numbers, email addresses, WhatsApp details or external links. Customers should book through Rydah.</span>
               </label>
               <button disabled={savingProfile} className="md:col-span-2 rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-50">Create Provider Profile</button>
             </form>
@@ -321,6 +348,7 @@ export default function ProviderDashboardPage() {
                     </div>
                     <p className="mt-2 text-zinc-400">{provider.service_category} • {provider.location}</p>
                     {provider.description && <p className="mt-4 text-sm leading-6 text-zinc-400">{provider.description}</p>}
+                    <a href="/provider-interest" className="mt-4 inline-block text-sm font-bold text-[#D4AF37]">Offer another profession →</a>
                   </div>
                   <button disabled={savingProfile} onClick={() => void toggleAvailability()} className={`rounded-2xl px-5 py-3 text-sm font-black ${provider.is_available ? "bg-emerald-500/15 text-emerald-400" : "bg-zinc-800 text-zinc-400"}`}>{provider.is_available ? "● Available now" : "○ Offline"}</button>
                 </div>
@@ -330,6 +358,10 @@ export default function ProviderDashboardPage() {
                 <p className="mt-2 text-3xl font-black text-[#D4AF37]">{naira(provider.starting_price)}</p>
                 <p className="mt-4 text-sm text-zinc-500">Active jobs: <span className="font-black text-white">{openJobs}</span></p>
               </div>
+            </div>
+
+            <div className="mt-6 rounded-3xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5 text-sm leading-6 text-zinc-300">
+              <strong className="text-[#D4AF37]">Keep Rydah jobs on-platform.</strong> Customer phone and email are released after the customer accepts your quote. Quotes, arrival checks and payments should remain inside Rydah so the job and commission record stay protected.
             </div>
 
             <div className="mt-8">
@@ -343,8 +375,12 @@ export default function ProviderDashboardPage() {
                   {jobs.map((job) => {
                     const busy = savingJobId === job.id;
                     const quoteEditable = ["open", "matched", "accepted"].includes(job.status) && job.payment_status !== "paid";
-                    const canStart = job.status === "accepted" && job.quote_status === "accepted" && Boolean(job.arrival_verified_at);
-                    const needsArrivalPin = job.status === "accepted" && job.quote_status === "accepted" && !job.arrival_verified_at;
+                    const contactReleased = job.quote_status === "accepted" && ["accepted", "in_progress", "completed"].includes(job.status);
+                    const pinVerified = Boolean(job.arrival_verified_at);
+                    const faceVerified = Boolean(job.arrival_face_verified_at);
+                    const canStart = job.status === "accepted" && job.quote_status === "accepted" && pinVerified && (!biometricArrivalRequired || faceVerified);
+                    const needsArrivalPin = job.status === "accepted" && job.quote_status === "accepted" && !pinVerified;
+                    const needsArrivalFace = job.status === "accepted" && job.quote_status === "accepted" && pinVerified && biometricArrivalRequired && !faceVerified;
                     return (
                       <article key={job.id} className="rounded-3xl border border-white/10 bg-[#121212] p-6">
                         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -362,8 +398,8 @@ export default function ProviderDashboardPage() {
 
                         <div className="mt-5 grid gap-3 rounded-2xl bg-[#1A1A1A] p-4 text-sm sm:grid-cols-3">
                           <div><p className="text-zinc-500">Customer</p><p className="mt-1 font-bold">{job.contact_name || "Not provided"}</p></div>
-                          <div><p className="text-zinc-500">Phone</p><p className="mt-1 font-bold">{job.contact_phone || "Not provided"}</p></div>
-                          <div><p className="text-zinc-500">Email</p><p className="mt-1 break-all font-bold">{job.contact_email || "Not provided"}</p></div>
+                          <div><p className="text-zinc-500">Phone</p><p className="mt-1 font-bold">{contactReleased ? (job.contact_phone || "Not provided") : "Released after quote acceptance"}</p></div>
+                          <div><p className="text-zinc-500">Email</p><p className="mt-1 break-all font-bold">{contactReleased ? (job.contact_email || "Not provided") : "Released after quote acceptance"}</p></div>
                         </div>
 
                         {quoteEditable && (
@@ -384,7 +420,7 @@ export default function ProviderDashboardPage() {
                         {needsArrivalPin && (
                           <div className="mt-5 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 p-5">
                             <p className="text-sm font-black text-[#D4AF37]">ARRIVAL PIN REQUIRED</p>
-                            <p className="mt-2 text-sm leading-6 text-zinc-300">When you are physically with the customer, ask them to open My Jobs and generate their one-time 6-digit Arrival PIN. Enter it below before starting work.</p>
+                            <p className="mt-2 text-sm leading-6 text-zinc-300">When you are physically with the customer, ask them to open My Jobs or Safety Check and generate their one-time 6-digit Arrival PIN. Enter it below before starting work.</p>
                             <div className="mt-4 flex flex-wrap gap-3">
                               <input inputMode="numeric" pattern="[0-9]*" maxLength={6} value={arrivalCodes[job.id] ?? ""} onChange={(e) => setArrivalCodes((current) => ({ ...current, [job.id]: e.target.value.replace(/\D/g, "").slice(0, 6) }))} placeholder="6-digit PIN" className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1A1A1A] px-4 py-3 text-center text-lg font-black tracking-[0.18em] outline-none" />
                               <button disabled={busy || (arrivalCodes[job.id] || "").length !== 6} onClick={() => void verifyArrivalPin(job)} className="rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black disabled:opacity-50">Verify Arrival</button>
@@ -392,8 +428,21 @@ export default function ProviderDashboardPage() {
                           </div>
                         )}
 
-                        {job.arrival_verified_at && job.status === "accepted" && (
-                          <div className="mt-5 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm text-emerald-300">✓ Customer Arrival PIN verified. You may start the job.</div>
+                        {needsArrivalFace && (
+                          <div className="mt-5 rounded-2xl border border-blue-500/20 bg-blue-500/10 p-5">
+                            <p className="text-sm font-black text-blue-300">CAMERA FACE MATCH REQUIRED</p>
+                            <p className="mt-2 text-sm leading-6 text-zinc-300">Arrival PIN passed. Ask the customer to open Safety Check and complete the provider camera face match. The Start Job button unlocks only after Rydah records a successful match.</p>
+                          </div>
+                        )}
+
+                        {pinVerified && job.status === "accepted" && !needsArrivalFace && (
+                          <div className="mt-5 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm text-emerald-300">
+                            ✓ Arrival safety checks complete. You may start the job.
+                          </div>
+                        )}
+
+                        {faceVerified && (
+                          <div className="mt-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-4 text-sm text-emerald-300">✓ Provider camera face matched for this arrival.</div>
                         )}
 
                         {!['completed', 'cancelled'].includes(job.status) && (
