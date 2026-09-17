@@ -29,7 +29,8 @@ export default function PostJobPage() {
 
     const storedSession = getStoredSession();
     if (!storedSession) {
-      window.location.href = "/sign-in";
+      const next = `${window.location.pathname}${window.location.search}`;
+      window.location.href = `/sign-in?next=${encodeURIComponent(next)}`;
       return;
     }
     if (storedSession.user.user_metadata?.role === "provider") {
