@@ -1,9 +1,10 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { getStoredSession, restGet, restInsert, type AuthSession } from "@/lib/supabase";
+import { getStoredSession, restGet, restInsert, restPatch, type AuthSession } from "@/lib/supabase";
 
 type JobStatus = "open" | "matched" | "accepted" | "in_progress" | "completed" | "cancelled";
+type QuoteStatus = "not_sent" | "pending" | "accepted" | "rejected";
 
 type JobRow = {
   id: string;
@@ -15,6 +16,8 @@ type JobRow = {
   status: JobStatus;
   created_at: string;
   quoted_amount: number | null;
+  quote_status: QuoteStatus;
+  quote_accepted_at: string | null;
   payment_status: "unpaid" | "pending" | "paid" | "cash_due" | "failed" | "refunded";
   providers: { business_name: string; starting_price: number | null } | null;
 };
@@ -72,7 +75,7 @@ export default function MyJobsPage() {
     try {
       const [jobRows, reviewRows] = await Promise.all([
         restGet<JobRow[]>(
-          `jobs?select=id,provider_id,service_category,location,description,is_urgent,status,created_at,quoted_amount,payment_status,providers(business_name,starting_price)&customer_id=eq.${currentSession.user.id}&order=created_at.desc`,
+          `jobs?select=id,provider_id,service_category,location,description,is_urgent,status,created_at,quoted_amount,quote_status,quote_accepted_at,payment_status,providers(business_name,starting_price)&customer_id=eq.${currentSession.user.id}&order=created_at.desc`,
           currentSession.access_token,
         ),
         restGet<ReviewRow[]>(
@@ -89,10 +92,53 @@ export default function MyJobsPage() {
     }
   }
 
+  async function respondToQuote(job: JobRow, decision: "accepted" | "rejected") {
+    if (!session) return;
+    setSavingJobId(job.id);
+    setError("");
+    setMessage("");
+    try {
+      const updated = await restPatch<JobRow[]>(
+        "jobs",
+        `id=eq.${job.id}`,
+        { quote_status: decision },
+        session.access_token,
+      );
+      if (!updated[0]) throw new Error("The quote response was not returned.");
+      setJobs((current) => current.map((item) => (item.id === job.id ? updated[0] : item)));
+      setMessage(decision === "accepted" ? "Quote accepted. The provider can now start the job." : "Quote rejected. The provider can send you a revised quote.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to respond to the quote.");
+    } finally {
+      setSavingJobId("");
+    }
+  }
+
+  async function cancelJob(job: JobRow) {
+    if (!session) return;
+    setSavingJobId(job.id);
+    setError("");
+    setMessage("");
+    try {
+      const updated = await restPatch<JobRow[]>(
+        "jobs",
+        `id=eq.${job.id}`,
+        { status: "cancelled" },
+        session.access_token,
+      );
+      if (!updated[0]) throw new Error("The cancellation was not returned.");
+      setJobs((current) => current.map((item) => (item.id === job.id ? updated[0] : item)));
+      setMessage("Job cancelled.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to cancel this job.");
+    } finally {
+      setSavingJobId("");
+    }
+  }
+
   async function submitReview(event: FormEvent<HTMLFormElement>, job: JobRow) {
     event.preventDefault();
     if (!session || !job.provider_id) return;
-
     const rating = ratings[job.id] ?? 0;
     if (rating < 1 || rating > 5) {
       setError("Choose a star rating from 1 to 5.");
@@ -102,7 +148,6 @@ export default function MyJobsPage() {
     setSavingJobId(job.id);
     setError("");
     setMessage("");
-
     try {
       const created = await restInsert<ReviewRow[]>(
         "reviews",
@@ -144,15 +189,9 @@ export default function MyJobsPage() {
           <div>
             <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">CUSTOMER DASHBOARD</p>
             <h2 className="mt-1 text-3xl font-black">Track your requests</h2>
-            <p className="mt-2 text-zinc-400">See provider progress, manage payment and rate completed work.</p>
+            <p className="mt-2 text-zinc-400">Review quotes, follow provider progress and pay completed jobs.</p>
           </div>
-          <button
-            type="button"
-            onClick={() => session && void loadData(session)}
-            className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-bold text-zinc-300"
-          >
-            Refresh Status
-          </button>
+          <button type="button" onClick={() => session && void loadData(session)} className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-bold text-zinc-300">Refresh Status</button>
         </div>
 
         {message && <div className="mt-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">{message}</div>}
@@ -171,7 +210,9 @@ export default function MyJobsPage() {
             {jobs.map((job) => {
               const review = reviewByJob.get(job.id);
               const providerName = job.providers?.business_name || (job.provider_id ? "Assigned provider" : "Matching in progress");
-              const amount = job.quoted_amount ?? job.providers?.starting_price ?? null;
+              const amount = job.quoted_amount ?? null;
+              const busy = savingJobId === job.id;
+              const canCancel = ["open", "matched", "accepted"].includes(job.status);
 
               return (
                 <article key={job.id} className="rounded-3xl border border-white/10 bg-[#121212] p-6">
@@ -188,19 +229,36 @@ export default function MyJobsPage() {
                   </div>
 
                   <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-2xl bg-[#1A1A1A] p-4">
-                      <p className="text-xs text-zinc-500">Provider</p>
-                      <p className="mt-1 font-bold">{providerName}</p>
-                    </div>
-                    <div className="rounded-2xl bg-[#1A1A1A] p-4">
-                      <p className="text-xs text-zinc-500">Requested</p>
-                      <p className="mt-1 font-bold">{new Date(job.created_at).toLocaleString()}</p>
-                    </div>
-                    <div className="rounded-2xl bg-[#1A1A1A] p-4">
-                      <p className="text-xs text-zinc-500">Request ID</p>
-                      <p className="mt-1 font-bold">{job.id.slice(0, 8)}</p>
-                    </div>
+                    <div className="rounded-2xl bg-[#1A1A1A] p-4"><p className="text-xs text-zinc-500">Provider</p><p className="mt-1 font-bold">{providerName}</p></div>
+                    <div className="rounded-2xl bg-[#1A1A1A] p-4"><p className="text-xs text-zinc-500">Requested</p><p className="mt-1 font-bold">{new Date(job.created_at).toLocaleString()}</p></div>
+                    <div className="rounded-2xl bg-[#1A1A1A] p-4"><p className="text-xs text-zinc-500">Request ID</p><p className="mt-1 font-bold">{job.id.slice(0, 8)}</p></div>
                   </div>
+
+                  {job.quoted_amount != null && job.quote_status !== "not_sent" && (
+                    <div className="mt-5 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 p-5">
+                      <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                          <p className="text-sm font-black text-[#D4AF37]">PROVIDER QUOTE</p>
+                          <p className="mt-1 text-3xl font-black">₦{job.quoted_amount.toLocaleString()}</p>
+                          <p className="mt-2 text-sm text-zinc-400">Status: <span className="font-black text-white">{label(job.quote_status)}</span></p>
+                        </div>
+                        {job.quote_status === "pending" && (
+                          <div className="flex gap-2">
+                            <button disabled={busy} onClick={() => void respondToQuote(job, "accepted")} className="rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black disabled:opacity-50">Accept Quote</button>
+                            <button disabled={busy} onClick={() => void respondToQuote(job, "rejected")} className="rounded-xl border border-white/10 px-5 py-3 text-sm font-black disabled:opacity-50">Reject</button>
+                          </div>
+                        )}
+                      </div>
+                      {job.quote_status === "accepted" && <p className="mt-3 text-sm text-emerald-300">Quote accepted. The provider may now start the job.</p>}
+                      {job.quote_status === "rejected" && <p className="mt-3 text-sm text-amber-300">Quote rejected. Wait for the provider to send a revised amount.</p>}
+                    </div>
+                  )}
+
+                  {canCancel && (
+                    <div className="mt-5">
+                      <button disabled={busy} onClick={() => void cancelJob(job)} className="rounded-xl border border-red-500/20 px-4 py-3 text-sm font-bold text-red-300 disabled:opacity-50">Cancel Job</button>
+                    </div>
+                  )}
 
                   {job.status === "completed" && job.provider_id && (
                     <div className="mt-5 rounded-2xl border border-white/10 bg-[#0D0D0D] p-5">
@@ -211,12 +269,10 @@ export default function MyJobsPage() {
                         </div>
                         <div className="flex items-center gap-3">
                           <span className={`rounded-full px-3 py-2 text-xs font-black ${paymentStyle(job.payment_status)}`}>{label(job.payment_status)}</span>
-                          <a href={`/payments?job=${job.id}`} className="rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">
-                            {job.payment_status === "paid" ? "View Payment" : "Pay / Test"}
-                          </a>
+                          <a href={`/payments?job=${job.id}`} className="rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">{job.payment_status === "paid" ? "View Payment" : "Pay Securely"}</a>
                         </div>
                       </div>
-                      <p className="mt-3 text-xs text-zinc-500">Payments are currently in sandbox mode for testing. No real money is charged.</p>
+                      <p className="mt-3 text-xs text-zinc-500">Online checkout is handled securely by Paystack. Only pay after you are satisfied the job is complete.</p>
                     </div>
                   )}
 
@@ -232,35 +288,13 @@ export default function MyJobsPage() {
                         <form onSubmit={(event) => void submitReview(event, job)}>
                           <p className="text-sm font-black text-[#D4AF37]">RATE THIS JOB</p>
                           <p className="mt-2 text-zinc-400">How was your experience with {providerName}?</p>
-
                           <div className="mt-4 flex gap-2">
                             {[1, 2, 3, 4, 5].map((star) => (
-                              <button
-                                key={star}
-                                type="button"
-                                onClick={() => setRatings((current) => ({ ...current, [job.id]: star }))}
-                                className={`text-3xl ${star <= (ratings[job.id] ?? 0) ? "text-[#D4AF37]" : "text-zinc-700"}`}
-                                aria-label={`${star} star${star === 1 ? "" : "s"}`}
-                              >
-                                ★
-                              </button>
+                              <button key={star} type="button" onClick={() => setRatings((current) => ({ ...current, [job.id]: star }))} className={`text-3xl ${star <= (ratings[job.id] ?? 0) ? "text-[#D4AF37]" : "text-zinc-700"}`} aria-label={`${star} star${star === 1 ? "" : "s"}`}>★</button>
                             ))}
                           </div>
-
-                          <textarea
-                            value={comments[job.id] ?? ""}
-                            onChange={(event) => setComments((current) => ({ ...current, [job.id]: event.target.value }))}
-                            maxLength={1000}
-                            placeholder="Optional comment about the service"
-                            className="mt-4 min-h-28 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600"
-                          />
-
-                          <button
-                            disabled={savingJobId === job.id}
-                            className="mt-4 rounded-2xl bg-[#D4AF37] px-5 py-3 font-black text-black disabled:opacity-60"
-                          >
-                            {savingJobId === job.id ? "Saving..." : "Submit Rating"}
-                          </button>
+                          <textarea value={comments[job.id] ?? ""} onChange={(event) => setComments((current) => ({ ...current, [job.id]: event.target.value }))} maxLength={1000} placeholder="Optional comment about the service" className="mt-4 min-h-28 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+                          <button disabled={busy} className="mt-4 rounded-2xl bg-[#D4AF37] px-5 py-3 font-black text-black disabled:opacity-60">{busy ? "Saving..." : "Submit Rating"}</button>
                         </form>
                       )}
                     </div>
