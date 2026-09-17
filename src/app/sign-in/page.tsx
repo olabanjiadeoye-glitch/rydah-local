@@ -17,6 +17,14 @@ function safeNextPath(raw: string | null) {
   return raw;
 }
 
+function strongPasswordError(password: string) {
+  if (password.length < 8) return "Password must be at least 8 characters.";
+  if (!/[a-z]/.test(password)) return "Password must include a lowercase letter.";
+  if (!/[A-Z]/.test(password)) return "Password must include an uppercase letter.";
+  if (!/\d/.test(password)) return "Password must include a number.";
+  return "";
+}
+
 async function sendToCorrectArea(session: AuthSession, nextPath: string | null) {
   const access = await resolveUserAccess(session);
   if (nextPath && access.role === "customer") {
@@ -75,6 +83,9 @@ export default function SignInPage() {
         await sendToCorrectArea(session, nextPath);
         return;
       }
+
+      const passwordError = strongPasswordError(password);
+      if (passwordError) throw new Error(passwordError);
 
       const nextQuery = role === "customer" && nextPath ? `&next=${encodeURIComponent(nextPath)}` : "";
       const result = await signUpWithPassword({
@@ -151,12 +162,13 @@ export default function SignInPage() {
             )}
 
             <label className="mt-5 block text-sm font-bold">Email</label>
-            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
 
             {mode !== "forgot" && (
               <>
                 <label className="mt-5 block text-sm font-bold">Password</label>
-                <input required minLength={6} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+                <input required minLength={mode === "sign-up" ? 8 : 1} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "sign-up" ? "8+ chars, upper/lowercase & number" : "Your password"} autoComplete={mode === "sign-up" ? "new-password" : "current-password"} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+                {mode === "sign-up" && <p className="mt-2 text-xs text-zinc-500">Use at least 8 characters with uppercase, lowercase and a number.</p>}
               </>
             )}
 
