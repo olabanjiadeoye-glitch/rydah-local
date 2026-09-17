@@ -61,6 +61,7 @@ export function canAccessPath(role: RydahRole, pathname: string) {
   const providerOnly =
     pathname === "/provider-dashboard" ||
     pathname === "/provider-onboarding" ||
+    pathname === "/provider-interest" ||
     pathname === "/earnings" ||
     pathname === "/payouts";
 
