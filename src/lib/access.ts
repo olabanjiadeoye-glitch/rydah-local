@@ -48,9 +48,7 @@ export async function resolveUserAccess(session: AuthSession): Promise<UserAcces
 
 export function destinationForAccess(access: UserAccess) {
   if (access.role === "admin") return "/admin-dashboard";
-  if (access.role === "provider") {
-    return access.hasProviderProfile ? "/provider-dashboard" : "/provider-onboarding";
-  }
+  if (access.role === "provider") return "/provider-dashboard";
   return "/providers";
 }
 
