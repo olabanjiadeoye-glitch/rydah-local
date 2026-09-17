@@ -8,12 +8,24 @@ import {
   signUpWithPassword,
   type AuthSession,
 } from "@/lib/supabase";
-import { destinationForAccess, resolveUserAccess } from "@/lib/access";
+import { canAccessPath, destinationForAccess, resolveUserAccess } from "@/lib/access";
 
 const PRODUCTION_ORIGIN = "https://rydahlocal.online";
 
-async function sendToCorrectArea(session: AuthSession) {
+function safeNextPath(raw: string | null) {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
+
+async function sendToCorrectArea(session: AuthSession, nextPath: string | null) {
   const access = await resolveUserAccess(session);
+  if (nextPath && access.role === "customer") {
+    const pathname = nextPath.split("?", 1)[0] || "/";
+    if (canAccessPath(access.role, pathname)) {
+      window.location.href = nextPath;
+      return;
+    }
+  }
   window.location.href = destinationForAccess(access);
 }
 
@@ -26,13 +38,17 @@ export default function SignInPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [nextPath, setNextPath] = useState<string | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    setNextPath(safeNextPath(params.get("next")));
     if (params.get("confirmed") === "1") {
       setMessage("Email confirmed. You can sign in now.");
       if (window.location.hash) {
-        window.history.replaceState({}, "", "/sign-in?confirmed=1");
+        const next = safeNextPath(params.get("next"));
+        const nextQuery = next ? `&next=${encodeURIComponent(next)}` : "";
+        window.history.replaceState({}, "", `/sign-in?confirmed=1${nextQuery}`);
       }
     }
     if (params.get("reset") === "1") {
@@ -56,22 +72,23 @@ export default function SignInPage() {
       if (mode === "sign-in") {
         const session = await signInWithPassword(email, password);
         saveSession(session);
-        await sendToCorrectArea(session);
+        await sendToCorrectArea(session, nextPath);
         return;
       }
 
+      const nextQuery = role === "customer" && nextPath ? `&next=${encodeURIComponent(nextPath)}` : "";
       const result = await signUpWithPassword({
         email,
         password,
         fullName,
         role,
-        redirectTo: `${PRODUCTION_ORIGIN}/sign-in?confirmed=1`,
+        redirectTo: `${PRODUCTION_ORIGIN}/sign-in?confirmed=1${nextQuery}`,
       });
 
       if (result.access_token && result.user) {
         const session = result as AuthSession;
         saveSession(session);
-        await sendToCorrectArea(session);
+        await sendToCorrectArea(session, role === "customer" ? nextPath : null);
         return;
       }
 
@@ -101,7 +118,9 @@ export default function SignInPage() {
           <p className="mt-3 text-zinc-400">
             {mode === "forgot"
               ? "Enter your account email and Rydah will send you a secure password reset link."
-              : "Secure authentication is connected to the Rydah Local backend."}
+              : nextPath && role === "customer"
+                ? "Sign in or create a customer account to continue your Rydah request."
+                : "Secure authentication is connected to the Rydah Local backend."}
           </p>
 
           {mode !== "forgot" && (
@@ -122,8 +141,8 @@ export default function SignInPage() {
 
                 <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-400">
                   {role === "provider"
-                    ? "Provider accounts continue to profile verification before receiving jobs."
-                    : "Customer accounts continue to the Rydah marketplace after sign in."}
+                    ? "Provider accounts continue to profile setup and verification before receiving jobs."
+                    : "Customer accounts can browse verified providers, post jobs and track payments."}
                 </div>
 
                 <label className="mt-5 block text-sm font-bold">Full name</label>
@@ -150,15 +169,11 @@ export default function SignInPage() {
           </form>
 
           {mode === "sign-in" && (
-            <button type="button" onClick={() => { setMode("forgot"); setError(""); setMessage(""); }} className="mt-5 w-full text-center text-sm font-semibold text-[#D4AF37]">
-              Forgot password?
-            </button>
+            <button type="button" onClick={() => { setMode("forgot"); setError(""); setMessage(""); }} className="mt-5 w-full text-center text-sm font-semibold text-[#D4AF37]">Forgot password?</button>
           )}
 
           {mode === "forgot" && (
-            <button type="button" onClick={() => { setMode("sign-in"); setError(""); setMessage(""); }} className="mt-5 w-full text-center text-sm font-semibold text-[#D4AF37]">
-              Back to sign in
-            </button>
+            <button type="button" onClick={() => { setMode("sign-in"); setError(""); setMessage(""); }} className="mt-5 w-full text-center text-sm font-semibold text-[#D4AF37]">Back to sign in</button>
           )}
         </div>
       </section>
