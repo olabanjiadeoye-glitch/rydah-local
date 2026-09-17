@@ -13,6 +13,7 @@ const baseLink = "shrink-0 rounded-xl border px-4 py-2 text-sm font-bold";
 const neutralLink = `${baseLink} border-white/15 text-white`;
 const goldLink = `${baseLink} border-[#D4AF37]/40 text-[#D4AF37]`;
 const adminLink = `${baseLink} border-emerald-500/30 text-emerald-300`;
+const authOnlyPaths = new Set(["/sign-in", "/reset-password"]);
 
 export default function SessionToolbar() {
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -20,6 +21,13 @@ export default function SessionToolbar() {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+    const pathname = window.location.pathname;
+    if (authOnlyPaths.has(pathname)) {
+      setSession(null);
+      setAccess(null);
+      return;
+    }
+
     const currentSession = getStoredSession();
     setSession(currentSession);
 
@@ -37,7 +45,6 @@ export default function SessionToolbar() {
       setAccess(resolvedAccess);
       setUnreadCount(unreadRows.length);
 
-      const pathname = window.location.pathname;
       if (!canAccessPath(resolvedAccess.role, pathname)) {
         window.location.replace(destinationForAccess(resolvedAccess));
       }
