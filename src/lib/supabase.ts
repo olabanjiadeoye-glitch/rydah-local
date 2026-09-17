@@ -215,6 +215,22 @@ export async function restDelete(table: string, query: string, token: string): P
   if (!response.ok) throw new Error(await readError(response));
 }
 
+export async function restRpc<T>(fn: string, payload: unknown, token: string): Promise<T> {
+  assertConfigured();
+  const response = await fetchWithOptionalRefresh(
+    `${SUPABASE_URL}/rest/v1/rpc/${fn}`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    token,
+    { "Content-Type": "application/json" },
+  );
+
+  if (!response.ok) throw new Error(await readError(response));
+  return (await response.json()) as T;
+}
+
 export async function signInWithPassword(email: string, password: string): Promise<AuthSession> {
   assertConfigured();
   const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
