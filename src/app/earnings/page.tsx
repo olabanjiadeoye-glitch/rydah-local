@@ -54,7 +54,6 @@ export default function EarningsPage() {
       window.location.href = "/sign-in";
       return;
     }
-
     setSession(currentSession);
     void loadEarnings(currentSession);
   }, []);
@@ -62,16 +61,13 @@ export default function EarningsPage() {
   async function loadEarnings(currentSession: AuthSession) {
     setLoading(true);
     setError("");
-
     try {
       const providerRows = await restGet<ProviderRow[]>(
         `providers?user_id=eq.${currentSession.user.id}&select=id,business_name&limit=1`,
         currentSession.access_token,
       );
-
       const currentProvider = providerRows[0] ?? null;
       setProvider(currentProvider);
-
       if (!currentProvider) {
         setPayments([]);
         return;
@@ -81,7 +77,6 @@ export default function EarningsPage() {
         `payments?provider_id=eq.${currentProvider.id}&select=id,job_id,amount_naira,method,status,reference,is_test,commission_rate_percent,commission_amount_naira,provider_net_naira,commission_status,created_at,jobs(service_category,location)&order=created_at.desc`,
         currentSession.access_token,
       );
-
       setPayments(paymentRows);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to load earnings.");
@@ -94,32 +89,30 @@ export default function EarningsPage() {
     () => payments.filter((payment) => ["paid", "cash_due"].includes(payment.status)),
     [payments],
   );
+  const liveSettled = useMemo(() => settledPayments.filter((payment) => !payment.is_test), [settledPayments]);
+  const testSettled = useMemo(() => settledPayments.filter((payment) => payment.is_test), [settledPayments]);
 
   const grossPaid = useMemo(
-    () => settledPayments.reduce((sum, payment) => sum + Number(payment.amount_naira || 0), 0),
-    [settledPayments],
+    () => liveSettled.reduce((sum, payment) => sum + Number(payment.amount_naira || 0), 0),
+    [liveSettled],
   );
-
   const rydahCommission = useMemo(
-    () => settledPayments.reduce((sum, payment) => sum + Number(payment.commission_amount_naira || 0), 0),
-    [settledPayments],
+    () => liveSettled.reduce((sum, payment) => sum + Number(payment.commission_amount_naira || 0), 0),
+    [liveSettled],
   );
-
   const providerNet = useMemo(
-    () => settledPayments.reduce((sum, payment) => sum + Number(payment.provider_net_naira || 0), 0),
-    [settledPayments],
+    () => liveSettled.reduce((sum, payment) => sum + Number(payment.provider_net_naira || 0), 0),
+    [liveSettled],
   );
-
   const commissionOwed = useMemo(
-    () => settledPayments
+    () => liveSettled
       .filter((payment) => payment.commission_status === "owed_by_provider")
       .reduce((sum, payment) => sum + Number(payment.commission_amount_naira || 0), 0),
-    [settledPayments],
+    [liveSettled],
   );
-
-  const testPaid = useMemo(
-    () => settledPayments.filter((payment) => payment.is_test).reduce((sum, payment) => sum + Number(payment.amount_naira || 0), 0),
-    [settledPayments],
+  const testGross = useMemo(
+    () => testSettled.reduce((sum, payment) => sum + Number(payment.amount_naira || 0), 0),
+    [testSettled],
   );
 
   return (
@@ -151,39 +144,35 @@ export default function EarningsPage() {
             <div>
               <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">PROVIDER FINANCE</p>
               <h2 className="mt-1 text-3xl font-black">{provider.business_name}</h2>
-              <p className="mt-2 text-zinc-400">Every completed Rydah job carries a 15% platform commission.</p>
+              <p className="mt-2 text-zinc-400">Live earnings are kept separate from Rydah sandbox and launch-test activity.</p>
             </div>
 
             <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-3xl border border-white/10 bg-[#121212] p-6">
-                <p className="text-sm text-zinc-500">Gross job value</p>
+                <p className="text-sm text-zinc-500">Live gross job value</p>
                 <p className="mt-2 text-3xl font-black">{naira(grossPaid)}</p>
-                <p className="mt-2 text-xs text-zinc-500">Total customer payments.</p>
+                <p className="mt-2 text-xs text-zinc-500">Real settled customer payments only.</p>
               </div>
               <div className="rounded-3xl border border-[#D4AF37]/25 bg-[#121212] p-6">
                 <p className="text-sm text-zinc-500">Rydah commission</p>
                 <p className="mt-2 text-3xl font-black text-[#D4AF37]">{naira(rydahCommission)}</p>
-                <p className="mt-2 text-xs text-zinc-500">15% retained by Rydah.</p>
+                <p className="mt-2 text-xs text-zinc-500">15% on live settled jobs.</p>
               </div>
               <div className="rounded-3xl border border-emerald-500/20 bg-[#121212] p-6">
-                <p className="text-sm text-zinc-500">Your net earnings</p>
+                <p className="text-sm text-zinc-500">Your live net earnings</p>
                 <p className="mt-2 text-3xl font-black text-emerald-400">{naira(providerNet)}</p>
-                <p className="mt-2 text-xs text-zinc-500">Gross less Rydah commission.</p>
+                <p className="mt-2 text-xs text-zinc-500">Live gross less Rydah commission.</p>
               </div>
               <div className="rounded-3xl border border-white/10 bg-[#121212] p-6">
-                <p className="text-sm text-zinc-500">Commission owed</p>
+                <p className="text-sm text-zinc-500">Live commission owed</p>
                 <p className="mt-2 text-3xl font-black">{naira(commissionOwed)}</p>
-                <p className="mt-2 text-xs text-zinc-500">Applies when cash is paid directly to you.</p>
+                <p className="mt-2 text-xs text-zinc-500">Cash commission actually owed to Rydah.</p>
               </div>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-white/10 bg-[#121212] p-4 text-sm text-zinc-400">
-              Example: on an ₦8,000 job, Rydah commission is ₦1,200 and provider net earnings are ₦6,800.
-            </div>
-
-            {testPaid > 0 && (
+            {testGross > 0 && (
               <div className="mt-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">
-                TEST MODE: {naira(testPaid)} of the gross total above is sandbox payment data. No real money has moved.
+                Test activity kept separate: {naira(testGross)}. These test records do not count toward live earnings or money owed.
               </div>
             )}
 
