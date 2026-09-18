@@ -233,6 +233,8 @@ export default function ProviderOnboardingPage() {
 
       await loadAll(current);
     })();
+  // Intentional one-time browser auth/data bootstrap.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function billingAction(current: AuthSession, action: string) {

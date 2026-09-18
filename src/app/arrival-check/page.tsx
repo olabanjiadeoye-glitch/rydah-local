@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { getStoredSession, invokeFunction, restGet, restRpc, type AuthSession } from "@/lib/supabase";
 
@@ -383,7 +384,7 @@ export default function ArrivalCheckPage() {
                           <div className="mt-4">
                             <p className="text-sm font-bold">Fresh camera capture</p>
                             <div className="mt-2 overflow-hidden rounded-2xl border border-white/10 bg-black">
-                              <img src={image} alt="Fresh provider camera capture" className="max-h-[420px] w-full object-contain" />
+                              <Image src={image} alt="Fresh provider camera capture" width={1200} height={900} unoptimized className="max-h-[360px] w-full object-contain" />
                             </div>
                             <button
                               type="button"

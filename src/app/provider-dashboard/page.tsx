@@ -140,6 +140,8 @@ export default function ProviderDashboardPage() {
         window.history.replaceState({}, "", "/provider-dashboard");
       }
     })();
+  // Intentional one-time browser auth/data bootstrap.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function callProviderBilling(currentSession: AuthSession, action: string) {

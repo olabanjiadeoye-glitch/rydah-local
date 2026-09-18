@@ -66,7 +66,7 @@ export default function SessionToolbar() {
     return () => {
       window.removeEventListener("rydah:immersive-verification", handleImmersiveVerification);
     };
-  }, []);
+  }, [router]);
 
   if (!session || !access || immersiveVerification) return null;
 

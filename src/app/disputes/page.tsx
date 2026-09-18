@@ -103,6 +103,8 @@ export default function DisputesPage() {
     }
     setSession(current);
     void initialise(current);
+  // Intentional one-time browser auth/data bootstrap.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

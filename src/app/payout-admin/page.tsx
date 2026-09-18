@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { getStoredSession, restGet, type AuthSession, invokeFunction } from "@/lib/supabase";
 
 type AdminRow = { user_id: string };
@@ -101,8 +101,8 @@ export default function PayoutAdminPage() {
   }
 
   const livePayouts = payouts.filter((p) => !p.is_test);
-  const pendingTotal = useMemo(() => livePayouts.filter((p) => p.status === "pending").reduce((s, p) => s + Number(p.amount_naira || 0), 0), [payouts]);
-  const paidTotal = useMemo(() => livePayouts.filter((p) => p.status === "paid").reduce((s, p) => s + Number(p.amount_naira || 0), 0), [payouts]);
+  const pendingTotal = livePayouts.filter((p) => p.status === "pending").reduce((s, p) => s + Number(p.amount_naira || 0), 0);
+  const paidTotal = livePayouts.filter((p) => p.status === "paid").reduce((s, p) => s + Number(p.amount_naira || 0), 0);
   const pendingCount = livePayouts.filter((p) => p.status === "pending").length;
 
   return (

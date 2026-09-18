@@ -32,6 +32,8 @@ export default function AdminAccountDeletionsPage() {
     }
     setSession(current);
     void initialise(current);
+  // Intentional one-time browser auth/data bootstrap.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function initialise(current: AuthSession) {
