@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
   try {
     const user = await getSignedInUser(req);
-    const body = await req.json().catch(() => ({})) as { action?: string; reference?: string; callback_url?: string };
+    const body = await req.json().catch(() => ({})) as { action?: string; reference?: string };
     const secretKey = required("PAYSTACK_SECRET_KEY");
     const isTest = secretKey.startsWith("sk_test_");
 
@@ -102,7 +102,13 @@ Deno.serve(async (req) => {
       }
 
       const reference = `RYD-COM-${Date.now()}-${crypto.randomUUID().replaceAll("-", "").slice(0, 8)}`;
-      const callbackUrl = body.callback_url && /^https?:\/\//i.test(body.callback_url) ? body.callback_url : undefined;
+      const publicOrigin = (Deno.env.get("RYDAH_PUBLIC_ORIGIN") || "https://rydahlocal.online").replace(/\/+$/, "");
+      let callbackUrl: string;
+      try {
+        callbackUrl = new URL("/earnings", publicOrigin).toString();
+      } catch {
+        return json({ error: "Rydah public origin configuration is invalid" }, 500);
+      }
       const paymentIds = owed.map((payment) => payment.id);
 
       const initialized = await paystack("transaction/initialize", {
@@ -113,7 +119,7 @@ Deno.serve(async (req) => {
           currency: "NGN",
           reference,
           channels: ["card", "bank", "bank_transfer", "ussd"],
-          ...(callbackUrl ? { callback_url: callbackUrl } : {}),
+          callback_url: callbackUrl,
           metadata: JSON.stringify({
             purpose: "rydah_provider_cash_commission_settlement",
             provider_id: provider.id,
