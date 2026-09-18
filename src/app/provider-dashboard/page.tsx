@@ -31,6 +31,10 @@ type ProviderVerificationRow = {
   biometric_job_id: string | null;
 };
 
+type PlatformSettingRow = {
+  value_numeric: number | string | null;
+};
+
 type JobStatus = "open" | "matched" | "accepted" | "in_progress" | "completed" | "cancelled";
 type QuoteStatus = "not_sent" | "pending" | "accepted" | "rejected";
 
@@ -70,6 +74,8 @@ export default function ProviderDashboardPage() {
   const [provider, setProvider] = useState<ProviderRow | null>(null);
   const [jobs, setJobs] = useState<JobRow[]>([]);
   const [biometricArrivalRequired, setBiometricArrivalRequired] = useState(false);
+  const [biometricStatus, setBiometricStatus] = useState("not_started");
+  const [biometricWorkRequired, setBiometricWorkRequired] = useState(false);
   const [loading, setLoading] = useState(true);
   const [savingJobId, setSavingJobId] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
@@ -113,19 +119,28 @@ export default function ProviderDashboardPage() {
       if (!currentProvider) {
         setJobs([]);
         setBiometricArrivalRequired(false);
+        setBiometricStatus("not_started");
+        setBiometricWorkRequired(false);
         return;
       }
 
-      const [jobRows, verificationRows] = await Promise.all([
+      const [jobRows, verificationRows, biometricSettingRows] = await Promise.all([
         restRpc<JobRow[]>("provider_job_feed", {}, currentSession.access_token),
         restGet<ProviderVerificationRow[]>(
           `provider_verifications?provider_id=eq.${currentProvider.id}&select=biometric_status,biometric_job_id&limit=1`,
+          currentSession.access_token,
+        ).catch(() => []),
+        restGet<PlatformSettingRow[]>(
+          "platform_settings?key=eq.biometric_verification_required&select=value_numeric&limit=1",
           currentSession.access_token,
         ).catch(() => []),
       ]);
 
       setJobs(jobRows);
       const verification = verificationRows[0];
+      const biometricRequired = Number(biometricSettingRows[0]?.value_numeric || 0) === 1;
+      setBiometricStatus(verification?.biometric_status || "not_started");
+      setBiometricWorkRequired(biometricRequired);
       setBiometricArrivalRequired(Boolean(verification?.biometric_status === "verified" && verification?.biometric_job_id));
       setQuoteDrafts(Object.fromEntries(jobRows.map((job) => [job.id, job.quoted_amount ? String(job.quoted_amount) : ""])));
     } catch (caught) {
@@ -370,7 +385,8 @@ export default function ProviderDashboardPage() {
                     const contactReleased = job.quote_status === "accepted" && ["accepted", "in_progress", "completed"].includes(job.status);
                     const pinVerified = Boolean(job.arrival_verified_at);
                     const faceVerified = Boolean(job.arrival_face_verified_at);
-                    const canStart = job.status === "accepted" && job.quote_status === "accepted" && pinVerified && (!biometricArrivalRequired || faceVerified);
+                    const biometricReady = biometricStatus === "verified";
+                    const canStart = job.status === "accepted" && job.quote_status === "accepted" && pinVerified && (!biometricWorkRequired || biometricReady) && (!biometricArrivalRequired || faceVerified);
                     const needsArrivalPin = job.status === "accepted" && job.quote_status === "accepted" && !pinVerified;
                     const needsArrivalFace = job.status === "accepted" && job.quote_status === "accepted" && pinVerified && biometricArrivalRequired && !faceVerified;
                     return (
@@ -417,6 +433,14 @@ export default function ProviderDashboardPage() {
                               <input inputMode="numeric" pattern="[0-9]*" maxLength={6} value={arrivalCodes[job.id] ?? ""} onChange={(e) => setArrivalCodes((current) => ({ ...current, [job.id]: e.target.value.replace(/\D/g, "").slice(0, 6) }))} placeholder="6-digit PIN" className="min-w-0 flex-1 rounded-xl border border-white/10 bg-[#1A1A1A] px-4 py-3 text-center text-lg font-black tracking-[0.18em] outline-none" />
                               <button disabled={busy || (arrivalCodes[job.id] || "").length !== 6} onClick={() => void verifyArrivalPin(job)} className="rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black disabled:opacity-50">Verify Arrival</button>
                             </div>
+                          </div>
+                        )}
+
+                        {job.status === "accepted" && job.quote_status === "accepted" && biometricWorkRequired && !biometricReady && (
+                          <div className="mt-5 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-5">
+                            <p className="text-sm font-black text-amber-300">BIOMETRIC VERIFICATION REQUIRED</p>
+                            <p className="mt-2 text-sm leading-6 text-zinc-300">Rydah now requires successful face and liveness verification before providers can accept or work on jobs. Complete verification before this job can start.</p>
+                            <a href="/provider-onboarding" className="mt-4 inline-block rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">Complete Biometric Verification</a>
                           </div>
                         )}
 
