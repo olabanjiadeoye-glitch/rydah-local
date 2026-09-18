@@ -60,12 +60,12 @@ export default function PostJobPage() {
       try {
         if (requestedProvider) {
           const rows = await restGet<ProviderLookup[]>(
-            `providers?select=id,business_name,slug,service_category,location&slug=eq.${encodeURIComponent(requestedProvider)}&user_id=not.is.null&is_verified=eq.true&is_available=eq.true&limit=1`,
+            `providers?select=id,business_name,slug,service_category,location&slug=eq.${encodeURIComponent(requestedProvider)}&user_id=not.is.null&is_verified=eq.true&biometric_verified=eq.true&is_available=eq.true&limit=1`,
             storedSession.access_token,
           );
           const match = rows[0] ?? null;
           if (!match) {
-            setError("This provider is not currently available. Please return to the marketplace and choose another verified provider.");
+            setError("This provider is not currently available. Please return to the marketplace and choose another biometric-verified provider.");
           } else {
             setSelectedProvider(match);
             setService(match.service_category);
@@ -73,7 +73,7 @@ export default function PostJobPage() {
           }
         } else {
           const rows = await restGet<AvailabilityRow[]>(
-            "providers?select=service_category,location&user_id=not.is.null&is_verified=eq.true&is_available=eq.true",
+            "providers?select=service_category,location&user_id=not.is.null&is_verified=eq.true&biometric_verified=eq.true&is_available=eq.true",
             storedSession.access_token,
           );
           setAvailability(rows);
@@ -127,14 +127,14 @@ export default function PostJobPage() {
         providerId = selectedProvider.id;
       } else if (provider) {
         const matches = await restGet<ProviderLookup[]>(
-          `providers?select=id,business_name,slug,service_category,location&slug=eq.${encodeURIComponent(provider)}&user_id=not.is.null&is_verified=eq.true&is_available=eq.true&limit=1`,
+          `providers?select=id,business_name,slug,service_category,location&slug=eq.${encodeURIComponent(provider)}&user_id=not.is.null&is_verified=eq.true&biometric_verified=eq.true&is_available=eq.true&limit=1`,
           session.access_token,
         );
         providerId = matches[0]?.id ?? null;
-        if (!providerId) throw new Error("This provider is not currently available. Please choose another verified provider.");
+        if (!providerId) throw new Error("This provider is not currently available. Please choose another biometric-verified provider.");
       } else {
         const matches = await restGet<ProviderLookup[]>(
-          `providers?select=id,business_name,slug,service_category,location&user_id=not.is.null&service_category=eq.${encodeURIComponent(service)}&location=eq.${encodeURIComponent(location)}&is_verified=eq.true&is_available=eq.true&order=rating.desc&limit=1`,
+          `providers?select=id,business_name,slug,service_category,location&user_id=not.is.null&service_category=eq.${encodeURIComponent(service)}&location=eq.${encodeURIComponent(location)}&is_verified=eq.true&biometric_verified=eq.true&is_available=eq.true&order=rating.desc&limit=1`,
           session.access_token,
         );
         providerId = matches[0]?.id ?? null;
@@ -190,7 +190,7 @@ export default function PostJobPage() {
           <div className="rounded-3xl border border-[#D4AF37]/30 bg-[#121212] p-8 text-center">
             <div className="text-5xl">✓</div>
             <h2 className="mt-4 text-3xl font-black">Request sent</h2>
-            <p className="mt-3 text-zinc-400">Your {urgent ? "urgent " : ""}request has been assigned to an available verified provider.</p>
+            <p className="mt-3 text-zinc-400">Your {urgent ? "urgent " : ""}request has been assigned to an available biometric-verified provider.</p>
             {jobId && <p className="mt-3 text-xs text-zinc-600">Request ID: {jobId.slice(0, 8)}</p>}
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <a href="/my-jobs" className="rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black">Track My Job</a>
@@ -210,7 +210,7 @@ export default function PostJobPage() {
             )}
             {!provider && (
               <div className="mb-5 rounded-2xl border border-white/10 bg-[#1A1A1A] p-4 text-sm text-zinc-400">
-                Only services with a genuine verified provider currently online are shown below. Rydah will match your request automatically.
+                Only services with a genuine biometric-verified provider currently online are shown below. Rydah will match your request automatically.
               </div>
             )}
 
