@@ -1,0 +1,9 @@
+ANDROID_HOME=/usr/local/lib/android/sdk
+ANDROID_SDK_ROOT=/usr/local/lib/android/sdk
+sdkmanager path:
+sdkmanager version:
+/home/runner/work/_temp/556d37be-531d-48e6-91e9-b8e9a771052a.sh: line 9: sdkmanager: command not found
+Installing API 36:
+/home/runner/work/_temp/556d37be-531d-48e6-91e9-b8e9a771052a.sh: line 11: sdkmanager: command not found
+yes: standard output: Broken pipe
+/home/runner/work/_temp/556d37be-531d-48e6-91e9-b8e9a771052a.sh: line 12: sdkmanager: command not found
