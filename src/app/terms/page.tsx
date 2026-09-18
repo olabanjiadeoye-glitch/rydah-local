@@ -4,7 +4,7 @@ export default function TermsPage() {
       <article className="mx-auto max-w-3xl">
         <a href="/" className="text-sm font-black tracking-[0.2em] text-[#D4AF37]">RYDAH LOCAL</a>
         <h1 className="mt-4 text-4xl font-black">Terms of Use</h1>
-        <p className="mt-3 text-sm text-zinc-500">Effective: 17 September 2026</p>
+        <p className="mt-3 text-sm text-zinc-500">Effective: 18 September 2026</p>
 
         <div className="mt-8 space-y-8 text-sm leading-7 text-zinc-300">
           <section>
@@ -38,8 +38,13 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-black text-white">Cancellations, complaints, and refunds</h2>
-            <p className="mt-2">Where a job is cancelled, disputed, incomplete, or materially different from what was agreed, Rydah may review the job and payment records and may request supporting information. Any refund, reversal, or account adjustment will depend on the facts of the transaction, payment-processor rules, and applicable law.</p>
+            <h2 className="text-xl font-black text-white">Cancellations, complaints, disputes, and refunds</h2>
+            <p className="mt-2">Where a job is cancelled, disputed, incomplete, unsafe, or materially different from what was agreed, users may submit a job-linked report through the Safety Center or Resolution Centre. Rydah may review job, payment, verification, safety, and support records and may request supporting information. Submitting a refund request does not move money automatically: authorised Rydah review is required, and any refund, reversal, or account adjustment depends on the facts of the transaction, payment-processor rules, and applicable law.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-black text-white">Notifications</h2>
+            <p className="mt-2">Users may opt in to device notifications for important job, safety, payment, dispute, and verification updates. Notification delivery depends on the user&apos;s device, browser, operating system, network, and notification permissions and therefore cannot be guaranteed.</p>
           </section>
 
           <section>
