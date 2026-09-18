@@ -87,7 +87,8 @@ export default function SessionToolbar() {
 
   return (
     <div className="fixed bottom-3 left-3 right-3 z-[100] flex flex-nowrap items-center gap-2 overflow-x-auto rounded-2xl border border-white/10 bg-[#111]/95 p-2 shadow-2xl backdrop-blur md:bottom-5 md:left-auto md:right-5 md:max-w-[calc(100vw-2.5rem)]">
-      <span className="shrink-0 rounded-xl bg-white/5 px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-zinc-400">
+      <span className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-white/5 px-3 py-2 text-[11px] font-black uppercase tracking-[0.16em] text-zinc-400">
+        <img src="/rydah-icon.svg" alt="" aria-hidden="true" className="h-5 w-5 rounded-md" />
         {access.role}
       </span>
 
