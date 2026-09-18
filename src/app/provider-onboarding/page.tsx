@@ -386,7 +386,7 @@ export default function ProviderOnboardingPage() {
 
                       <label className="block md:col-span-2">
                         <span className="text-sm font-bold">Selfie / clear face photo</span>
-                        <input required type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setSelfie(e.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-sm text-zinc-300" />
+                        <input required={!(verification.id_type === "NIN" && fullIdNumber.replace(/\s+/g, "").trim() === "11111111111")} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setSelfie(e.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-sm text-zinc-300" />
                         <span className="mt-2 block text-xs text-zinc-500">For normal verification, choose a clear front-facing image. For the sandbox NIN 11111111111, no file is required because Rydah uses the identity provider's official sandbox test image. Before live launch, Rydah will require a live selfie/liveness check.</span>
                       </label>
 
