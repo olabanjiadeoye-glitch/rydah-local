@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   getStoredSession,
@@ -691,10 +692,10 @@ export default function ProviderOnboardingPage() {
     <main className="min-h-screen bg-[#080808] text-white">
       <header className="border-b border-white/10">
         <div className="mx-auto flex max-w-xl items-center justify-between gap-3 px-5 py-5">
-          <a href="/" className="font-black tracking-[0.18em] text-[#D4AF37]">RYDAH LOCAL</a>
-          <a href="/" className="rounded-full border border-white/10 px-4 py-2 text-xs font-bold text-zinc-400">
+          <Link href="/" className="font-black tracking-[0.18em] text-[#D4AF37]">RYDAH LOCAL</Link>
+          <Link href="/" className="rounded-full border border-white/10 px-4 py-2 text-xs font-bold text-zinc-400">
             Save & Exit
-          </a>
+          </Link>
         </div>
       </header>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { resolveUserAccess } from "@/lib/access";
 import { getStoredSession, invokeFunction, restGet, type AuthSession } from "@/lib/supabase";
@@ -95,10 +96,10 @@ export default function AdminAccountDeletionsPage() {
     <main className="min-h-screen bg-[#080808] px-5 py-6 text-white">
       <section className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <a href="/admin-dashboard"><BrandLogo /></a>
-          <a href="/admin-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">
+          <Link href="/admin-dashboard"><BrandLogo /></Link>
+          <Link href="/admin-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">
             Admin Dashboard
-          </a>
+          </Link>
         </div>
 
         <div className="mt-6 rounded-3xl border border-red-500/20 bg-red-950/10 p-6">

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, type AuthSession } from "@/lib/supabase";
 
@@ -159,13 +160,13 @@ export default function AdminDashboardPage() {
             <h1 className="mt-1 text-2xl font-black">Business Control Centre</h1>
           </div>
           <div className="flex flex-wrap gap-2">
-            <a href="/admin/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Verification</a>
-            <a href="/admin/finance" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Finance</a>
-            <a href="/payout-admin" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Payouts</a>
-            <a href="/admin/safety" className="rounded-full border border-red-500/30 px-4 py-2 text-sm text-red-300">Safety</a>
-            <a href="/admin/disputes" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Disputes</a>
-            <a href="/admin/account-deletions" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Deletions</a>
-            <a href="/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Marketplace</a>
+            <Link href="/admin/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Verification</Link>
+            <Link href="/admin/finance" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Finance</Link>
+            <Link href="/payout-admin" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Payouts</Link>
+            <Link href="/admin/safety" className="rounded-full border border-red-500/30 px-4 py-2 text-sm text-red-300">Safety</Link>
+            <Link href="/admin/disputes" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Disputes</Link>
+            <Link href="/admin/account-deletions" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Deletions</Link>
+            <Link href="/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Marketplace</Link>
           </div>
         </div>
       </header>
@@ -216,17 +217,17 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <a href="/admin/providers" className="rounded-3xl border border-[#D4AF37]/25 bg-[#121212] p-6 transition hover:border-[#D4AF37]/50">
+              <Link href="/admin/providers" className="rounded-3xl border border-[#D4AF37]/25 bg-[#121212] p-6 transition hover:border-[#D4AF37]/50">
                 <p className="text-sm text-zinc-500">Pending verification</p>
                 <p className="mt-2 text-4xl font-black text-[#D4AF37]">{pendingVerifications.length}</p>
                 <p className="mt-3 text-sm font-bold text-[#D4AF37]">Review providers →</p>
-              </a>
-              <a href="/payout-admin" className="rounded-3xl border border-[#D4AF37]/25 bg-[#121212] p-6 transition hover:border-[#D4AF37]/50">
+              </Link>
+              <Link href="/payout-admin" className="rounded-3xl border border-[#D4AF37]/25 bg-[#121212] p-6 transition hover:border-[#D4AF37]/50">
                 <p className="text-sm text-zinc-500">Pending payouts</p>
                 <p className="mt-2 text-4xl font-black">{pendingPayouts.length}</p>
                 <p className="mt-1 text-lg font-black text-[#D4AF37]">{naira(pendingPayoutAmount)}</p>
                 <p className="mt-3 text-sm font-bold text-[#D4AF37]">Open payout queue →</p>
-              </a>
+              </Link>
               <div className="rounded-3xl border border-emerald-500/20 bg-[#121212] p-6">
                 <p className="text-sm text-zinc-500">Completed payouts</p>
                 <p className="mt-2 text-4xl font-black text-emerald-400">{paidPayouts.length}</p>
@@ -246,7 +247,7 @@ export default function AdminDashboardPage() {
                     <p className="text-sm font-black tracking-[0.16em] text-[#D4AF37]">RECENT JOBS</p>
                     <h3 className="mt-1 text-2xl font-black">Latest requests</h3>
                   </div>
-                  <a href="/providers" className="text-sm font-bold text-zinc-400">Marketplace</a>
+                  <Link href="/providers" className="text-sm font-bold text-zinc-400">Marketplace</Link>
                 </div>
                 <div className="mt-5 grid gap-3">
                   {jobs.length === 0 ? (
@@ -269,13 +270,13 @@ export default function AdminDashboardPage() {
                 <p className="text-sm font-black tracking-[0.16em] text-[#D4AF37]">ADMIN SHORTCUTS</p>
                 <h3 className="mt-1 text-2xl font-black">Run Rydah</h3>
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <a href="/admin/providers" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Provider Verification</p><p className="mt-1 text-sm text-zinc-500">Approve trusted professionals.</p></a>
-                  <a href="/admin/finance" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Finance & Commission</p><p className="mt-1 text-sm text-zinc-500">Revenue, ledger and commission rate.</p></a>
-                  <a href="/payout-admin" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Provider Payouts</p><p className="mt-1 text-sm text-zinc-500">Review and settle withdrawal requests.</p></a>
-                  <a href="/notifications" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Notifications</p><p className="mt-1 text-sm text-zinc-500">See verification and job updates.</p></a>
-                  <a href="/admin/safety" className="rounded-2xl border border-red-500/20 bg-red-950/10 p-5"><p className="font-black text-red-200">Safety Review</p><p className="mt-1 text-sm text-zinc-500">Review job-linked safety reports and urgent concerns.</p></a>
-                  <a href="/admin/disputes" className="rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5"><p className="font-black text-[#E5C65A]">Disputes & Refunds</p><p className="mt-1 text-sm text-zinc-500">Review complaints and controlled refund requests.</p></a>
-                  <a href="/admin/account-deletions" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Account Deletions</p><p className="mt-1 text-sm text-zinc-500">Complete anonymisation and deletion requests.</p></a>
+                  <Link href="/admin/providers" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Provider Verification</p><p className="mt-1 text-sm text-zinc-500">Approve trusted professionals.</p></Link>
+                  <Link href="/admin/finance" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Finance & Commission</p><p className="mt-1 text-sm text-zinc-500">Revenue, ledger and commission rate.</p></Link>
+                  <Link href="/payout-admin" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Provider Payouts</p><p className="mt-1 text-sm text-zinc-500">Review and settle withdrawal requests.</p></Link>
+                  <Link href="/notifications" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Notifications</p><p className="mt-1 text-sm text-zinc-500">See verification and job updates.</p></Link>
+                  <Link href="/admin/safety" className="rounded-2xl border border-red-500/20 bg-red-950/10 p-5"><p className="font-black text-red-200">Safety Review</p><p className="mt-1 text-sm text-zinc-500">Review job-linked safety reports and urgent concerns.</p></Link>
+                  <Link href="/admin/disputes" className="rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5"><p className="font-black text-[#E5C65A]">Disputes & Refunds</p><p className="mt-1 text-sm text-zinc-500">Review complaints and controlled refund requests.</p></Link>
+                  <Link href="/admin/account-deletions" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Account Deletions</p><p className="mt-1 text-sm text-zinc-500">Complete anonymisation and deletion requests.</p></Link>
                 </div>
               </section>
             </div>

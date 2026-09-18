@@ -1,8 +1,9 @@
+import Link from "next/link";
 export default function TermsPage() {
   return (
     <main className="min-h-screen bg-[#080808] px-5 py-7 sm:py-6 text-white">
       <article className="mx-auto max-w-3xl">
-        <a href="/" className="text-sm font-black tracking-[0.2em] text-[#D4AF37]">RYDAH LOCAL</a>
+        <Link href="/" className="text-sm font-black tracking-[0.2em] text-[#D4AF37]">RYDAH LOCAL</Link>
         <h1 className="mt-4 text-4xl font-black">Terms of Use</h1>
         <p className="mt-3 text-sm text-zinc-500">Effective: 18 September 2026</p>
 
@@ -60,9 +61,9 @@ export default function TermsPage() {
         </div>
 
         <div className="mt-7 flex flex-wrap gap-3">
-          <a href="/privacy" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Privacy</a>
-          <a href="/support" className="rounded-xl border border-[#D4AF37]/40 px-4 py-2 font-bold text-[#D4AF37]">Support</a>
-          <a href="/" className="rounded-xl bg-[#D4AF37] px-4 py-2 font-bold text-black">Home</a>
+          <Link href="/privacy" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Privacy</Link>
+          <Link href="/support" className="rounded-xl border border-[#D4AF37]/40 px-4 py-2 font-bold text-[#D4AF37]">Support</Link>
+          <Link href="/" className="rounded-xl bg-[#D4AF37] px-4 py-2 font-bold text-black">Home</Link>
         </div>
       </article>
     </main>

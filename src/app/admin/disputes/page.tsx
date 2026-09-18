@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { resolveUserAccess } from "@/lib/access";
 import {
@@ -160,8 +161,8 @@ export default function AdminDisputesPage() {
     <main className="min-h-screen bg-[#080808] px-5 py-6 text-white">
       <section className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <a href="/admin-dashboard"><BrandLogo /></a>
-          <a href="/admin-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Admin Dashboard</a>
+          <Link href="/admin-dashboard"><BrandLogo /></Link>
+          <Link href="/admin-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Admin Dashboard</Link>
         </div>
 
         <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
