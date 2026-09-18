@@ -63,7 +63,9 @@ jobs:
 
       - name: Install Bubblewrap
         id: bubblewrap_install
-        run: npm install --global @bubblewrap/cli
+        run: |
+          npm install --global @bubblewrap/cli
+          bubblewrap updateConfig --jdkPath="$JAVA_HOME" --androidSdkPath="$ANDROID_HOME"
 
       - name: Generate Android project
         id: generate
@@ -71,13 +73,13 @@ jobs:
           mkdir -p build/android-twa
           cp release/android/twa-manifest.json build/android-twa/twa-manifest.json
           cd build/android-twa
-          bubblewrap update --skipVersionUpgrade --manifest=. --androidSdkPath="$ANDROID_HOME"
+          bubblewrap update --skipVersionUpgrade --manifest="./twa-manifest.json"
 
       - name: Build unsigned Android App Bundle
         id: bundle
         run: |
           cd build/android-twa
-          bubblewrap build --skipPwaValidation --skipSigning --manifest=.
+          bubblewrap build --skipPwaValidation --skipSigning --manifest="./twa-manifest.json"
 
       - name: Generate Google Play image assets
         id: play_assets
