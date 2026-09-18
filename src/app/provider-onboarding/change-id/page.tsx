@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { getStoredSession, restGet, type AuthSession } from "@/lib/supabase";
+import { getStoredSession, restGet, type AuthSession, invokeFunction } from "@/lib/supabase";
 
 type Verification = {
   id_type: "NIN" | "Drivers Licence" | "International Passport" | "Voters Card";
@@ -81,19 +81,11 @@ export default function ChangeProviderIdPage() {
     setError("");
     setMessage("");
     try {
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-      const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
-      if (!supabaseUrl || !publishableKey) throw new Error("Verification service is not configured.");
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/change-provider-id-type`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          apikey: publishableKey,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id_type: idType, id_last4: cleanLast4 }),
-      });
+      const response = await invokeFunction(
+        "change-provider-id-type",
+        { id_type: idType, id_last4: cleanLast4 },
+        session.access_token,
+      );
       const result = (await response.json().catch(() => ({}))) as ChangeResponse;
       if (!response.ok) throw new Error(result.error || "Unable to change verification ID type.");
 
