@@ -6,6 +6,7 @@
 - Website: https://rydahlocal.online
 - Support: https://rydahlocal.online/support
 - Privacy policy: https://rydahlocal.online/privacy
+- Account deletion URL: https://rydahlocal.online/delete-account
 - Primary market at launch: Lagos, Nigeria
 - Brand colours: Deep Black `#080808`, Premium Gold `#D4AF37`
 - App icon source: `/public/rydah-icon.svg`
