@@ -55,6 +55,14 @@ jobs:
           cd build/android-twa
           bubblewrap build --skipPwaValidation --skipSigning --manifest=.
 
+      - name: Generate Google Play image assets
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y librsvg2-bin
+          mkdir -p build/play-assets
+          rsvg-convert -w 512 -h 512 public/rydah-icon.svg -o build/play-assets/rydah-icon-512.png
+          rsvg-convert -w 1024 -h 500 release/google-play/feature-graphic.svg -o build/play-assets/rydah-feature-1024x500.png
+
       - name: Upload Android build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -65,6 +73,8 @@ jobs:
             build/android-twa/app-release-unsigned.apk
             build/android-twa/app-release-signed.apk
             build/android-twa/twa-manifest.json
+            build/play-assets/rydah-icon-512.png
+            build/play-assets/rydah-feature-1024x500.png
 
       - name: Publish CI prerelease
         env:
@@ -73,6 +83,8 @@ jobs:
           TAG="android-ci-${{ github.run_number }}"
           gh release create "$TAG" \
             build/android-twa/app-release-bundle.aab \
+            build/play-assets/rydah-icon-512.png \
+            build/play-assets/rydah-feature-1024x500.png \
             --repo "${{ github.repository }}" \
             --title "Rydah Android CI build ${{ github.run_number }}" \
             --notes "Unsigned Android App Bundle for package online.rydahlocal.app. CI validation only; not ready for Play upload until permanent signing is configured." \
