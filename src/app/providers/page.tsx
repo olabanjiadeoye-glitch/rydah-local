@@ -48,6 +48,7 @@ export default function ProvidersPage() {
   const [userCoordinates, setUserCoordinates] = useState<DeviceCoordinates | null>(null);
   const [gpsBusy, setGpsBusy] = useState(false);
   const [gpsMessage, setGpsMessage] = useState("");
+  const [searchMessage, setSearchMessage] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -181,6 +182,20 @@ export default function ProvidersPage() {
     }
   }
 
+  function runProviderSearch() {
+    setActiveSearch(query);
+    const selectedArea = location === "All Areas" ? "Lagos, Abuja & Ibadan" : location;
+    setSearchMessage(
+      query.trim()
+        ? `Search applied for "${query.trim()}" in ${selectedArea}.`
+        : `Search applied for ${selectedArea}.`,
+    );
+
+    window.setTimeout(() => {
+      document.getElementById("provider-results")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 0);
+  }
+
   async function toggleFavorite(provider: Provider) {
     const alreadySaved = favorites.includes(provider.id);
     const next = alreadySaved ? favorites.filter((id) => id !== provider.id) : [...favorites, provider.id];
@@ -223,7 +238,7 @@ export default function ProvidersPage() {
             <p className="text-xs font-bold tracking-widest text-zinc-500">SEARCH VERIFIED PROFESSIONALS</p>
             <p className="text-xs text-zinc-600">{status}</p>
           </div>
-          <input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && setActiveSearch(query)} placeholder="Search electrician, carpenter, cleaner, area or provider..." className="mt-3 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && runProviderSearch()} placeholder="Search electrician, carpenter, cleaner, area or provider..." className="mt-3 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <select value={location} onChange={(e) => setLocation(e.target.value)} className="rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
               <option value="All Areas">All Areas — Lagos, Abuja & Ibadan</option>
@@ -266,7 +281,7 @@ export default function ProvidersPage() {
             )}
           </div>
           {gpsMessage && <p className="mt-2 text-xs leading-5 text-emerald-300">{gpsMessage}</p>}
-          <button onClick={() => setActiveSearch(query)} className="mt-4 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black">Search Providers</button>
+          <button type="button" onClick={runProviderSearch} className="mt-4 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black active:scale-[0.99]">Search Providers</button>
         </div>
       </section>
 
@@ -276,7 +291,8 @@ export default function ProvidersPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-8">
+      <section id="provider-results" className="mx-auto max-w-6xl scroll-mt-6 px-5 py-8">
+        {searchMessage && <div className="mb-4 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-4 py-3 text-sm text-[#E5C65A]">{searchMessage} {visibleProviders.length} verified provider{visibleProviders.length === 1 ? "" : "s"} currently available.</div>}
         <div className="mb-5 flex items-end justify-between">
           <div><p className="text-xs font-bold tracking-widest text-[#D4AF37]">VERIFIED & AVAILABLE</p><h2 className="mt-1 text-2xl font-bold">Ready to take a job</h2></div>
           <span className="text-sm text-zinc-500">{visibleProviders.length} providers</span>
