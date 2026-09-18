@@ -144,7 +144,7 @@ export default function ChangeProviderIdPage() {
               <label className="block">
                 <span className="text-sm font-bold">Last 4 characters only</span>
                 <input required minLength={4} maxLength={4} pattern="[A-Za-z0-9]{4}" value={last4} onChange={(event) => setLast4(event.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 uppercase outline-none" placeholder="1234" />
-                <span className="mt-2 block text-xs text-zinc-500">For a real verification, enter the last four characters of the provider's genuine ID.</span>
+                <span className="mt-2 block text-xs text-zinc-500">For a real verification, enter the last four characters of the provider’s genuine ID.</span>
               </label>
 
               <button disabled={saving} className="rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-50">

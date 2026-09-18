@@ -96,10 +96,6 @@ const steps = [
   { number: 5, title: "Ready", short: "Go online" },
 ] as const;
 
-function label(value: string) {
-  return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
 function naira(value: number | null | undefined) {
   return `₦${Number(value || 0).toLocaleString()}`;
 }
@@ -524,8 +520,8 @@ export default function ProviderOnboardingPage() {
         throw new Error("The secure camera session could not be started.");
       }
 
-      const module = await import("youverify-liveness-web");
-      const YouverifyLiveness = module.default;
+      const livenessModule = await import("youverify-liveness-web");
+      const YouverifyLiveness = livenessModule.default;
       const [firstName, ...rest] = verification.legal_name.trim().split(/\s+/);
       const liveSessionId = credentials.session_id;
 
@@ -555,7 +551,7 @@ export default function ProviderOnboardingPage() {
           setMessage("Camera check passed. Finishing your verification…");
           window.setTimeout(() => void completeLiveFaceVerification(liveSessionId), 1200);
         },
-        onFailure: (data: any) => {
+        onFailure: (data: { error?: { message?: string; key?: string } }) => {
           setImmersiveVerification(false);
           setMessage("");
           setError(String(data?.error?.message || data?.error?.key || "Face check failed. Please try again."));

@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 type BrandLogoProps = {
   compact?: boolean;
   className?: string;
@@ -6,10 +8,13 @@ type BrandLogoProps = {
 export default function BrandLogo({ compact = false, className = "" }: BrandLogoProps) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <img
+      <Image
         src="/rydah-icon.svg"
         alt=""
         aria-hidden="true"
+        width={40}
+        height={40}
+        unoptimized
         className={compact ? "h-8 w-8 shrink-0 rounded-lg" : "h-10 w-10 shrink-0 rounded-xl"}
       />
       <span className="leading-none">

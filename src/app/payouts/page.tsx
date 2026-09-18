@@ -264,7 +264,7 @@ export default function PayoutsPage() {
             ) : (
               <form onSubmit={savePayoutAccount} className="mt-5 rounded-3xl border border-white/10 bg-[#121212] p-6">
                 <p className="text-sm font-black tracking-[0.16em] text-[#D4AF37]">CONNECT BANK ACCOUNT</p>
-                <p className="mt-2 text-sm text-zinc-400">Connect the provider's Nigerian bank account. The full account number is never stored in the Rydah database.</p>
+                <p className="mt-2 text-sm text-zinc-400">Connect the provider’s Nigerian bank account. The full account number is never stored in the Rydah database.</p>
                 {banks.length === 0 ? (
                   <button type="button" disabled={saving} onClick={() => void loadBanks()} className="mt-5 rounded-2xl border border-[#D4AF37]/40 px-5 py-3 font-bold text-[#D4AF37] disabled:opacity-50">{saving ? "Loading…" : "Load Nigerian Banks"}</button>
                 ) : (
