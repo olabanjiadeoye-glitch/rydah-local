@@ -130,12 +130,20 @@ Deno.serve(async (req) => {
     if (job.arrival_face_verified_at) {
       return json({ ok: true, status: "verified", result_text: "Provider camera face match already completed." });
     }
+    if (Number(job.arrival_face_attempts || 0) >= 5) {
+      return json({
+        error: "Too many unsuccessful face checks. Restart the arrival safety check or contact Rydah support.",
+        code: "arrival_face_attempt_limit",
+      }, 429);
+    }
 
     const providerResponse = await supabaseRequest(
-      `providers?id=eq.${encodeURIComponent(job.provider_id)}&select=id,business_name,is_verified&limit=1`,
+      `providers?id=eq.${encodeURIComponent(job.provider_id)}&select=id,business_name,is_verified,biometric_verified&limit=1`,
     );
     const provider = (await providerResponse.json())[0];
-    if (!provider?.is_verified) return json({ error: "The assigned provider is not Rydah verified" }, 409);
+    if (!provider?.is_verified || !provider?.biometric_verified) {
+      return json({ error: "The assigned provider has not completed Rydah biometric verification" }, 409);
+    }
 
     const verificationResponse = await supabaseRequest(
       `provider_verifications?provider_id=eq.${encodeURIComponent(job.provider_id)}&select=id,biometric_status,biometric_job_id&limit=1`,
