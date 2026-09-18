@@ -410,8 +410,8 @@ export default function ProviderOnboardingPage() {
                   <h2 className="mt-1 text-2xl font-black">{provider.business_name}</h2>
                   <p className="mt-1 text-zinc-400">{provider.service_category} • {provider.location}</p>
                 </div>
-                <span className={`rounded-full px-4 py-2 text-xs font-black ${statusStyle(provider.is_verified ? "approved" : verification?.status ?? "draft")}`}>
-                  {provider.is_verified ? "✓ VERIFIED" : (verification?.status ?? "draft").toUpperCase()}
+                <span className={`rounded-full px-4 py-2 text-xs font-black ${biometricStatus === "verified" ? "bg-emerald-500/15 text-emerald-400" : provider.is_verified ? "bg-amber-500/15 text-amber-300" : statusStyle(verification?.status ?? "draft")}`}>
+                  {biometricStatus === "verified" ? "✓ BIOMETRIC VERIFIED" : provider.is_verified ? "ID REVIEWED • BIOMETRIC REQUIRED" : (verification?.status ?? "draft").toUpperCase()}
                 </span>
               </div>
               {verification?.status === "rejected" && verification.admin_notes && (
@@ -421,10 +421,17 @@ export default function ProviderOnboardingPage() {
               )}
             </div>
 
-            {provider.is_verified && (
+            {provider.is_verified && biometricStatus === "verified" && (
               <div className="mt-6 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-7">
-                <h3 className="text-2xl font-black text-emerald-400">Provider badge active</h3>
-                <p className="mt-2 text-zinc-300">Your Rydah verified badge is active. The Face & ID Match below is the stronger verification layer for the updated onboarding flow.</p>
+                <h3 className="text-2xl font-black text-emerald-400">Biometric verification complete</h3>
+                <p className="mt-2 text-zinc-300">Your identity review and live face verification are complete. You are eligible for Rydah jobs subject to the other marketplace requirements.</p>
+              </div>
+            )}
+
+            {provider.is_verified && biometricStatus !== "verified" && (
+              <div className="mt-6 rounded-3xl border border-amber-500/25 bg-amber-500/10 p-7">
+                <h3 className="text-2xl font-black text-amber-300">Identity reviewed — biometric upgrade required</h3>
+                <p className="mt-2 text-zinc-300">Your older provider review remains on record, but Rydah now requires successful live face and liveness verification before you can receive or work on new jobs.</p>
               </div>
             )}
 
