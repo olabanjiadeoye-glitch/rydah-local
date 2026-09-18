@@ -61,6 +61,8 @@ Collected:
 - Notifications
 - Favourites / marketplace interactions where persisted
 - Support/complaint information
+- Safety incident reports and review status
+- Payment/service disputes and refund-review status
 
 Purposes:
 - Core app functionality
@@ -69,11 +71,17 @@ Purposes:
 - Marketplace operations
 - Financial reconciliation
 
-### Device / session data
+### Device / session / notification data
 May include:
 - Authentication/session information
 - Browser/device information exposed in normal web requests/logs
 - Security/audit metadata
+- Web Push subscription endpoint and encryption keys when a user opts in to device notifications
+
+Purposes:
+- Account security
+- App functionality
+- Delivery of job, safety, payment, dispute and verification notifications
 
 Review Supabase, Vercel and any production analytics/logging configuration before answering Play's device identifiers and diagnostics questions.
 
@@ -102,7 +110,7 @@ Rydah supports account creation. Google Play therefore requires:
 Current web resource:
 https://rydahlocal.online/delete-account
 
-Deletion requests must result in deletion of associated user data, except limited records that Rydah is legally permitted or required to retain. Any such retention must be described accurately in the privacy notice.
+The implemented admin deletion workflow removes the Supabase Auth account, deletes account-linked records where configured to cascade, anonymises retained customer job/provider identity data, and removes the direct user link from retained financial records. Limited transaction, dispute and safety records may remain where reasonably necessary for reconciliation, fraud prevention, safety, legal obligations, or resolving claims.
 
 ## Items to verify before final Play answers
 1. Production Youverify retention behaviour and DPA / privacy terms.
@@ -110,9 +118,9 @@ Deletion requests must result in deletion of associated user data, except limite
 3. Whether any analytics SDK is added before release.
 4. Whether crash reporting is added before release.
 5. Whether precise location/GPS is collected or only user-entered service area/location text.
-6. Whether push notification tokens/device identifiers are stored after native notification integration.
-7. Exact retention period for completed jobs, payments, disputes and verification audit records.
-8. Actual process/SLA used by Rydah support to complete account deletion requests.
+6. Confirm production Web Push delivery behaviour on Android/PWA and whether Play categorises the stored push endpoint as a device or other identifier for the final questionnaire.
+7. Exact retention period for completed jobs, payments, disputes, safety incidents and verification audit records.
+8. Actual operational SLA used by Rydah support to complete account deletion requests.
 9. Whether users can upload job photos or other user-generated files in the production build.
 10. Whether any AI assistant conversation content is retained server-side.
 
