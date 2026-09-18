@@ -214,7 +214,8 @@ export default function ProviderOnboardingPage() {
   async function verifyFaceAndId(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!session || !verification) return;
-    if (!selfie) {
+    const sandboxTestNin = verification.id_type === "NIN" && fullIdNumber.replace(/\s+/g, "").trim() === "11111111111";
+    if (!selfie && !sandboxTestNin) {
       setError("Take or choose a clear selfie first.");
       return;
     }
@@ -228,11 +229,12 @@ export default function ProviderOnboardingPage() {
     setMessage("Checking your face against your ID record…");
 
     try {
-      const selfieData = await fileToDataUrl(selfie);
+      const selfieData = selfie ? await fileToDataUrl(selfie) : "";
       const result = await callIdentityBackend(session, {
         action: "verify_face_id",
         id_number: fullIdNumber,
         selfie: selfieData,
+        use_sandbox_sample: sandboxTestNin,
         consent: true,
       });
       setMessage(result.result_text || "Face and ID verification completed.");
@@ -385,7 +387,7 @@ export default function ProviderOnboardingPage() {
                       <label className="block md:col-span-2">
                         <span className="text-sm font-bold">Selfie / clear face photo</span>
                         <input required type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setSelfie(e.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-sm text-zinc-300" />
-                        <span className="mt-2 block text-xs text-zinc-500">Choose a clear front-facing image from your gallery/files for sandbox testing. Before live launch, Rydah will require a live selfie/liveness check.</span>
+                        <span className="mt-2 block text-xs text-zinc-500">For normal verification, choose a clear front-facing image. For the sandbox NIN 11111111111, no file is required because Rydah uses the identity provider's official sandbox test image. Before live launch, Rydah will require a live selfie/liveness check.</span>
                       </label>
 
                       <label className="md:col-span-2 flex items-start gap-3 rounded-2xl border border-white/10 p-4 text-sm text-zinc-300">
@@ -393,7 +395,7 @@ export default function ProviderOnboardingPage() {
                         <span>I consent to Rydah sending my ID number and selfie to its identity-verification provider solely to verify my identity and face match.</span>
                       </label>
 
-                      <button disabled={faceSaving || !fullIdNumber.trim() || !selfie || !faceConsent} className="md:col-span-2 rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-40">
+                      <button disabled={faceSaving || !fullIdNumber.trim() || (!selfie && !(verification.id_type === "NIN" && fullIdNumber.replace(/\s+/g, "").trim() === "11111111111")) || !faceConsent} className="md:col-span-2 rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-40">
                         {faceSaving ? "Checking Face & ID…" : "Verify Face & ID"}
                       </button>
                     </form>
