@@ -77,7 +77,7 @@ export default function DeleteAccountPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#080808] px-5 py-7 sm:py-6 text-white">
+    <main className="min-h-screen bg-[#080808] px-5 py-6 sm:py-8 text-white">
       <section className="mx-auto max-w-2xl">
         <Link href="/" aria-label="Rydah Local home"><BrandLogo /></Link>
 

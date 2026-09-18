@@ -207,7 +207,7 @@ export default function MyJobsPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-5xl px-5 py-7 sm:py-6">
+      <section className="mx-auto max-w-5xl px-5 py-6 sm:py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">CUSTOMER DASHBOARD</p>

@@ -120,7 +120,7 @@ export default function PayoutAdminPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-5 py-7 sm:py-6">
+      <section className="mx-auto max-w-6xl px-5 py-6 sm:py-8">
         <div className="mb-6 rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-4 text-sm text-emerald-300">
           LIVE PAYOUT LEDGER — only mark a live payout paid after the provider has actually received an external bank transfer. A payment reference is required.
         </div>

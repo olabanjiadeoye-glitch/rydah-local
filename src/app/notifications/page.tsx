@@ -285,7 +285,7 @@ export default function NotificationsPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-4xl px-5 py-7 sm:py-6">
+      <section className="mx-auto max-w-4xl px-5 py-6 sm:py-8">
         <div className="rounded-3xl border border-[#D4AF37]/20 bg-[#121212] p-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>

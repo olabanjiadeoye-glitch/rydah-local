@@ -247,7 +247,7 @@ export default function ArrivalCheckPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-4xl px-5 py-7 sm:py-6">
+      <section className="mx-auto max-w-4xl px-5 py-6 sm:py-8">
         <div className="rounded-3xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 p-6">
           <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">BEFORE WORK STARTS</p>
           <h2 className="mt-2 text-3xl font-black">Confirm the right provider arrived</h2>

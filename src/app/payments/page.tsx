@@ -227,7 +227,7 @@ export default function PaymentsPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-3xl px-5 py-7 sm:py-6">
+      <section className="mx-auto max-w-3xl px-5 py-6 sm:py-8">
         <div className="mb-5 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-4 text-sm text-[#E7C85A]">
           Secure checkout is handled by Paystack. Rydah never asks you to enter card details directly on this page.
         </div>

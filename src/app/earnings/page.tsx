@@ -193,7 +193,7 @@ export default function EarningsPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-5xl px-5 py-7 sm:py-6">
+      <section className="mx-auto max-w-5xl px-5 py-6 sm:py-8">
         {message && <div className="mb-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">{message}</div>}
         {error && <div className="mb-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
