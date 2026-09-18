@@ -162,6 +162,7 @@ export default function AdminDashboardPage() {
             <a href="/admin/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Verification</a>
             <a href="/admin/finance" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Finance</a>
             <a href="/payout-admin" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Payouts</a>
+            <a href="/admin/safety" className="rounded-full border border-red-500/30 px-4 py-2 text-sm text-red-300">Safety</a>
             <a href="/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Marketplace</a>
           </div>
         </div>
@@ -270,6 +271,7 @@ export default function AdminDashboardPage() {
                   <a href="/admin/finance" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Finance & Commission</p><p className="mt-1 text-sm text-zinc-500">Revenue, ledger and commission rate.</p></a>
                   <a href="/payout-admin" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Provider Payouts</p><p className="mt-1 text-sm text-zinc-500">Review and settle withdrawal requests.</p></a>
                   <a href="/notifications" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Notifications</p><p className="mt-1 text-sm text-zinc-500">See verification and job updates.</p></a>
+                  <a href="/admin/safety" className="rounded-2xl border border-red-500/20 bg-red-950/10 p-5"><p className="font-black text-red-200">Safety Review</p><p className="mt-1 text-sm text-zinc-500">Review job-linked safety reports and urgent concerns.</p></a>
                 </div>
               </section>
             </div>
