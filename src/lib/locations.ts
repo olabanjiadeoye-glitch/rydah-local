@@ -1,4 +1,4 @@
-export const RYDAH_TARGET_CITIES = ["Lagos", "Abuja", "Ibadan"] as const;
+export const RYDAH_TARGET_CITIES = ["Lagos", "Abuja", "Ibadan", "Warri", "Port Harcourt"] as const;
 
 export const RYDAH_SERVICE_AREAS = [
   "Lekki, Lagos",
@@ -29,6 +29,20 @@ export const RYDAH_SERVICE_AREAS = [
   "Jericho, Ibadan",
   "Iyaganku, Ibadan",
   "Other Ibadan area",
+  "Warri Central, Warri",
+  "Effurun, Warri",
+  "Enerhen, Warri",
+  "Udu, Warri",
+  "Ekpan, Warri",
+  "Airport Road, Warri",
+  "Other Warri area",
+  "GRA, Port Harcourt",
+  "D-Line, Port Harcourt",
+  "Rumuola, Port Harcourt",
+  "Rumuokoro, Port Harcourt",
+  "Woji, Port Harcourt",
+  "Trans Amadi, Port Harcourt",
+  "Other Port Harcourt area",
 ] as const;
 
 export const RYDAH_DEFAULT_SERVICE_AREA = "Lekki, Lagos";
@@ -66,6 +80,20 @@ export const RYDAH_SERVICE_AREA_CENTERS: Record<string, AreaCenter> = {
   "Akala, Ibadan": { latitude: 7.3520, longitude: 3.8450 },
   "Jericho, Ibadan": { latitude: 7.3950, longitude: 3.8720 },
   "Iyaganku, Ibadan": { latitude: 7.3890, longitude: 3.8910 },
+
+  "Warri Central, Warri": { latitude: 5.5167, longitude: 5.7500 },
+  "Effurun, Warri": { latitude: 5.5560, longitude: 5.7840 },
+  "Enerhen, Warri": { latitude: 5.5330, longitude: 5.7580 },
+  "Udu, Warri": { latitude: 5.4890, longitude: 5.8180 },
+  "Ekpan, Warri": { latitude: 5.5730, longitude: 5.7730 },
+  "Airport Road, Warri": { latitude: 5.5480, longitude: 5.7350 },
+
+  "GRA, Port Harcourt": { latitude: 4.8156, longitude: 7.0046 },
+  "D-Line, Port Harcourt": { latitude: 4.8150, longitude: 7.0120 },
+  "Rumuola, Port Harcourt": { latitude: 4.8500, longitude: 7.0200 },
+  "Rumuokoro, Port Harcourt": { latitude: 4.8667, longitude: 6.9980 },
+  "Woji, Port Harcourt": { latitude: 4.8300, longitude: 7.0550 },
+  "Trans Amadi, Port Harcourt": { latitude: 4.8060, longitude: 7.0400 },
 };
 
 export function cityFromServiceArea(area: string) {

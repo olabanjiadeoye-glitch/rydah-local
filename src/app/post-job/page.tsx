@@ -134,7 +134,7 @@ export default function PostJobPage() {
 
       if (!nearest || nearest.distanceKm > 60) {
         setGpsCoordinates(null);
-        setGpsMessage("GPS detected outside Rydah's current Lagos, Abuja and Ibadan coverage. Choose the Nigerian service area manually; Rydah will not store this out-of-coverage GPS position.");
+        setGpsMessage("GPS detected outside Rydah's current Lagos, Abuja, Ibadan, Warri and Port Harcourt coverage. Choose the Nigerian service area manually; Rydah will not store this out-of-coverage GPS position.");
         return;
       }
 

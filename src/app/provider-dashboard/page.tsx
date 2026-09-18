@@ -174,7 +174,7 @@ export default function ProviderDashboardPage() {
       );
 
       if (!nearest || nearest.distanceKm > 60) {
-        throw new Error("Your GPS position appears outside Rydah's current Lagos, Abuja and Ibadan coverage. Choose your Nigerian service area manually.");
+        throw new Error("Your GPS position appears outside Rydah's current Lagos, Abuja, Ibadan, Warri and Port Harcourt coverage. Choose your Nigerian service area manually.");
       }
 
       setLocation(nearest.area);
