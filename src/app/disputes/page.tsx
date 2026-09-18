@@ -26,6 +26,7 @@ type PaymentRow = {
   status: string;
   reference: string;
   method: string;
+  gateway: string;
   refund_status: string;
 };
 
@@ -130,7 +131,7 @@ export default function DisputesPage() {
               current.access_token,
             ),
         restGet<PaymentRow[]>(
-          "payments?select=id,job_id,amount_naira,status,reference,method,refund_status&order=created_at.desc&limit=100",
+          "payments?select=id,job_id,amount_naira,status,reference,method,gateway,refund_status&order=created_at.desc&limit=100",
           current.access_token,
         ),
         restGet<DisputeRow[]>(
