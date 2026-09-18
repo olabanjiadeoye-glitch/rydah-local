@@ -451,8 +451,12 @@ export default function ProviderDashboardPage() {
                           </div>
                         )}
 
-                        {pinVerified && job.status === "accepted" && !needsArrivalFace && (
+                        {pinVerified && job.status === "accepted" && !needsArrivalFace && (!biometricWorkRequired || biometricReady) && (
                           <div className="mt-5 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-4 text-sm text-emerald-300">✓ Arrival safety checks complete. You may start the job.</div>
+                        )}
+
+                        {pinVerified && job.status === "accepted" && biometricWorkRequired && !biometricReady && (
+                          <div className="mt-5 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-200">Arrival PIN verified, but work cannot start until biometric verification is successfully completed.</div>
                         )}
 
                         {faceVerified && (
