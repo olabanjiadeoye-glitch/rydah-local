@@ -124,9 +124,9 @@ export default function AdminFinancePage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-5 py-10">
+      <section className="mx-auto max-w-6xl px-5 py-7 sm:py-6">
         {loading ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">Loading finance dashboard...</div>
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">Loading finance dashboard...</div>
         ) : (
           <>
             {error && <div className="mb-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
@@ -154,12 +154,12 @@ export default function AdminFinancePage() {
                   </form>
                 </div>
 
-                <div className="mt-8">
+                <div className="mt-6">
                   <p className="text-sm font-black tracking-[0.16em] text-[#D4AF37]">COMMISSION LEDGER</p>
                   <h2 className="mt-1 text-3xl font-black">Transactions</h2>
                   <div className="mt-5 grid gap-4">
                     {payments.length === 0 ? (
-                      <div className="rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">No payment records yet.</div>
+                      <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">No payment records yet.</div>
                     ) : payments.map((payment) => (
                       <article key={payment.id} className="rounded-3xl border border-white/10 bg-[#121212] p-6">
                         <div className="flex flex-wrap items-start justify-between gap-4">
