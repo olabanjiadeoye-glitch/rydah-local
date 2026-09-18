@@ -11,6 +11,7 @@ import {
   type AuthSession,
 } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
+import { RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS } from "@/lib/locations";
 
 type ProviderRow = {
   id: string;
@@ -59,7 +60,7 @@ type JobRow = {
 };
 
 const categories = ["Electrician", "Plumber", "AC Technician", "Generator", "Cleaning", "Mechanic"];
-const locations = ["Lekki, Lagos", "Victoria Island, Lagos", "Ikeja, Lagos"];
+const locations = RYDAH_SERVICE_AREAS;
 
 function naira(value: number | null) {
   return value == null ? "Not set" : `₦${Number(value).toLocaleString()}`;
@@ -86,7 +87,7 @@ export default function ProviderDashboardPage() {
 
   const [businessName, setBusinessName] = useState("");
   const [category, setCategory] = useState("Electrician");
-  const [location, setLocation] = useState("Lekki, Lagos");
+  const [location, setLocation] = useState(RYDAH_DEFAULT_SERVICE_AREA);
   const [description, setDescription] = useState("");
   const [startingPrice, setStartingPrice] = useState("");
 
