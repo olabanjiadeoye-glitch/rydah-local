@@ -104,23 +104,50 @@ Deno.serve(async (req) => {
       const secretKey = required("PAYSTACK_SECRET_KEY");
       const isTest = secretKey.startsWith("sk_test_");
 
+      const checkoutSettingKey = isTest ? "paystack_test_checkout_enabled" : "payment_gateway_live_enabled";
+      const splitSettingKey = isTest ? "paystack_test_split_enabled" : "paystack_split_enabled";
+
       const [accountResponse, settingResponse] = await Promise.all([
         supabaseRequest(
           `provider_payout_accounts?provider_id=eq.${encodeURIComponent(job.provider_id)}&status=eq.verified&is_test=eq.${isTest ? "true" : "false"}&select=gateway_subaccount_code&limit=1`,
         ),
-        supabaseRequest("platform_settings?key=eq.commission_rate_percent&select=value_numeric&limit=1"),
+        supabaseRequest(
+          `platform_settings?key=in.(commission_rate_percent,${checkoutSettingKey},${splitSettingKey})&select=key,value_numeric`,
+        ),
       ]);
       const payoutAccounts = await accountResponse.json() as Array<{ gateway_subaccount_code: string | null }>;
-      const settings = await settingResponse.json() as Array<{ value_numeric: number | string }>;
-      const subaccountCode = payoutAccounts[0]?.gateway_subaccount_code || null;
-      const commissionRate = Number(settings[0]?.value_numeric ?? 15);
+      const settings = await settingResponse.json() as Array<{ key: string; value_numeric: number | string }>;
+      const settingValue = (key: string, fallback = 0) =>
+        Number(settings.find((row) => row.key === key)?.value_numeric ?? fallback);
+
+      const checkoutEnabled = settingValue(checkoutSettingKey) === 1;
+      const splitEnabled = settingValue(splitSettingKey) === 1;
+      const commissionRate = settingValue("commission_rate_percent", 15);
+
+      if (!checkoutEnabled) {
+        return json({
+          error: isTest
+            ? "Paystack test checkout is currently disabled by Rydah."
+            : "Live Paystack checkout is not enabled yet.",
+        }, 503);
+      }
 
       if (!Number.isFinite(commissionRate) || commissionRate < 0 || commissionRate >= 100) {
         return json({ error: "Rydah commission configuration is invalid" }, 500);
       }
 
-      // Fail closed in live mode. We never want a new real payment to silently fall back
-      // to manual provider payout once automatic settlement is expected.
+      if (!isTest && !splitEnabled) {
+        return json({
+          error: "Live automatic provider settlement is not enabled yet.",
+        }, 503);
+      }
+
+      const subaccountCode = splitEnabled
+        ? (payoutAccounts[0]?.gateway_subaccount_code || null)
+        : null;
+
+      // Fail closed in live mode. A real customer payment must never silently fall back
+      // to manual provider payout once live checkout is enabled.
       if (!isTest && !subaccountCode) {
         return json({
           error: "Automatic provider settlement is not ready for this provider. The provider must connect and verify a live bank account before the customer can pay with Paystack.",
