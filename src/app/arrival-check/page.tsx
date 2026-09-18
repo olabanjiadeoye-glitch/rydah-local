@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getStoredSession, restGet, restRpc, type AuthSession } from "@/lib/supabase";
+import { getStoredSession, restGet, restRpc, type AuthSession, invokeFunction } from "@/lib/supabase";
 
 type JobRow = {
   id: string;
@@ -36,24 +36,7 @@ async function fileToDataUrl(file: File) {
 }
 
 async function callArrivalFaceBackend(session: AuthSession, jobId: string, faceImage: string) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
-  if (!supabaseUrl || !publishableKey) throw new Error("Arrival camera verification is not configured.");
-
-  const response = await fetch(`${supabaseUrl}/functions/v1/arrival-face-verification`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      apikey: publishableKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      action: "verify_arrival_face",
-      job_id: jobId,
-      face_image: faceImage,
-      consent: true,
-    }),
-  });
+  const response = await invokeFunction("arrival-face-verification", { action: "verify_arrival_face", job_id: jobId, face_image: faceImage, consent: true }, session.access_token);
 
   const result = (await response.json().catch(() => ({}))) as FaceResult;
   if (!response.ok) throw new Error(result.error || "Unable to verify the provider camera image.");
