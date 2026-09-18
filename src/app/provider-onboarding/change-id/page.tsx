@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { getStoredSession, restGet, type AuthSession, invokeFunction } from "@/lib/supabase";
 
@@ -106,7 +107,7 @@ export default function ChangeProviderIdPage() {
             <p className="text-sm font-black tracking-[0.22em] text-[#D4AF37]">RYDAH LOCAL</p>
             <h1 className="mt-1 text-2xl font-black">Change Face & ID Method</h1>
           </div>
-          <a href="/provider-onboarding" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Back</a>
+          <Link href="/provider-onboarding" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Back</Link>
         </div>
       </header>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getStoredSession, type AuthSession, invokeFunction } from "@/lib/supabase";
 
@@ -53,7 +54,7 @@ export default function VerificationStatusPage() {
               <div className="inline-flex rounded-full bg-emerald-500/15 px-4 py-2 text-sm font-black text-emerald-400">CONNECTED</div>
               <h2 className="mt-4 text-2xl font-black">Identity provider is connected</h2>
               <p className="mt-2 text-zinc-400">Environment: <span className="font-bold text-white">{result.environment || "unknown"}</span></p>
-              <a href="/provider-onboarding" className="mt-6 inline-block rounded-2xl bg-[#D4AF37] px-5 py-3 font-black text-black">Open Face & ID Verification</a>
+              <Link href="/provider-onboarding" className="mt-6 inline-block rounded-2xl bg-[#D4AF37] px-5 py-3 font-black text-black">Open Face & ID Verification</Link>
             </>
           ) : (
             <>

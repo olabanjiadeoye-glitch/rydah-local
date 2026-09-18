@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getStoredSession, type AuthSession, invokeFunction } from "@/lib/supabase";
 
@@ -171,7 +172,7 @@ export default function SandboxFaceTestPage() {
           {message && <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm leading-6 text-emerald-300">{message}</div>}
           {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm leading-6 text-red-300">{error}</div>}
 
-          <a href="/provider-onboarding" className="mt-6 inline-block text-sm font-bold text-[#D4AF37]">← Back to Provider Verification</a>
+          <Link href="/provider-onboarding" className="mt-6 inline-block text-sm font-bold text-[#D4AF37]">← Back to Provider Verification</Link>
         </div>
       </section>
     </main>

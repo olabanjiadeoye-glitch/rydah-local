@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   clearSession,
@@ -488,7 +489,7 @@ export default function ProviderDashboardPage() {
             <h1 className="mt-1 text-2xl font-black">Provider Dashboard</h1>
           </div>
           <div className="flex gap-2">
-            <a href="/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Marketplace</a>
+            <Link href="/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Marketplace</Link>
             <button onClick={signOut} className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Sign Out</button>
           </div>
         </div>
@@ -579,7 +580,7 @@ export default function ProviderDashboardPage() {
           <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">
             <h2 className="text-2xl font-black">This is a customer account</h2>
             <p className="mt-3 text-zinc-400">Use a provider account to access this dashboard.</p>
-            <a href="/providers" className="mt-6 inline-block rounded-2xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Browse Providers</a>
+            <Link href="/providers" className="mt-6 inline-block rounded-2xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Browse Providers</Link>
           </div>
         ) : !provider ? (
           <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">
@@ -593,7 +594,7 @@ export default function ProviderDashboardPage() {
               <label className="block">
                 <span className="text-sm font-bold">Service category</span>
                 <select value={category} onChange={(e) => setCategory(e.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">{categories.map((item) => <option key={item}>{item}</option>)}</select>
-                <a href="/provider-interest" className="mt-2 inline-block text-xs font-bold text-[#D4AF37]">Profession not listed? Register it for review →</a>
+                <Link href="/provider-interest" className="mt-2 inline-block text-xs font-bold text-[#D4AF37]">Profession not listed? Register it for review →</Link>
               </label>
               <label className="block">
                 <span className="text-sm font-bold">Location</span>
@@ -655,7 +656,7 @@ export default function ProviderDashboardPage() {
                       >
                         {gpsBusy ? "Finding GPS…" : "📍 Update Area from GPS"}
                       </button>
-                      <a href="/provider-interest" className="text-sm font-bold text-[#D4AF37]">Offer another profession →</a>
+                      <Link href="/provider-interest" className="text-sm font-bold text-[#D4AF37]">Offer another profession →</Link>
                     </div>
                     {gpsMessage && <p className="mt-2 text-xs leading-5 text-emerald-300">{gpsMessage}</p>}
                   </div>
@@ -768,7 +769,7 @@ export default function ProviderDashboardPage() {
                           <div className="mt-5 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-5">
                             <p className="text-sm font-black text-amber-300">BIOMETRIC VERIFICATION REQUIRED</p>
                             <p className="mt-2 text-sm leading-6 text-zinc-300">Rydah now requires successful face and liveness verification before providers can accept or work on jobs. Complete verification before this job can start.</p>
-                            <a href="/provider-onboarding" className="mt-4 inline-block rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">Complete Biometric Verification</a>
+                            <Link href="/provider-onboarding" className="mt-4 inline-block rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">Complete Biometric Verification</Link>
                           </div>
                         )}
 
