@@ -162,4 +162,4 @@ jobs:
           git add ci-status/android-twa.json
           if [ -f ci-status/android-bundle.log ]; then git add ci-status/android-bundle.log; fi
           git commit -m "Record Android CI status [skip ci]" || true
-          git push
+          git push || echo "CI status file could not be pushed because main advanced during this run; build artifacts remain valid."
