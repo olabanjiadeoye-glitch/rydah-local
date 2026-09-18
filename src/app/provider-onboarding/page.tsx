@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   getStoredSession,
   invokeFunction,
@@ -9,13 +9,39 @@ import {
   restPatch,
   type AuthSession,
 } from "@/lib/supabase";
+import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
+import { getCurrentDeviceLocation } from "@/lib/device-location";
+import {
+  RYDAH_DEFAULT_SERVICE_AREA,
+  RYDAH_SERVICE_AREAS,
+  nearestServiceArea,
+} from "@/lib/locations";
 
 type ProviderRow = {
   id: string;
+  user_id: string | null;
   business_name: string;
   service_category: string;
   location: string;
+  description: string | null;
+  starting_price: number | null;
   is_verified: boolean;
+  is_available: boolean;
+};
+
+type ProviderBillingState = {
+  mode: "test" | "live";
+  provider_id: string | null;
+  registration_fee_naira: number;
+  monthly_fee_naira: number;
+  registration_status: "unpaid" | "pending" | "paid" | "failed" | "waived";
+  registration_paid_at: string | null;
+  mandate_status: "not_started" | "pending" | "active" | "failed" | "revoked";
+  subscription_status: "inactive" | "pending" | "active" | "past_due" | "non_renewing" | "cancelled";
+  subscription_started_at: string | null;
+  last_subscription_paid_at: string | null;
+  next_payment_at: string | null;
+  billing_ready: boolean;
 };
 
 type BiometricStatus = "not_started" | "pending" | "verified" | "failed" | "review_required";
@@ -27,18 +53,14 @@ type VerificationRow = {
   phone: string;
   years_experience: number;
   service_address: string;
-  id_type: "NIN" | "Drivers Licence" | "International Passport" | "Voters Card";
+  id_type: "NIN" | "International Passport";
   id_last4: string;
   status: "draft" | "pending" | "approved" | "rejected";
   admin_notes: string | null;
-  submitted_at: string | null;
-  reviewed_at: string | null;
   biometric_status: BiometricStatus;
-  biometric_provider: string | null;
   biometric_result_text: string | null;
   biometric_verified_at: string | null;
   biometric_liveness_session_id?: string | null;
-  biometric_liveness_result?: string | null;
 };
 
 type IdentityResponse = {
@@ -46,64 +68,70 @@ type IdentityResponse = {
   status?: BiometricStatus;
   result_text?: string;
   error?: string;
-  setup_required?: boolean;
   environment?: string;
-  configured?: boolean;
   liveness_configured?: boolean;
-  public_merchant_id_configured?: boolean;
   session_id?: string;
   session_token?: string;
 };
 
-const idTypes: VerificationRow["id_type"][] = [
-  "NIN",
-  "Drivers Licence",
-  "International Passport",
-  "Voters Card",
-];
+type BillingResponse = {
+  ok?: boolean;
+  status?: string;
+  error?: string;
+  message?: string;
+  authorization_url?: string;
+  redirect_url?: string;
+  billing?: ProviderBillingState;
+};
 
-function statusStyle(status: VerificationRow["status"]) {
-  if (status === "approved") return "bg-emerald-500/15 text-emerald-400";
-  if (status === "rejected") return "bg-red-500/15 text-red-300";
-  if (status === "pending") return "bg-[#D4AF37]/15 text-[#D4AF37]";
-  return "bg-zinc-800 text-zinc-400";
+const categories = ["Electrician", "Plumber", "AC Technician", "Generator", "Cleaning", "Mechanic"];
+const idTypes: VerificationRow["id_type"][] = ["NIN", "International Passport"];
+
+const steps = [
+  { number: 1, title: "Registration", short: "Pay once" },
+  { number: 2, title: "Your service", short: "Set profile" },
+  { number: 3, title: "Monthly payment", short: "Connect bank" },
+  { number: 4, title: "Verify identity", short: "ID + face" },
+  { number: 5, title: "Ready", short: "Go online" },
+] as const;
+
+function label(value: string) {
+  return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-function biometricStyle(status: BiometricStatus) {
-  if (status === "verified") return "bg-emerald-500/15 text-emerald-400";
-  if (status === "failed") return "bg-red-500/15 text-red-300";
-  if (status === "pending" || status === "review_required") return "bg-[#D4AF37]/15 text-[#D4AF37]";
-  return "bg-zinc-800 text-zinc-400";
+function naira(value: number | null | undefined) {
+  return `₦${Number(value || 0).toLocaleString()}`;
 }
 
 async function fileToDataUrl(file: File) {
   return await new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("Unable to read selfie image."));
+    reader.onerror = () => reject(new Error("Unable to read the photo."));
     reader.readAsDataURL(file);
   });
-}
-
-async function callIdentityBackend(session: AuthSession, payload: Record<string, unknown>) {
-  const response = await invokeFunction("identity-verification", payload, session.access_token);
-  const result = (await response.json().catch(() => ({}))) as IdentityResponse;
-  if (!response.ok) throw new Error(result.error || "Unable to complete face verification.");
-  return result;
 }
 
 export default function ProviderOnboardingPage() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [provider, setProvider] = useState<ProviderRow | null>(null);
+  const [billing, setBilling] = useState<ProviderBillingState | null>(null);
   const [verification, setVerification] = useState<VerificationRow | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [faceSaving, setFaceSaving] = useState(false);
-  const [liveFaceSaving, setLiveFaceSaving] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [faceBusy, setFaceBusy] = useState(false);
+  const [gpsBusy, setGpsBusy] = useState(false);
   const [identityEnvironment, setIdentityEnvironment] = useState("sandbox");
   const [livenessConfigured, setLivenessConfigured] = useState(false);
-  const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const [businessName, setBusinessName] = useState("");
+  const [category, setCategory] = useState("Electrician");
+  const [location, setLocation] = useState(RYDAH_DEFAULT_SERVICE_AREA);
+  const [startingPrice, setStartingPrice] = useState("");
+  const [description, setDescription] = useState("");
+  const [gpsMessage, setGpsMessage] = useState("");
 
   const [legalName, setLegalName] = useState("");
   const [phone, setPhone] = useState("");
@@ -114,96 +142,275 @@ export default function ProviderOnboardingPage() {
   const [fullIdNumber, setFullIdNumber] = useState("");
   const [selfie, setSelfie] = useState<File | null>(null);
   const [faceConsent, setFaceConsent] = useState(false);
-  const [autoFinalizingSessionId, setAutoFinalizingSessionId] = useState("");
+
+  const registrationDone = Boolean(
+    billing && ["paid", "waived"].includes(billing.registration_status),
+  );
+  const profileDone = Boolean(provider);
+  const subscriptionDone = Boolean(billing?.billing_ready);
+  const biometricDone = verification?.biometric_status === "verified";
+  const verificationDone = Boolean(provider?.is_verified && biometricDone);
+  const ready = registrationDone && profileDone && subscriptionDone && verificationDone;
+
+  const currentStep = useMemo(() => {
+    if (!registrationDone) return 1;
+    if (!profileDone) return 2;
+    if (!subscriptionDone) return 3;
+    if (!verificationDone) return 4;
+    return 5;
+  }, [registrationDone, profileDone, subscriptionDone, verificationDone]);
 
   useEffect(() => {
-    const currentSession = getStoredSession();
-    if (!currentSession) {
+    const current = getStoredSession();
+    if (!current) {
       window.location.assign("/sign-in");
       return;
     }
-    setSession(currentSession);
-    void load(currentSession);
+    setSession(current);
+
+    void (async () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const billingReturn = params.get("billing");
+        if (billingReturn === "registration") {
+          const result = await billingAction(current, "verify_registration");
+          if (result.status === "paid") {
+            setMessage("Registration payment confirmed. Next, tell customers what service you provide.");
+          }
+        } else if (billingReturn === "mandate") {
+          const result = await billingAction(current, "verify_mandate");
+          setMessage(
+            result.message ||
+              (result.status === "active"
+                ? "Monthly payment is active."
+                : "Your bank approval is still being completed."),
+          );
+        }
+        if (billingReturn) {
+          window.history.replaceState({}, "", "/provider-onboarding");
+        }
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "Unable to confirm your latest setup step.");
+      }
+
+      await loadAll(current);
+    })();
   }, []);
 
-  useEffect(() => {
-    const pendingSessionId = verification?.biometric_liveness_session_id || "";
-    const shouldFinalize =
-      verification?.biometric_status === "pending" &&
-      Boolean(pendingSessionId) &&
-      Boolean(fullIdNumber.trim()) &&
-      faceConsent &&
-      !liveFaceSaving &&
-      autoFinalizingSessionId !== pendingSessionId;
+  async function billingAction(current: AuthSession, action: string) {
+    const response = await invokeFunction("provider-billing", { action }, current.access_token);
+    const result = (await response.json().catch(() => ({}))) as BillingResponse;
+    if (!response.ok) throw new Error(result.error || result.message || "Unable to update provider billing.");
+    if (result.billing) setBilling(result.billing);
+    return result;
+  }
 
-    if (!shouldFinalize) return;
+  async function callIdentity(current: AuthSession, payload: Record<string, unknown>) {
+    const response = await invokeFunction("identity-verification", payload, current.access_token);
+    const result = (await response.json().catch(() => ({}))) as IdentityResponse;
+    if (!response.ok) throw new Error(result.error || "Unable to complete identity verification.");
+    return result;
+  }
 
-    const timer = window.setTimeout(() => {
-      setAutoFinalizingSessionId(pendingSessionId);
-      void completeLiveFaceVerification(pendingSessionId);
-    }, 600);
-
-    return () => window.clearTimeout(timer);
-  }, [
-    verification?.biometric_status,
-    verification?.biometric_liveness_session_id,
-    fullIdNumber,
-    faceConsent,
-    liveFaceSaving,
-  ]);
-
-  async function load(currentSession: AuthSession) {
+  async function loadAll(current: AuthSession) {
     setLoading(true);
     setError("");
     try {
-      const providerRows = await restGet<ProviderRow[]>(
-        `providers?user_id=eq.${currentSession.user.id}&select=id,business_name,service_category,location,is_verified&limit=1`,
-        currentSession.access_token,
-      );
+      const [billingResult, providerRows] = await Promise.all([
+        billingAction(current, "status"),
+        restGet<ProviderRow[]>(
+          `providers?user_id=eq.${current.user.id}&select=*&limit=1`,
+          current.access_token,
+        ),
+      ]);
+
       const currentProvider = providerRows[0] ?? null;
       setProvider(currentProvider);
+      if (billingResult.billing) setBilling(billingResult.billing);
 
       if (!currentProvider) {
         setVerification(null);
         return;
       }
 
-      const verificationRows = await restGet<VerificationRow[]>(
-        `provider_verifications?provider_id=eq.${currentProvider.id}&select=*&limit=1`,
-        currentSession.access_token,
-      );
+      const [verificationRows, identityStatus] = await Promise.all([
+        restGet<VerificationRow[]>(
+          `provider_verifications?provider_id=eq.${currentProvider.id}&select=*&limit=1`,
+          current.access_token,
+        ),
+        callIdentity(current, { action: "status" }).catch(() => null),
+      ]);
+
       const currentVerification = verificationRows[0] ?? null;
       setVerification(currentVerification);
 
-      const identityStatus = await callIdentityBackend(currentSession, { action: "status" }).catch(() => null);
       if (identityStatus) {
         setIdentityEnvironment(identityStatus.environment || "sandbox");
         setLivenessConfigured(Boolean(identityStatus.liveness_configured));
       }
 
       if (currentVerification) {
-        setLegalName(currentVerification.legal_name);
-        setPhone(currentVerification.phone);
-        setYearsExperience(String(currentVerification.years_experience));
-        setServiceAddress(currentVerification.service_address);
-        setIdType(currentVerification.id_type);
-        setIdLast4(currentVerification.id_last4);
+        setLegalName(currentVerification.legal_name || "");
+        setPhone(currentVerification.phone || "");
+        setYearsExperience(String(currentVerification.years_experience ?? 1));
+        setServiceAddress(currentVerification.service_address || "");
+        setIdType(currentVerification.id_type === "International Passport" ? "International Passport" : "NIN");
+        setIdLast4(currentVerification.id_last4 || "");
+      }
+
+      if (
+        billingResult.billing?.billing_ready &&
+        currentProvider.is_verified &&
+        currentVerification?.biometric_status === "verified" &&
+        currentProvider.is_available
+      ) {
+        window.location.replace("/provider-work");
       }
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to load verification details.");
+      const detail = caught instanceof Error ? caught.message : "Unable to load provider setup.";
+      if (detail.toLowerCase().includes("provider account is required")) {
+        window.location.replace("/providers");
+        return;
+      }
+      setError(detail);
     } finally {
       setLoading(false);
     }
   }
 
-  async function submitVerification(event: FormEvent<HTMLFormElement>) {
+  async function startRegistrationPayment() {
+    if (!session) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const result = await billingAction(session, "initialize_registration");
+      if (result.authorization_url) {
+        window.location.assign(result.authorization_url);
+        return;
+      }
+      setMessage("Registration is already paid.");
+      await loadAll(session);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to start registration payment.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function useGpsArea() {
+    setGpsBusy(true);
+    setError("");
+    setGpsMessage("");
+    try {
+      const coordinates = await getCurrentDeviceLocation();
+      const nearest = nearestServiceArea(
+        coordinates.latitude,
+        coordinates.longitude,
+        RYDAH_SERVICE_AREAS,
+      );
+      if (!nearest || nearest.distanceKm > 60) {
+        throw new Error("We could not match your phone location to a current Rydah service area. Choose your area from the list.");
+      }
+      setLocation(nearest.area);
+      setGpsMessage(`Area detected: ${nearest.area}`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to detect your service area.");
+    } finally {
+      setGpsBusy(false);
+    }
+  }
+
+  async function createProfile(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session || !registrationDone) return;
+    if (containsOffPlatformContact(description)) {
+      setError(offPlatformContactMessage);
+      return;
+    }
+
+    const price = Number(startingPrice);
+    if (!Number.isFinite(price) || price <= 0) {
+      setError("Enter a valid starting price.");
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const rows = await restInsert<ProviderRow[]>(
+        "providers",
+        {
+          user_id: session.user.id,
+          business_name: businessName.trim(),
+          service_category: category,
+          location,
+          description: description.trim(),
+          starting_price: Math.round(price),
+          is_available: false,
+          is_verified: false,
+        },
+        session.access_token,
+      );
+
+      if (!rows[0]) throw new Error("Your provider profile was not returned by Rydah.");
+      setMessage("Profile saved. Now connect your bank for the ₦500 monthly provider payment.");
+      await loadAll(session);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to save your provider profile.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function startMonthlyPayment() {
+    if (!session || !provider) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const result = await billingAction(session, "initialize_mandate");
+      if (result.redirect_url) {
+        window.location.assign(result.redirect_url);
+        return;
+      }
+      setMessage("Your monthly payment is already active.");
+      await loadAll(session);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to connect your bank.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function checkBankApproval() {
+    if (!session) return;
+    setBusy(true);
+    setError("");
+    try {
+      const result = await billingAction(session, "verify_mandate");
+      setMessage(
+        result.message ||
+          (result.status === "active"
+            ? "Monthly payment is active."
+            : "Your bank approval is still being completed."),
+      );
+      await loadAll(session);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to check bank approval.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitIdentityDetails(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!session || !provider) return;
 
-    setSaving(true);
+    setBusy(true);
     setError("");
     setMessage("");
-
     const payload = {
       provider_id: provider.id,
       legal_name: legalName.trim(),
@@ -217,167 +424,115 @@ export default function ProviderOnboardingPage() {
     };
 
     try {
-      let rows: VerificationRow[];
-      if (verification) {
-        rows = await restPatch<VerificationRow[]>(
-          "provider_verifications",
-          `id=eq.${verification.id}`,
-          payload,
-          session.access_token,
-        );
-      } else {
-        rows = await restInsert<VerificationRow[]>(
-          "provider_verifications",
-          payload,
-          session.access_token,
-        );
-      }
+      const rows = verification
+        ? await restPatch<VerificationRow[]>(
+            "provider_verifications",
+            `id=eq.${verification.id}`,
+            payload,
+            session.access_token,
+          )
+        : await restInsert<VerificationRow[]>(
+            "provider_verifications",
+            payload,
+            session.access_token,
+          );
 
-      const updated = rows[0];
-      if (!updated) throw new Error("Verification submission was not returned by the backend.");
-      setVerification(updated);
-      setMessage("Identity details submitted. Complete Face & ID Match below before admin approval.");
+      if (!rows[0]) throw new Error("Rydah could not confirm your identity details.");
+      setMessage("Details saved. One last identity step: verify your face.");
+      await loadAll(session);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Unable to submit verification.");
+      setError(caught instanceof Error ? caught.message : "Unable to save identity details.");
     } finally {
-      setSaving(false);
+      setBusy(false);
     }
-  }
-
-  async function verifyFaceAndId(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!session || !verification) return;
-    const sandboxTestNin = verification.id_type === "NIN" && fullIdNumber.replace(/\s+/g, "").trim() === "11111111111";
-    if (!selfie && !sandboxTestNin) {
-      setError("Take or choose a clear selfie first.");
-      return;
-    }
-    if (!faceConsent) {
-      setError("You must consent to the face and ID check before continuing.");
-      return;
-    }
-
-    setFaceSaving(true);
-    setError("");
-    setMessage("Checking your face against your ID record…");
-
-    try {
-      const selfieData = selfie ? await fileToDataUrl(selfie) : "";
-      const result = await callIdentityBackend(session, {
-        action: "verify_face_id",
-        id_number: fullIdNumber,
-        selfie: selfieData,
-        use_sandbox_sample: sandboxTestNin,
-        consent: true,
-      });
-      setMessage(result.result_text || "Face and ID verification completed.");
-      setFullIdNumber("");
-      setSelfie(null);
-      setFaceConsent(false);
-      await load(session);
-    } catch (caught) {
-      setMessage("");
-      setError(caught instanceof Error ? caught.message : "Unable to complete face and ID verification.");
-      await load(session);
-    } finally {
-      setFaceSaving(false);
-    }
-  }
-
-  async function completeLiveFaceVerification(livenessSessionId: string) {
-    const activeSession = session ?? getStoredSession();
-    if (!activeSession) {
-      setError("Please sign in again before checking verification.");
-      return;
-    }
-    if (!livenessSessionId) {
-      setError("No saved live verification session was found.");
-      return;
-    }
-    if (!fullIdNumber.trim()) {
-      setError("Enter the full ID number before checking the latest result.");
-      return;
-    }
-    if (!faceConsent) {
-      setError("Confirm consent before checking the latest result.");
-      return;
-    }
-    setLiveFaceSaving(true);
-
-    setMessage("Live presence confirmed. Finalizing the liveness result and matching the live face with the identity record…");
-    setError("");
-
-    for (let attempt = 1; attempt <= 6; attempt += 1) {
-      try {
-        const result = await callIdentityBackend(activeSession, {
-          action: "complete_live_verification",
-          id_number: fullIdNumber,
-          session_id: livenessSessionId,
-          consent: true,
-        });
-        setMessage(result.result_text || "Live face and identity verification completed.");
-        setFullIdNumber("");
-        setSelfie(null);
-        setFaceConsent(false);
-        await load(activeSession);
-        setLiveFaceSaving(false);
-        return;
-      } catch (caught) {
-        const detail = caught instanceof Error ? caught.message : "Unable to complete live face verification.";
-        if (detail.includes("still being finalized") && attempt < 6) {
-          setMessage(`Verification captured. Finalizing securely… (${attempt}/6)`);
-          await new Promise((resolve) => window.setTimeout(resolve, 2000));
-          continue;
-        }
-
-        await load(activeSession);
-        setMessage("");
-        setError(detail);
-        setLiveFaceSaving(false);
-        return;
-      }
-    }
-
-    setLiveFaceSaving(false);
   }
 
   function setImmersiveVerification(active: boolean) {
-    window.dispatchEvent(new CustomEvent("rydah:immersive-verification", { detail: { active } }));
+    window.dispatchEvent(
+      new CustomEvent("rydah:immersive-verification", { detail: { active } }),
+    );
   }
 
-  async function startLiveFaceVerification() {
-    if (!session || !verification) return;
+  async function completeLiveFaceVerification(sessionId: string) {
+    const activeSession = session ?? getStoredSession();
+    if (!activeSession || !sessionId) return;
     if (!fullIdNumber.trim()) {
-      setError("Enter the full ID number for this verification only.");
+      setError("Enter your full ID number first.");
       return;
     }
     if (!faceConsent) {
-      setError("You must consent to the live face and ID check before continuing.");
+      setError("Tick the consent box before continuing.");
       return;
     }
 
-    setAutoFinalizingSessionId("");
-    setLiveFaceSaving(true);
+    setFaceBusy(true);
+    setError("");
+    setMessage("Finishing your secure identity check…");
+
+    for (let attempt = 1; attempt <= 6; attempt += 1) {
+      try {
+        const result = await callIdentity(activeSession, {
+          action: "complete_live_verification",
+          id_number: fullIdNumber,
+          session_id: sessionId,
+          consent: true,
+        });
+        setMessage(result.result_text || "Face verification completed.");
+        setFullIdNumber("");
+        setFaceConsent(false);
+        await loadAll(activeSession);
+        setFaceBusy(false);
+        return;
+      } catch (caught) {
+        const detail = caught instanceof Error ? caught.message : "Unable to finish face verification.";
+        if (detail.includes("still being finalized") && attempt < 6) {
+          setMessage("Your camera check is complete. Finishing securely…");
+          await new Promise((resolve) => window.setTimeout(resolve, 2000));
+          continue;
+        }
+        setError(detail);
+        setMessage("");
+        setFaceBusy(false);
+        await loadAll(activeSession);
+        return;
+      }
+    }
+
+    setFaceBusy(false);
+  }
+
+  async function startLiveFaceVerification() {
+    if (!session || !provider || !verification) return;
+    if (!fullIdNumber.trim()) {
+      setError("Enter your full ID number first.");
+      return;
+    }
+    if (!faceConsent) {
+      setError("Tick the consent box before continuing.");
+      return;
+    }
+
+    setFaceBusy(true);
     setImmersiveVerification(true);
     setError("");
-    setMessage("Preparing secure live camera verification…");
+    setMessage("Opening your secure camera check…");
 
     try {
-      const credentials = await callIdentityBackend(session, { action: "liveness_session" });
+      const credentials = await callIdentity(session, { action: "liveness_session" });
       if (!credentials.session_id || !credentials.session_token) {
-        throw new Error("Live verification session could not be created.");
+        throw new Error("The secure camera session could not be started.");
       }
 
       const module = await import("youverify-liveness-web");
       const YouverifyLiveness = module.default;
       const [firstName, ...rest] = verification.legal_name.trim().split(/\s+/);
-      const livenessSessionId = credentials.session_id;
+      const liveSessionId = credentials.session_id;
 
-      const yvLiveness = new YouverifyLiveness({
+      const liveness = new YouverifyLiveness({
         presentation: "modal",
         sessionId: credentials.session_id,
         sessionToken: credentials.session_token,
-        entityId: provider?.id,
+        entityId: provider.id,
         sandboxEnvironment: (credentials.environment || identityEnvironment) !== "live",
         tasks: [
           { id: "motions", difficulty: "medium", maxNods: 2, maxBlinks: 2, timeout: 30000 },
@@ -394,245 +549,573 @@ export default function ProviderOnboardingPage() {
           showPoweredBy: true,
         },
         allowAudio: true,
-        onSuccess: (data: any) => {
+        onSuccess: () => {
           setImmersiveVerification(false);
-          setMessage(data?.passed === true
-            ? "Live camera check passed. Finalizing securely…"
-            : "Live camera completed. Confirming the result securely…");
-          window.setTimeout(() => {
-            void completeLiveFaceVerification(livenessSessionId);
-          }, 1200);
+          setMessage("Camera check passed. Finishing your verification…");
+          window.setTimeout(() => void completeLiveFaceVerification(liveSessionId), 1200);
         },
         onFailure: (data: any) => {
-          const detail = data?.error?.message || data?.error?.key || "Live face check failed. Please try again.";
           setImmersiveVerification(false);
           setMessage("");
-          setError(String(detail));
-          setLiveFaceSaving(false);
+          setError(String(data?.error?.message || data?.error?.key || "Face check failed. Please try again."));
+          setFaceBusy(false);
         },
         onClose: () => {
           setImmersiveVerification(false);
-          window.setTimeout(() => {
-            void completeLiveFaceVerification(livenessSessionId);
-          }, 1500);
+          setFaceBusy(false);
         },
       });
 
-      yvLiveness.start();
+      liveness.start();
     } catch (caught) {
       setImmersiveVerification(false);
+      setFaceBusy(false);
       setMessage("");
-      setError(caught instanceof Error ? caught.message : "Unable to start live face verification.");
-      setLiveFaceSaving(false);
+      setError(caught instanceof Error ? caught.message : "Unable to start the camera check.");
     }
   }
 
-  if (loading) {
-    return <main className="min-h-screen bg-[#080808] p-8 text-zinc-400">Loading verification...</main>;
+  async function runSandboxFaceMatch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session || !verification) return;
+    const sampleNin = idType === "NIN" && fullIdNumber.replace(/\s+/g, "") === "11111111111";
+    if (!selfie && !sampleNin) {
+      setError("Choose a clear test photo first.");
+      return;
+    }
+    if (!faceConsent) {
+      setError("Tick the consent box before continuing.");
+      return;
+    }
+
+    setFaceBusy(true);
+    setError("");
+    setMessage("Running the test identity check…");
+    try {
+      const selfieData = selfie ? await fileToDataUrl(selfie) : "";
+      const result = await callIdentity(session, {
+        action: "verify_face_id",
+        id_number: fullIdNumber,
+        selfie: selfieData,
+        use_sandbox_sample: sampleNin,
+        consent: true,
+      });
+      setMessage(result.result_text || "Test verification completed.");
+      setFullIdNumber("");
+      setSelfie(null);
+      setFaceConsent(false);
+      await loadAll(session);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to run the test verification.");
+      setMessage("");
+    } finally {
+      setFaceBusy(false);
+    }
   }
 
-  const biometricStatus: BiometricStatus = verification?.biometric_status ?? "not_started";
-  const faceMatchSupported = verification?.id_type === "NIN" || verification?.id_type === "International Passport";
+  async function goOnline() {
+    if (!session || !provider || !ready) return;
+    setBusy(true);
+    setError("");
+    try {
+      const rows = await restPatch<ProviderRow[]>(
+        "providers",
+        `id=eq.${provider.id}`,
+        { is_available: true },
+        session.access_token,
+      );
+      if (!rows[0]) throw new Error("Rydah could not switch your provider profile online.");
+      window.location.assign("/provider-work");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to go online.");
+      setBusy(false);
+    }
+  }
+
+  function Progress() {
+    const percent = ((currentStep - 1) / (steps.length - 1)) * 100;
+    return (
+      <div className="rounded-3xl border border-white/10 bg-[#121212] p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">PROVIDER SETUP</p>
+            <p className="mt-1 text-sm font-bold text-zinc-300">Step {currentStep} of {steps.length}</p>
+          </div>
+          <span className="rounded-full bg-[#D4AF37]/10 px-3 py-2 text-xs font-black text-[#D4AF37]">
+            {steps[currentStep - 1].title}
+          </span>
+        </div>
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-800">
+          <div
+            className="h-full rounded-full bg-[#D4AF37] transition-all"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+        <div className="mt-4 grid grid-cols-5 gap-1">
+          {steps.map((step) => (
+            <div key={step.number} className="text-center">
+              <div
+                className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${
+                  step.number < currentStep
+                    ? "bg-emerald-500/20 text-emerald-300"
+                    : step.number === currentStep
+                      ? "bg-[#D4AF37] text-black"
+                      : "bg-zinc-800 text-zinc-500"
+                }`}
+              >
+                {step.number < currentStep ? "✓" : step.number}
+              </div>
+              <p className="mt-1 hidden text-[10px] font-bold text-zinc-500 sm:block">{step.short}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#080808] px-5 py-10 text-white">
+        <div className="mx-auto max-w-xl">
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">
+            Loading your setup…
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  const identityDetailsNeedWork = !verification || verification.status === "rejected";
 
   return (
     <main className="min-h-screen bg-[#080808] text-white">
       <header className="border-b border-white/10">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-5 py-5">
-          <div>
-            <p className="text-sm font-black tracking-[0.22em] text-[#D4AF37]">RYDAH LOCAL</p>
-            <h1 className="mt-1 text-2xl font-black">Provider Verification</h1>
-          </div>
-          <a href="/provider-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Dashboard</a>
+        <div className="mx-auto flex max-w-xl items-center justify-between gap-3 px-5 py-5">
+          <a href="/" className="font-black tracking-[0.18em] text-[#D4AF37]">RYDAH LOCAL</a>
+          <a href="/" className="rounded-full border border-white/10 px-4 py-2 text-xs font-bold text-zinc-400">
+            Save & Exit
+          </a>
         </div>
       </header>
 
-      <section className="mx-auto max-w-4xl px-5 py-10">
-        {message && <div className="mb-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">{message}</div>}
-        {error && <div className="mb-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
+      <section className="mx-auto max-w-xl px-5 py-7 pb-16">
+        <Progress />
 
-        {!provider ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7">
-            <h2 className="text-2xl font-black">Create your provider profile first</h2>
-            <p className="mt-3 text-zinc-400">Your business profile must exist before verification can be submitted.</p>
-            <a href="/provider-dashboard" className="mt-6 inline-block rounded-2xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Go to Provider Dashboard</a>
+        {message && (
+          <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm leading-6 text-emerald-200">
+            ✓ {message}
           </div>
-        ) : (
-          <>
-            <div className="rounded-3xl border border-white/10 bg-[#121212] p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm text-zinc-500">Provider</p>
-                  <h2 className="mt-1 text-2xl font-black">{provider.business_name}</h2>
-                  <p className="mt-1 text-zinc-400">{provider.service_category} • {provider.location}</p>
-                </div>
-                <span className={`rounded-full px-4 py-2 text-xs font-black ${biometricStatus === "verified" ? "bg-emerald-500/15 text-emerald-400" : provider.is_verified ? "bg-amber-500/15 text-amber-300" : statusStyle(verification?.status ?? "draft")}`}>
-                  {biometricStatus === "verified" ? "✓ BIOMETRIC VERIFIED" : provider.is_verified ? "ID REVIEWED • BIOMETRIC REQUIRED" : (verification?.status ?? "draft").toUpperCase()}
-                </span>
+        )}
+        {error && (
+          <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm leading-6 text-red-200">
+            {error}
+          </div>
+        )}
+
+        {currentStep === 1 && billing && (
+          <div className="mt-6 rounded-3xl border border-[#D4AF37]/25 bg-gradient-to-br from-[#17130a] to-[#101010] p-6">
+            <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">STEP 1</p>
+            <h1 className="mt-2 text-3xl font-black">Activate your provider account</h1>
+            <p className="mt-3 text-sm leading-6 text-zinc-400">
+              Pay {naira(billing.registration_fee_naira)} once to register as a Rydah service provider.
+            </p>
+
+            <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-sm text-zinc-400">Registration fee</span>
+                <span className="text-2xl font-black">{naira(billing.registration_fee_naira)}</span>
               </div>
-              {verification?.status === "rejected" && verification.admin_notes && (
-                <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-200">
-                  Review note: {verification.admin_notes}
-                </div>
-              )}
+              <p className="mt-3 text-xs leading-5 text-zinc-500">
+                This is separate from the {naira(billing.monthly_fee_naira)} monthly provider membership shown later.
+              </p>
             </div>
 
-            {provider.is_verified && biometricStatus === "verified" && (
-              <div className="mt-6 rounded-3xl border border-emerald-500/20 bg-emerald-500/10 p-7">
-                <h3 className="text-2xl font-black text-emerald-400">Biometric verification complete</h3>
-                <p className="mt-2 text-zinc-300">Your identity review and live face verification are complete. You are eligible for Rydah jobs subject to the other marketplace requirements.</p>
+            {billing.mode === "test" && (
+              <p className="mt-4 rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4 text-xs leading-5 text-blue-200">
+                Test mode is active. You can test this step without taking live money.
+              </p>
+            )}
+
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void startRegistrationPayment()}
+              className="mt-6 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 text-base font-black text-black disabled:opacity-50"
+            >
+              {busy ? "Opening secure payment…" : `Pay ${naira(billing.registration_fee_naira)} & Continue`}
+            </button>
+          </div>
+        )}
+
+        {currentStep === 2 && (
+          <form onSubmit={createProfile} className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-6">
+            <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">STEP 2</p>
+            <h1 className="mt-2 text-3xl font-black">Tell customers what you do</h1>
+            <p className="mt-3 text-sm leading-6 text-zinc-400">
+              Keep it simple. You can update these details later.
+            </p>
+
+            <label className="mt-6 block">
+              <span className="text-sm font-bold">Business or display name</span>
+              <input
+                required
+                value={businessName}
+                onChange={(event) => setBusinessName(event.target.value)}
+                placeholder="e.g. Ade Electrical Services"
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600"
+              />
+            </label>
+
+            <label className="mt-5 block">
+              <span className="text-sm font-bold">Main service</span>
+              <select
+                value={category}
+                onChange={(event) => setCategory(event.target.value)}
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
+              >
+                {categories.map((item) => <option key={item}>{item}</option>)}
+              </select>
+            </label>
+
+            <label className="mt-5 block">
+              <span className="text-sm font-bold">Main service area</span>
+              <select
+                value={location}
+                onChange={(event) => {
+                  setLocation(event.target.value);
+                  setGpsMessage("");
+                }}
+                className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
+              >
+                {RYDAH_SERVICE_AREAS.map((area) => <option key={area}>{area}</option>)}
+              </select>
+              <button
+                type="button"
+                disabled={gpsBusy}
+                onClick={() => void useGpsArea()}
+                className="mt-3 rounded-xl border border-[#D4AF37]/35 px-4 py-3 text-sm font-black text-[#E5C65A] disabled:opacity-40"
+              >
+                {gpsBusy ? "Finding your area…" : "📍 Use My Phone Location"}
+              </button>
+              {gpsMessage && <span className="mt-2 block text-xs text-emerald-300">{gpsMessage}</span>}
+            </label>
+
+            <label className="mt-5 block">
+              <span className="text-sm font-bold">Starting price</span>
+              <div className="relative mt-2">
+                <span className="absolute left-4 top-4 font-black text-[#D4AF37]">₦</span>
+                <input
+                  required
+                  min="1"
+                  inputMode="numeric"
+                  type="number"
+                  value={startingPrice}
+                  onChange={(event) => setStartingPrice(event.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-[#1A1A1A] py-4 pl-9 pr-4 outline-none"
+                />
+              </div>
+            </label>
+
+            <label className="mt-5 block">
+              <span className="text-sm font-bold">Short description</span>
+              <textarea
+                required
+                minLength={20}
+                maxLength={500}
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="Briefly describe the jobs you handle and your experience."
+                className="mt-2 min-h-28 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600"
+              />
+              <span className="mt-2 block text-xs text-zinc-500">
+                Keep phone numbers, WhatsApp and external links out of your profile.
+              </span>
+            </label>
+
+            <button
+              disabled={busy}
+              className="mt-6 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-50"
+            >
+              {busy ? "Saving…" : "Save & Continue"}
+            </button>
+          </form>
+        )}
+
+        {currentStep === 3 && billing && provider && (
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-6">
+            <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">STEP 3</p>
+            <h1 className="mt-2 text-3xl font-black">Connect your bank</h1>
+            <p className="mt-3 text-sm leading-6 text-zinc-400">
+              Approve a secure bank instruction so Rydah can collect {naira(billing.monthly_fee_naira)} once each month while you use the provider marketplace.
+            </p>
+
+            <div className="mt-6 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5">
+              <p className="text-sm font-black text-[#D4AF37]">{naira(billing.monthly_fee_naira)} / month</p>
+              <p className="mt-2 text-sm leading-6 text-zinc-300">
+                You approve this with your bank through Paystack. Rydah does not ask you to type your full bank credentials into this page.
+              </p>
+            </div>
+
+            {billing.mandate_status === "pending" && (
+              <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-200">
+                Your bank approval is still pending. You can check again below.
               </div>
             )}
 
-            {provider.is_verified && biometricStatus !== "verified" && (
-              <div className="mt-6 rounded-3xl border border-amber-500/25 bg-amber-500/10 p-7">
-                <h3 className="text-2xl font-black text-amber-300">Identity reviewed — biometric upgrade required</h3>
-                <p className="mt-2 text-zinc-300">Your older provider review remains on record, but Rydah now requires successful live face and liveness verification before you can receive or work on new jobs.</p>
-              </div>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void startMonthlyPayment()}
+              className="mt-6 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-50"
+            >
+              {busy ? "Please wait…" : billing.mandate_status === "pending" ? "Open Bank Approval Again" : "Connect Bank & Continue"}
+            </button>
+
+            {billing.mandate_status === "pending" && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void checkBankApproval()}
+                className="mt-3 w-full rounded-2xl border border-[#D4AF37]/40 px-5 py-4 font-black text-[#E5C65A] disabled:opacity-50"
+              >
+                Check Bank Approval
+              </button>
             )}
+          </div>
+        )}
 
-            {!provider.is_verified && verification?.status === "pending" ? (
-              <div className="mt-6 rounded-3xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-7">
-                <h3 className="text-2xl font-black text-[#D4AF37]">Identity details submitted</h3>
-                <p className="mt-2 text-zinc-300">Complete Face & ID Match below. Admin approval should only happen after the biometric check passes.</p>
-              </div>
-            ) : !provider.is_verified && (
-              <form onSubmit={submitVerification} className="mt-6 grid gap-5 rounded-3xl border border-white/10 bg-[#121212] p-7 md:grid-cols-2">
-                <div className="md:col-span-2">
-                  <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">IDENTITY & EXPERIENCE</p>
-                  <h3 className="mt-2 text-3xl font-black">Complete verification</h3>
-                  <p className="mt-2 text-sm leading-6 text-zinc-400">Rydah stores only the final four characters of the selected ID at this stage. Do not enter the full ID number in this form.</p>
-                </div>
+        {currentStep === 4 && provider && (
+          <div className="mt-6">
+            {identityDetailsNeedWork ? (
+              <form onSubmit={submitIdentityDetails} className="rounded-3xl border border-white/10 bg-[#121212] p-6">
+                <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">STEP 4</p>
+                <h1 className="mt-2 text-3xl font-black">Verify who you are</h1>
+                <p className="mt-3 text-sm leading-6 text-zinc-400">
+                  We use these details to protect customers and genuine providers from impersonation.
+                </p>
 
-                <label className="block md:col-span-2">
+                {verification?.status === "rejected" && verification.admin_notes && (
+                  <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-200">
+                    Please update this before resubmitting: {verification.admin_notes}
+                  </div>
+                )}
+
+                <label className="mt-6 block">
                   <span className="text-sm font-bold">Legal name</span>
-                  <input required value={legalName} onChange={(e) => setLegalName(e.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none" placeholder="Full legal name" />
+                  <input
+                    required
+                    value={legalName}
+                    onChange={(event) => setLegalName(event.target.value)}
+                    placeholder="As shown on your ID"
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600"
+                  />
                 </label>
 
-                <label className="block">
-                  <span className="text-sm font-bold">Phone</span>
-                  <input required value={phone} onChange={(e) => setPhone(e.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none" placeholder="080..." />
+                <label className="mt-5 block">
+                  <span className="text-sm font-bold">Phone number</span>
+                  <input
+                    required
+                    inputMode="tel"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    placeholder="080..."
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600"
+                  />
                 </label>
 
-                <label className="block">
+                <label className="mt-5 block">
                   <span className="text-sm font-bold">Years of experience</span>
-                  <input required min="0" max="60" type="number" value={yearsExperience} onChange={(e) => setYearsExperience(e.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none" />
+                  <input
+                    required
+                    min="0"
+                    max="60"
+                    inputMode="numeric"
+                    type="number"
+                    value={yearsExperience}
+                    onChange={(event) => setYearsExperience(event.target.value)}
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
+                  />
                 </label>
 
-                <label className="block md:col-span-2">
+                <label className="mt-5 block">
                   <span className="text-sm font-bold">Service address / base</span>
-                  <input required value={serviceAddress} onChange={(e) => setServiceAddress(e.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none" placeholder="Business or operating address" />
+                  <input
+                    required
+                    value={serviceAddress}
+                    onChange={(event) => setServiceAddress(event.target.value)}
+                    placeholder="Your business or operating base"
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600"
+                  />
                 </label>
 
-                <label className="block">
+                <label className="mt-5 block">
                   <span className="text-sm font-bold">ID type</span>
-                  <select value={idType} onChange={(e) => setIdType(e.target.value as VerificationRow["id_type"])} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
+                  <select
+                    value={idType}
+                    onChange={(event) => setIdType(event.target.value as VerificationRow["id_type"])}
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
+                  >
                     {idTypes.map((item) => <option key={item}>{item}</option>)}
                   </select>
+                  <span className="mt-2 block text-xs text-zinc-500">
+                    NIN and International Passport provide the smoothest automated face check at launch.
+                  </span>
                 </label>
 
-                <label className="block">
-                  <span className="text-sm font-bold">Last 4 characters only</span>
-                  <input required minLength={4} maxLength={4} pattern="[A-Za-z0-9]{4}" value={idLast4} onChange={(e) => setIdLast4(e.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 uppercase outline-none" placeholder="1234" />
+                <label className="mt-5 block">
+                  <span className="text-sm font-bold">Last 4 characters of ID</span>
+                  <input
+                    required
+                    minLength={4}
+                    maxLength={4}
+                    pattern="[A-Za-z0-9]{4}"
+                    value={idLast4}
+                    onChange={(event) => setIdLast4(event.target.value)}
+                    placeholder="1234"
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 uppercase outline-none placeholder:text-zinc-600"
+                  />
                 </label>
 
-                <button disabled={saving} className="md:col-span-2 rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-60">
-                  {saving ? "Submitting..." : verification?.status === "rejected" ? "Resubmit Verification" : "Submit Identity Details"}
+                <button
+                  disabled={busy}
+                  className="mt-6 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-50"
+                >
+                  {busy ? "Saving…" : "Save Details & Continue"}
                 </button>
               </form>
-            )}
+            ) : verification?.biometric_status !== "verified" ? (
+              <div className="rounded-3xl border border-white/10 bg-[#121212] p-6">
+                <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">STEP 4 • FINAL CHECK</p>
+                <h1 className="mt-2 text-3xl font-black">Verify your face</h1>
+                <p className="mt-3 text-sm leading-6 text-zinc-400">
+                  Enter your full {verification?.id_type || "ID"} number for this check only, then use your phone camera. Rydah keeps the result and last four characters, not your full ID number or camera image.
+                </p>
 
-            {verification && (
-              <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-7">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">FACE & ID MATCH</p>
-                    <h3 className="mt-2 text-3xl font-black">Verify the person behind the profile</h3>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">The full ID number and selfie are sent securely to the identity-verification provider for this check. Rydah keeps only the ID last four characters and the result, not the full ID number or selfie.</p>
+                {verification?.biometric_result_text && (
+                  <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-300">
+                    {verification.biometric_result_text}
                   </div>
-                  <span className={`rounded-full px-4 py-2 text-xs font-black ${biometricStyle(biometricStatus)}`}>
-                    {biometricStatus.replaceAll("_", " ").toUpperCase()}
-                  </span>
-                </div>
-
-                {verification.biometric_result_text && (
-                  <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-300">{verification.biometric_result_text}</div>
                 )}
 
-                {biometricStatus !== "verified" && (
-                  faceMatchSupported ? (
-                    <div className="mt-6 grid gap-4 md:grid-cols-2">
-                      <label className="block md:col-span-2">
-                        <span className="text-sm font-bold">Full {verification.id_type} number</span>
-                        <input required value={fullIdNumber} onChange={(e) => setFullIdNumber(e.target.value)} autoComplete="off" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none" placeholder={verification.id_type === "NIN" ? "Enter full NIN" : "Enter passport number"} />
-                        <span className="mt-2 block text-xs text-zinc-500">Used only for this verification request. Rydah keeps the final four characters and verification result, not the complete ID number.</span>
-                      </label>
+                <label className="mt-6 block">
+                  <span className="text-sm font-bold">Full {verification?.id_type || "ID"} number</span>
+                  <input
+                    required
+                    value={fullIdNumber}
+                    onChange={(event) => setFullIdNumber(event.target.value)}
+                    autoComplete="off"
+                    placeholder={verification?.id_type === "NIN" ? "Enter full NIN" : "Enter passport number"}
+                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600"
+                  />
+                </label>
 
-                      <div className="md:col-span-2 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 p-5">
-                        <p className="text-sm font-black text-[#D4AF37]">LIVE FACE VERIFICATION</p>
-                        <p className="mt-2 text-sm leading-6 text-zinc-300">Rydah uses the device camera for a real-time liveness challenge such as blinking and head movement. The verification provider confirms live presence before the captured face is matched with the NIN or passport record.</p>
-                        <div className="mt-4 grid gap-2 text-xs text-zinc-500 sm:grid-cols-3">
-                          <span>✓ Android & iPhone camera</span>
-                          <span>✓ Desktop webcam</span>
-                          <span>✓ Anti-photo/replay check</span>
-                        </div>
-                      </div>
+                <label className="mt-5 flex items-start gap-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-zinc-300">
+                  <input
+                    type="checkbox"
+                    checked={faceConsent}
+                    onChange={(event) => setFaceConsent(event.target.checked)}
+                    className="mt-1 h-5 w-5"
+                  />
+                  <span>I agree to use my phone camera for a live identity check.</span>
+                </label>
 
-                      <label className="md:col-span-2 flex items-start gap-3 rounded-2xl border border-white/10 p-4 text-sm text-zinc-300">
-                        <input type="checkbox" checked={faceConsent} onChange={(e) => setFaceConsent(e.target.checked)} className="mt-1" />
-                        <span>I consent to Rydah and its identity-verification provider using a live camera session solely to verify liveness and match my face with my selected identity record.</span>
-                      </label>
+                {livenessConfigured ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={faceBusy || !fullIdNumber.trim() || !faceConsent}
+                      onClick={() => void startLiveFaceVerification()}
+                      className="mt-6 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-40"
+                    >
+                      {faceBusy ? "Checking…" : "Open Camera & Verify"}
+                    </button>
 
-                      {livenessConfigured ? (
-                        <>
-                          <button type="button" disabled={liveFaceSaving || !fullIdNumber.trim() || !faceConsent} onClick={() => void startLiveFaceVerification()} className="md:col-span-2 rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-40">
-                            {liveFaceSaving ? "Starting Secure Camera…" : "Open Live Camera & Verify"}
-                          </button>
-                          {biometricStatus === "pending" && verification.biometric_liveness_session_id && (
-                            <button
-                              type="button"
-                              disabled={liveFaceSaving || !fullIdNumber.trim() || !faceConsent}
-                              onClick={() => void completeLiveFaceVerification(verification.biometric_liveness_session_id || "")}
-                              className="md:col-span-2 rounded-2xl border border-[#D4AF37]/40 px-5 py-4 font-black text-[#D4AF37] disabled:opacity-40"
-                            >
-                              {liveFaceSaving ? "Checking Latest Result…" : "Check Latest Verification Result"}
-                            </button>
-                          )}
-                          <div className="md:col-span-2 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-zinc-400">
-                            <strong className="text-white">When the camera opens:</strong> tap the screen to begin or continue when prompted, keep your face inside the guide, and follow the movement instructions. There is no shutter button — capture happens automatically during the liveness check. Tap <strong className="text-white">Finish</strong> when Youverify says verification is complete.
-                          </div>
-                        </>
-                      ) : identityEnvironment === "sandbox" ? (
-                        <form onSubmit={verifyFaceAndId} className="md:col-span-2 grid gap-4">
-                          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-200">
-                            Live liveness is built but the Youverify public merchant ID still needs to be connected. Sandbox fallback remains available only for testing.
-                          </div>
-                          <label className="block">
-                            <span className="text-sm font-bold">Sandbox face image (test only)</span>
-                            <input required={!(verification.id_type === "NIN" && fullIdNumber.replace(/\s+/g, "").trim() === "11111111111")} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setSelfie(e.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-sm text-zinc-300" />
-                          </label>
-                          <button disabled={faceSaving || !fullIdNumber.trim() || (!selfie && !(verification.id_type === "NIN" && fullIdNumber.replace(/\s+/g, "").trim() === "11111111111")) || !faceConsent} className="rounded-2xl border border-[#D4AF37]/35 px-5 py-4 font-black text-[#D4AF37] disabled:opacity-40">
-                            {faceSaving ? "Running Sandbox Check…" : "Run Sandbox Face Match"}
-                          </button>
-                        </form>
-                      ) : (
-                        <div className="md:col-span-2 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-200">
-                          Live biometric verification is required for production. Provider work remains blocked until the live liveness service is connected.
-                        </div>
-                      )}
+                    {verification?.biometric_status === "pending" && verification.biometric_liveness_session_id && (
+                      <button
+                        type="button"
+                        disabled={faceBusy || !fullIdNumber.trim() || !faceConsent}
+                        onClick={() => void completeLiveFaceVerification(verification.biometric_liveness_session_id || "")}
+                        className="mt-3 w-full rounded-2xl border border-[#D4AF37]/40 px-5 py-4 font-black text-[#E5C65A] disabled:opacity-40"
+                      >
+                        Check Latest Result
+                      </button>
+                    )}
+                  </>
+                ) : identityEnvironment === "sandbox" ? (
+                  <form onSubmit={runSandboxFaceMatch} className="mt-6">
+                    <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4 text-xs leading-5 text-blue-200">
+                      Rydah is currently using the identity test environment. This test control disappears when live camera verification is enabled.
                     </div>
-                  ) : (
-                    <div className="mt-5 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-4 text-sm text-[#E7C85A]">
-                      Automated face-to-ID matching currently supports NIN and International Passport. Change the selected ID type and resubmit your identity details to use automated face matching.
-                    </div>
-                  )
-                )}
-
-                {biometricStatus === "verified" && verification.biometric_verified_at && (
-                  <p className="mt-4 text-sm text-emerald-300">Verified {new Date(verification.biometric_verified_at).toLocaleString()}.</p>
+                    <label className="mt-4 block">
+                      <span className="text-sm font-bold">Test face photo</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={(event) => setSelfie(event.target.files?.[0] ?? null)}
+                        className="mt-2 block w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-sm text-zinc-300"
+                      />
+                    </label>
+                    <button
+                      disabled={faceBusy || !fullIdNumber.trim() || !faceConsent}
+                      className="mt-5 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-40"
+                    >
+                      {faceBusy ? "Checking…" : "Run Test Verification"}
+                    </button>
+                  </form>
+                ) : (
+                  <div className="mt-6 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm leading-6 text-amber-200">
+                    Secure camera verification is temporarily unavailable. Your progress is saved; return here when the service is connected.
+                  </div>
                 )}
               </div>
-            )}
-          </>
+            ) : !provider.is_verified ? (
+              <div className="rounded-3xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-7 text-center">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-2xl text-emerald-300">✓</div>
+                <h1 className="mt-4 text-3xl font-black">Face check complete</h1>
+                <p className="mt-3 text-sm leading-6 text-zinc-300">
+                  Your identity check passed. Rydah is completing the final provider review. You do not need to repeat any previous step.
+                </p>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => session && void loadAll(session)}
+                  className="mt-6 w-full rounded-2xl border border-[#D4AF37]/40 px-5 py-4 font-black text-[#E5C65A] disabled:opacity-50"
+                >
+                  Check Review Status
+                </button>
+              </div>
+            ) : null}
+          </div>
+        )}
+
+        {currentStep === 5 && provider && billing && (
+          <div className="mt-6 rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/30 to-[#101010] p-7 text-center">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-3xl text-emerald-300">✓</div>
+            <p className="mt-5 text-xs font-black tracking-[0.18em] text-emerald-300">SETUP COMPLETE</p>
+            <h1 className="mt-2 text-4xl font-black">You’re ready for Rydah jobs</h1>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-zinc-300">
+              Registration is paid, your {naira(billing.monthly_fee_naira)} monthly payment is active, and your identity is verified.
+            </p>
+
+            <div className="mt-6 grid gap-2 text-left text-sm">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">✓ Registration paid</div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">✓ Provider profile created</div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">✓ Monthly bank payment active</div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">✓ Identity & face verified</div>
+            </div>
+
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void goOnline()}
+              className="mt-7 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 text-lg font-black text-black disabled:opacity-50"
+            >
+              {busy ? "Going online…" : "GO ONLINE"}
+            </button>
+            <p className="mt-3 text-xs leading-5 text-zinc-500">
+              Going online means customers can see you as available for suitable Rydah jobs.
+            </p>
+          </div>
         )}
       </section>
     </main>

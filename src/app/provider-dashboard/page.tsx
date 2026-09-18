@@ -238,7 +238,7 @@ export default function ProviderDashboardPage() {
     setLoading(true);
     setError("");
     try {
-      await loadBilling(currentSession);
+      const billingState = await loadBilling(currentSession);
       const providerRows = await restGet<ProviderRow[]>(
         `providers?user_id=eq.${currentSession.user.id}&select=*`,
         currentSession.access_token,
@@ -247,15 +247,11 @@ export default function ProviderDashboardPage() {
       setProvider(currentProvider);
 
       if (!currentProvider) {
-        setJobs([]);
-        setBiometricArrivalRequired(false);
-        setBiometricStatus("not_started");
-        setBiometricWorkRequired(false);
+        window.location.replace("/provider-onboarding");
         return;
       }
 
-      const [jobRows, verificationRows, biometricSettingRows] = await Promise.all([
-        restRpc<JobRow[]>("provider_job_feed", {}, currentSession.access_token),
+      const [verificationRows, biometricSettingRows] = await Promise.all([
         restGet<ProviderVerificationRow[]>(
           `provider_verifications?provider_id=eq.${currentProvider.id}&select=biometric_status,biometric_job_id&limit=1`,
           currentSession.access_token,
@@ -266,8 +262,23 @@ export default function ProviderDashboardPage() {
         ).catch(() => []),
       ]);
 
-      setJobs(jobRows);
       const verification = verificationRows[0];
+      if (
+        !billingState?.billing_ready ||
+        !currentProvider.is_verified ||
+        verification?.biometric_status !== "verified"
+      ) {
+        window.location.replace("/provider-onboarding");
+        return;
+      }
+
+      const jobRows = await restRpc<JobRow[]>(
+        "provider_job_feed",
+        {},
+        currentSession.access_token,
+      );
+
+      setJobs(jobRows);
       const biometricRequired = Number(biometricSettingRows[0]?.value_numeric || 0) === 1;
       setBiometricStatus(verification?.biometric_status || "not_started");
       setBiometricWorkRequired(biometricRequired);
