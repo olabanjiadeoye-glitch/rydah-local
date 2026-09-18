@@ -50,7 +50,7 @@ jobs:
             -v "$PWD/build/android-twa:/app" \
             -w /app \
             ghcr.io/googlechromelabs/bubblewrap:latest \
-            build --skipPwaValidation --skipSigning \
+            sh -lc 'yes | sdkmanager --licenses >/dev/null && bubblewrap build --skipPwaValidation --skipSigning' \
             2>&1 | tee ci-status/android-bundle.log
           EXIT_CODE=${PIPESTATUS[0]}
           exit $EXIT_CODE
