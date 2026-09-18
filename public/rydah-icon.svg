@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Rydah Local</title>
+  <desc id="desc">Premium gold Rydah Local R monogram with location pin and road on deep black.</desc>
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7b4d05"/>
+      <stop offset=".16" stop-color="#fff0a6"/>
+      <stop offset=".36" stop-color="#f0c95a"/>
+      <stop offset=".58" stop-color="#b67a0b"/>
+      <stop offset=".76" stop-color="#fff1ad"/>
+      <stop offset="1" stop-color="#9d5d02"/>
+    </linearGradient>
+    <linearGradient id="gold2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff5bb"/>
+      <stop offset=".5" stop-color="#e6b63d"/>
+      <stop offset="1" stop-color="#8f5300"/>
+    </linearGradient>
+    <radialGradient id="bg" cx=".5" cy=".35" r=".8">
+      <stop offset="0" stop-color="#1a1306"/>
+      <stop offset=".55" stop-color="#080808"/>
+      <stop offset="1" stop-color="#030303"/>
+    </radialGradient>
+    <filter id="glow" x="-35%" y="-35%" width="170%" height="170%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect x="20" y="20" width="472" height="472" rx="92" fill="url(#bg)" stroke="url(#gold)" stroke-width="10"/>
+  <path d="M118 86h155c74 0 119 36 119 102 0 49-27 83-73 96l77 127h-91l-68-116h-35v116h-84V86Zm84 72v70h62c29 0 45-12 45-35s-16-35-45-35h-62Z"
+        fill="url(#gold)" stroke="#f8db7b" stroke-opacity=".35" stroke-width="2"/>
+  <path d="M114 383c57-12 82-91 145-91 48 0 64 53 112 53 27 0 46-10 65-28"
+        fill="none" stroke="url(#gold2)" stroke-width="26" stroke-linecap="round"/>
+  <path d="M114 383c57-12 82-91 145-91 48 0 64 53 112 53 27 0 46-10 65-28"
+        fill="none" stroke="#0c0c0c" stroke-width="13" stroke-linecap="round"/>
+  <path d="M128 378c50-16 78-79 131-79 45 0 64 53 111 53 23 0 42-10 58-24"
+        fill="none" stroke="#e9ba3f" stroke-width="3" stroke-dasharray="14 15" stroke-linecap="round"/>
+  <g filter="url(#glow)">
+    <path d="M219 194c0-34 26-60 60-60s60 26 60 60c0 43-60 99-60 99s-60-56-60-99Z"
+          fill="url(#gold2)" stroke="#5b3500" stroke-width="5"/>
+    <circle cx="279" cy="194" r="21" fill="#0b0b0b" stroke="#f7d878" stroke-width="4"/>
+  </g>
+</svg>
