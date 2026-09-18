@@ -82,3 +82,12 @@ Before production submission:
 
 ## Current web/PWA identity
 The production web app exposes Rydah Local install metadata, black/gold branding, standalone display mode, and the Rydah icon for supported browsers/devices.
+
+
+## Google Play payments model
+Rydah Local facilitates payment for real-world local services. Google Play's billing system is intended for digital goods/services and is not the payment system for physical services such as transportation, cleaning, food delivery and similar real-world services.
+
+Current release approach:
+- Keep Google Play Billing disabled.
+- Use the existing Paystack-backed Rydah payment flow for eligible real-world service jobs.
+- Do not introduce digital subscriptions, paid digital features or virtual goods without reviewing Play Billing requirements again.
