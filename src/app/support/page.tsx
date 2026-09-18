@@ -18,6 +18,12 @@ export default function SupportPage() {
           <a href="/safety" className="mt-4 inline-flex rounded-xl border border-red-500/30 px-4 py-2 text-sm font-black text-red-200">Open Safety Center</a>
         </div>
 
+        <div className="mt-6 rounded-3xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-7">
+          <h2 className="text-xl font-black">Service or payment problem?</h2>
+          <p className="mt-2 text-sm leading-6 text-zinc-300">Open a job-linked dispute in the Rydah Resolution Centre. Refund requests are reviewed before any money movement is attempted.</p>
+          <a href="/disputes" className="mt-4 inline-flex rounded-xl bg-[#D4AF37] px-4 py-2 text-sm font-black text-black">Open Resolution Centre</a>
+        </div>
+
         <div className="mt-10 flex flex-wrap gap-3">
           <a href="/privacy" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Privacy</a>
           <a href="/terms" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Terms</a>
