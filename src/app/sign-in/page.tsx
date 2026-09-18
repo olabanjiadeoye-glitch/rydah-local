@@ -168,28 +168,43 @@ export default function SignInPage() {
             {mode !== "forgot" && (
               <>
                 <label className="mt-5 block text-sm font-bold" htmlFor="rydah-password">Password</label>
-                <input
-                  id="rydah-password"
-                  required
-                  minLength={mode === "sign-up" ? 8 : 1}
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={mode === "sign-up" ? "8+ chars, upper/lowercase & number" : "Your password"}
-                  autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
-                  spellCheck={false}
-                  autoCapitalize="none"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600"
-                />
-                <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-300">
+                <div className="relative mt-2">
                   <input
-                    type="checkbox"
-                    checked={showPassword}
-                    onChange={(e) => setShowPassword(e.target.checked)}
-                    className="h-4 w-4 accent-[#D4AF37]"
+                    id="rydah-password"
+                    required
+                    minLength={mode === "sign-up" ? 8 : 1}
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder={mode === "sign-up" ? "8+ chars, upper/lowercase & number" : "Your password"}
+                    autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
+                    spellCheck={false}
+                    autoCapitalize="none"
+                    className="w-full rounded-2xl border border-white/10 bg-[#1A1A1A] py-4 pl-4 pr-14 outline-none placeholder:text-zinc-600"
                   />
-                  <span>Show password before continuing</span>
-                </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((current) => !current)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
+                    title={showPassword ? "Hide password" : "Show password"}
+                    className="absolute inset-y-0 right-0 flex w-14 items-center justify-center rounded-r-2xl text-zinc-400 transition hover:text-[#D4AF37] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#D4AF37]"
+                  >
+                    {showPassword ? (
+                      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 3l18 18" />
+                        <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                        <path d="M9.9 4.2A10.5 10.5 0 0 1 12 4c5.2 0 9 4.5 9 8a8.5 8.5 0 0 1-2 4.2" />
+                        <path d="M6.6 6.6C4.3 8 3 10.2 3 12c0 3.5 3.8 8 9 8a9.5 9.5 0 0 0 4.1-.9" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-none stroke-current" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 {mode === "sign-up" && <p className="mt-2 text-xs text-zinc-500">Use at least 8 characters with uppercase, lowercase and a number.</p>}
               </>
             )}
