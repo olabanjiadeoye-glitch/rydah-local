@@ -35,7 +35,7 @@ export default function ProvidersPage() {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [query, setQuery] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
-  const [location, setLocation] = useState("All Lagos");
+  const [location, setLocation] = useState("All Areas");
   const [sort, setSort] = useState("Recommended");
   const [category, setCategory] = useState("All");
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -103,14 +103,14 @@ export default function ProvidersPage() {
 
   const locations = useMemo(() => {
     const discovered = providers.map((provider) => provider.area).filter(Boolean);
-    return ["All Lagos", ...Array.from(new Set(discovered)).sort((a, b) => a.localeCompare(b))];
+    return ["All Areas", ...Array.from(new Set(discovered)).sort((a, b) => a.localeCompare(b))];
   }, [providers]);
 
   const visibleProviders = useMemo(() => {
     let result = providers.filter((provider) => {
       const search = activeSearch.trim().toLowerCase();
       const matchesSearch = !search || provider.name.toLowerCase().includes(search) || provider.category.toLowerCase().includes(search) || provider.area.toLowerCase().includes(search) || provider.bio.toLowerCase().includes(search);
-      const matchesLocation = location === "All Lagos" || provider.area === location;
+      const matchesLocation = location === "All Areas" || provider.area === location;
       const matchesCategory = category === "All" || provider.category === category;
       return matchesSearch && matchesLocation && matchesCategory;
     });
