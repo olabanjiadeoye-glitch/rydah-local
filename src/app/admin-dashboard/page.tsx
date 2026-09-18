@@ -170,7 +170,7 @@ export default function AdminDashboardPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-5 py-10">
+      <section className="mx-auto max-w-6xl px-5 py-7 sm:py-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">LIVE BUSINESS SUMMARY</p>
@@ -187,12 +187,12 @@ export default function AdminDashboardPage() {
         </div>
 
         {loading ? (
-          <div className="mt-8 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">Loading Rydah business data...</div>
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">Loading Rydah business data...</div>
         ) : error ? (
-          <div className="mt-8 rounded-3xl border border-red-500/20 bg-red-950/20 p-7 text-red-300">{error}</div>
+          <div className="mt-6 rounded-3xl border border-red-500/20 bg-red-950/20 p-5 sm:p-6 text-red-300">{error}</div>
         ) : (
           <>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="rounded-3xl border border-white/10 bg-[#121212] p-6">
                 <p className="text-sm text-zinc-500">Total jobs</p>
                 <p className="mt-2 text-4xl font-black">{jobs.length}</p>
@@ -239,7 +239,7 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="mt-8 grid gap-6 lg:grid-cols-2">
+            <div className="mt-6 grid gap-4 lg:grid-cols-2">
               <section className="rounded-3xl border border-white/10 bg-[#121212] p-6">
                 <div className="flex items-center justify-between gap-3">
                   <div>
