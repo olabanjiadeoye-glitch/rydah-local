@@ -351,7 +351,7 @@ export default function ProviderDashboardPage() {
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="text-2xl font-black">{provider.business_name}</h2>
-                      <span className={`rounded-full px-3 py-1 text-xs font-black ${provider.is_verified ? "bg-emerald-500/15 text-emerald-400" : "bg-zinc-800 text-zinc-400"}`}>{provider.is_verified ? "✓ VERIFIED" : "VERIFICATION PENDING"}</span>
+                      <span className={`rounded-full px-3 py-1 text-xs font-black ${biometricStatus === "verified" ? "bg-emerald-500/15 text-emerald-400" : provider.is_verified ? "bg-amber-500/15 text-amber-300" : "bg-zinc-800 text-zinc-400"}`}>{biometricStatus === "verified" ? "✓ BIOMETRIC VERIFIED" : provider.is_verified ? "ID REVIEWED • BIOMETRIC REQUIRED" : "VERIFICATION PENDING"}</span>
                     </div>
                     <p className="mt-2 text-zinc-400">{provider.service_category} • {provider.location}</p>
                     {provider.description && <p className="mt-4 text-sm leading-6 text-zinc-400">{provider.description}</p>}
