@@ -19,8 +19,15 @@ export default function SessionToolbar() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [access, setAccess] = useState<UserAccess | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [immersiveVerification, setImmersiveVerification] = useState(false);
 
   useEffect(() => {
+    const handleImmersiveVerification = (event: Event) => {
+      const custom = event as CustomEvent<{ active?: boolean }>;
+      setImmersiveVerification(Boolean(custom.detail?.active));
+    };
+    window.addEventListener("rydah:immersive-verification", handleImmersiveVerification);
+
     const pathname = window.location.pathname;
     if (authOnlyPaths.has(pathname)) {
       setSession(null);
@@ -51,9 +58,13 @@ export default function SessionToolbar() {
     };
 
     void detectAccess();
+
+    return () => {
+      window.removeEventListener("rydah:immersive-verification", handleImmersiveVerification);
+    };
   }, []);
 
-  if (!session || !access) return null;
+  if (!session || !access || immersiveVerification) return null;
 
   const signOut = () => {
     clearSession();
