@@ -13,8 +13,9 @@ export default function SupportPage() {
         </div>
 
         <div className="mt-6 rounded-3xl border border-red-500/20 bg-red-950/20 p-7">
-          <h2 className="text-xl font-black">Emergency notice</h2>
+          <h2 className="text-xl font-black">Safety & emergency notice</h2>
           <p className="mt-2 text-sm leading-6 text-zinc-300">Rydah Local is not an emergency service. If there is an immediate threat to life, safety, or property, contact the appropriate emergency services.</p>
+          <a href="/safety" className="mt-4 inline-flex rounded-xl border border-red-500/30 px-4 py-2 text-sm font-black text-red-200">Open Safety Center</a>
         </div>
 
         <div className="mt-10 flex flex-wrap gap-3">
