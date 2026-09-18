@@ -92,7 +92,7 @@ export default function AdminAccountDeletionsPage() {
   const completed = rows.filter((row) => row.status === "completed");
 
   return (
-    <main className="min-h-screen bg-[#080808] px-5 py-8 text-white">
+    <main className="min-h-screen bg-[#080808] px-5 py-6 text-white">
       <section className="mx-auto max-w-5xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <a href="/admin-dashboard"><BrandLogo /></a>
@@ -101,7 +101,7 @@ export default function AdminAccountDeletionsPage() {
           </a>
         </div>
 
-        <div className="mt-8 rounded-3xl border border-red-500/20 bg-red-950/10 p-6">
+        <div className="mt-6 rounded-3xl border border-red-500/20 bg-red-950/10 p-6">
           <p className="text-xs font-black tracking-[0.18em] text-red-300">ACCOUNT DELETION ADMIN</p>
           <h1 className="mt-2 text-3xl font-black">Deletion requests</h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-zinc-300">
@@ -113,7 +113,7 @@ export default function AdminAccountDeletionsPage() {
         {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
         {loading ? (
-          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">Loading deletion requests…</div>
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">Loading deletion requests…</div>
         ) : (
           <>
             <section className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-6">
