@@ -101,6 +101,20 @@ Deno.serve(async (req) => {
       if (accountNumber.length !== 10) return json({ error: "Enter a valid 10-digit Nigerian account number" }, 400);
 
       const secretKey = required("PAYSTACK_SECRET_KEY");
+      const isTest = secretKey.startsWith("sk_test_");
+      const splitSettingKey = isTest ? "paystack_test_split_enabled" : "paystack_split_enabled";
+      const splitResponse = await supabaseRequest(
+        `platform_settings?key=eq.${splitSettingKey}&select=value_numeric&limit=1`,
+      );
+      const splitRows = await splitResponse.json() as Array<{ value_numeric: number | string }>;
+      if (Number(splitRows[0]?.value_numeric ?? 0) !== 1) {
+        return json({
+          error: isTest
+            ? "Paystack test split settlement is currently disabled by Rydah."
+            : "Live Paystack split settlement is not enabled yet.",
+        }, 503);
+      }
+
       const created = await paystack("subaccount", {
         method: "POST",
         body: JSON.stringify({
@@ -119,7 +133,6 @@ Deno.serve(async (req) => {
 
       const accountName = String(data.account_name || provider.business_name);
       const bankName = String(data.settlement_bank || "Paystack bank");
-      const isTest = secretKey.startsWith("sk_test_");
 
       const savedResponse = await supabaseRequest("provider_payout_accounts?on_conflict=provider_id", {
         method: "POST",
