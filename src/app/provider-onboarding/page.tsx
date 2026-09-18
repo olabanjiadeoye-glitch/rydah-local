@@ -36,6 +36,8 @@ type VerificationRow = {
   biometric_provider: string | null;
   biometric_result_text: string | null;
   biometric_verified_at: string | null;
+  biometric_liveness_session_id?: string | null;
+  biometric_liveness_result?: string | null;
 };
 
 type IdentityResponse = {
@@ -548,6 +550,16 @@ export default function ProviderOnboardingPage() {
                           <button type="button" disabled={liveFaceSaving || !fullIdNumber.trim() || !faceConsent} onClick={() => void startLiveFaceVerification()} className="md:col-span-2 rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-40">
                             {liveFaceSaving ? "Starting Secure Camera…" : "Open Live Camera & Verify"}
                           </button>
+                          {biometricStatus === "pending" && verification.biometric_liveness_session_id && (
+                            <button
+                              type="button"
+                              disabled={liveFaceSaving || !fullIdNumber.trim() || !faceConsent}
+                              onClick={() => void completeLiveFaceVerification(verification.biometric_liveness_session_id || "")}
+                              className="md:col-span-2 rounded-2xl border border-[#D4AF37]/40 px-5 py-4 font-black text-[#D4AF37] disabled:opacity-40"
+                            >
+                              Check Latest Verification Result
+                            </button>
+                          )}
                           <div className="md:col-span-2 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-zinc-400">
                             <strong className="text-white">When the camera opens:</strong> tap the screen to begin or continue when prompted, keep your face inside the guide, and follow the movement instructions. There is no shutter button — capture happens automatically during the liveness check. Tap <strong className="text-white">Finish</strong> when Youverify says verification is complete.
                           </div>
