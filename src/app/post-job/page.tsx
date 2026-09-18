@@ -117,7 +117,7 @@ export default function PostJobPage() {
     }
   };
 
-  const useCurrentLocation = async () => {
+  const detectCurrentLocation = async () => {
     setGpsBusy(true);
     setError("");
     setGpsMessage("");
@@ -305,7 +305,7 @@ export default function PostJobPage() {
               <button
                 type="button"
                 disabled={gpsBusy}
-                onClick={() => void useCurrentLocation()}
+                onClick={() => void detectCurrentLocation()}
                 className="rounded-xl border border-[#D4AF37]/35 px-4 py-2.5 text-sm font-black text-[#E5C65A] disabled:opacity-40"
               >
                 {gpsBusy ? "Finding GPS…" : "📍 Use My Current Location"}

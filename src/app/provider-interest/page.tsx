@@ -64,7 +64,7 @@ export default function ProviderInterestPage() {
     }
   }
 
-  async function useGpsArea() {
+  async function detectGpsArea() {
     setGpsBusy(true);
     setError("");
     setGpsMessage("");
@@ -178,7 +178,7 @@ export default function ProviderInterestPage() {
             <button
               type="button"
               disabled={gpsBusy}
-              onClick={() => void useGpsArea()}
+              onClick={() => void detectGpsArea()}
               className="mt-2 rounded-xl border border-[#D4AF37]/35 px-3 py-2 text-xs font-black text-[#E5C65A] disabled:opacity-40"
             >
               {gpsBusy ? "Finding GPS…" : "📍 Detect My Service Area"}

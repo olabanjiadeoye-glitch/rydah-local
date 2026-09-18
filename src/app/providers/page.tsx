@@ -152,7 +152,7 @@ export default function ProvidersPage() {
     return result;
   }, [providers, activeSearch, location, sort, category, userCoordinates]);
 
-  async function useCurrentLocation() {
+  async function detectCurrentLocation() {
     setGpsBusy(true);
     setLoadError("");
     setGpsMessage("");
@@ -273,7 +273,7 @@ export default function ProvidersPage() {
             <button
               type="button"
               disabled={gpsBusy}
-              onClick={() => void useCurrentLocation()}
+              onClick={() => void detectCurrentLocation()}
               className="rounded-xl border border-[#D4AF37]/35 px-4 py-2.5 text-sm font-black text-[#E5C65A] disabled:opacity-40"
             >
               {gpsBusy ? "Finding GPS…" : "📍 Find Providers Near Me"}

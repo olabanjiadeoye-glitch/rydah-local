@@ -299,7 +299,7 @@ export default function ProviderOnboardingPage() {
     }
   }
 
-  async function useGpsArea() {
+  async function detectGpsArea() {
     setGpsBusy(true);
     setError("");
     setGpsMessage("");
@@ -793,7 +793,7 @@ export default function ProviderOnboardingPage() {
               <button
                 type="button"
                 disabled={gpsBusy}
-                onClick={() => void useGpsArea()}
+                onClick={() => void detectGpsArea()}
                 className="mt-3 rounded-xl border border-[#D4AF37]/35 px-4 py-3 text-sm font-black text-[#E5C65A] disabled:opacity-40"
               >
                 {gpsBusy ? "Finding your area…" : "📍 Use My Phone Location"}

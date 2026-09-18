@@ -291,7 +291,7 @@ export default function ProviderDashboardPage() {
     }
   }
 
-  async function useProviderGps() {
+  async function updateProviderGps() {
     if (!session) return;
 
     setGpsBusy(true);
@@ -608,7 +608,7 @@ export default function ProviderDashboardPage() {
                 <button
                   type="button"
                   disabled={gpsBusy}
-                  onClick={() => void useProviderGps()}
+                  onClick={() => void updateProviderGps()}
                   className="mt-2 rounded-xl border border-[#D4AF37]/35 px-3 py-2 text-xs font-black text-[#E5C65A] disabled:opacity-40"
                 >
                   {gpsBusy ? "Finding GPS…" : "📍 Detect Service Area"}
@@ -648,7 +648,7 @@ export default function ProviderDashboardPage() {
                       <button
                         type="button"
                         disabled={gpsBusy}
-                        onClick={() => void useProviderGps()}
+                        onClick={() => void updateProviderGps()}
                         className="rounded-xl border border-[#D4AF37]/35 px-3 py-2 text-xs font-black text-[#E5C65A] disabled:opacity-40"
                       >
                         {gpsBusy ? "Finding GPS…" : "📍 Update Area from GPS"}
