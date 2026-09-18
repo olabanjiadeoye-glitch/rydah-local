@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getStoredSession, type AuthSession } from "@/lib/supabase";
+import { getStoredSession, type AuthSession, invokeFunction } from "@/lib/supabase";
 
 type StatusResponse = {
   ok?: boolean;
@@ -11,19 +11,7 @@ type StatusResponse = {
 };
 
 async function checkStatus(session: AuthSession) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
-  if (!supabaseUrl || !publishableKey) throw new Error("Identity verification service is not configured.");
-
-  const response = await fetch(`${supabaseUrl}/functions/v1/identity-connection-status`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      apikey: publishableKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({}),
-  });
+  const response = await invokeFunction("identity-connection-status", {}, session.access_token);
 
   const result = (await response.json().catch(() => ({}))) as StatusResponse;
   if (!response.ok) throw new Error(result.error || "Unable to check identity provider status.");
