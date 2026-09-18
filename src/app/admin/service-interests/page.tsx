@@ -93,7 +93,7 @@ export default function AdminServiceInterestsPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-5 py-7 sm:py-6">
+      <section className="mx-auto max-w-6xl px-5 py-6 sm:py-8">
         <div className="rounded-3xl border border-[#D4AF37]/20 bg-[#121212] p-6">
           <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">MARKET EXPANSION</p>
           <h2 className="mt-2 text-3xl font-black">See what professionals want to offer</h2>

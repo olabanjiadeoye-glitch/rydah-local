@@ -52,7 +52,7 @@ export default function Home() {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-black/15" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#080808] to-transparent" aria-hidden="true" />
 
-        <div className="relative mx-auto flex min-h-[500px] max-w-6xl items-center px-5 py-16 sm:min-h-[560px] sm:py-24">
+        <div className="relative mx-auto flex min-h-[500px] max-w-6xl items-center px-5 py-10 sm:min-h-[560px] sm:py-14">
           <div className="w-full max-w-5xl">
             <div className="inline-flex items-center gap-3 rounded-full border border-[#D4AF37]/35 bg-black/50 px-4 py-2.5 shadow-[0_10px_40px_rgba(0,0,0,0.25)] backdrop-blur-md">
               <span className="text-3xl leading-none" role="img" aria-label="Nigeria flag">🇳🇬</span>
@@ -83,7 +83,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="relative mx-auto max-w-6xl px-5 py-7 sm:py-6 sm:py-7 sm:py-6">
+      <section className="relative mx-auto max-w-6xl px-5 py-6 sm:py-8">
         <div className="absolute -left-32 top-6 h-72 w-72 rounded-full bg-violet-600/10 blur-3xl" aria-hidden="true" />
         <div className="absolute -right-32 bottom-0 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl" aria-hidden="true" />
 
@@ -97,7 +97,7 @@ export default function Home() {
 
         <div className="relative grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {services.map((service) => (
-            <a
+            <Link
               key={service.name}
               href={`/providers?category=${encodeURIComponent(service.name)}`}
               className={`group flex items-center gap-4 rounded-2xl border border-white/10 bg-gradient-to-br ${service.surface} p-4 transition hover:-translate-y-1 hover:border-[#D4AF37]/45 hover:shadow-[0_18px_45px_rgba(0,0,0,0.22)] sm:block sm:rounded-3xl sm:p-6`}
@@ -109,7 +109,7 @@ export default function Home() {
                 <h3 className="text-lg font-black transition group-hover:text-[#F5D35F] sm:mt-5 sm:text-xl">{service.name}</h3>
                 <p className="mt-1 text-sm leading-5 text-zinc-400 sm:mt-2 sm:text-base sm:leading-normal">{service.description}</p>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -153,7 +153,7 @@ export default function Home() {
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/20" aria-hidden="true" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#101010] via-transparent to-transparent" aria-hidden="true" />
-            <div className="relative flex min-h-[250px] items-end p-5 sm:p-6 sm:min-h-[300px] sm:p-6 sm:p-5 sm:p-6">
+            <div className="relative flex min-h-[250px] items-end p-5 sm:p-6 sm:min-h-[300px] sm:p-5">
               <div className="max-w-3xl">
                 <p className="text-xs font-black tracking-[0.2em] text-[#F3D56B]">LAGOS ENERGY • NIGERIAN REACH</p>
                 <h2 className="mt-3 text-3xl font-black sm:text-5xl">Built to feel local, wherever Rydah grows next.</h2>
@@ -162,7 +162,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="p-5 sm:p-6 sm:p-6 sm:p-5 sm:p-6">
+          <div className="p-5 sm:p-6">
             <p className="text-xs font-black tracking-widest text-[#D4AF37]">HOW RYDAH PROTECTS THE JOB</p>
             <h2 className="mt-3 max-w-3xl text-3xl font-black sm:text-4xl">Designed to keep trust, identity and payment inside the platform.</h2>
             <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -178,7 +178,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-7 sm:py-6">
+      <section className="mx-auto max-w-6xl px-5 py-6 sm:py-8">
         <div className="grid gap-5 lg:grid-cols-2">
           <div className="relative overflow-hidden rounded-3xl border border-orange-300/20 bg-gradient-to-br from-orange-500/20 via-rose-500/10 to-[#0d0d0d] p-5 sm:p-6 shadow-[0_18px_50px_rgba(249,115,22,0.08)]">
             <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#D4AF37]/15 blur-3xl" aria-hidden="true" />
@@ -198,8 +198,8 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-7 sm:py-6">
-        <div className="relative overflow-hidden rounded-[2rem] border border-violet-300/20 bg-gradient-to-br from-violet-500/15 via-[#17130a] to-emerald-500/10 p-5 sm:p-6 sm:p-6 sm:p-5 sm:p-6">
+      <section className="mx-auto max-w-6xl px-5 py-6 sm:py-8">
+        <div className="relative overflow-hidden rounded-[2rem] border border-violet-300/20 bg-gradient-to-br from-violet-500/15 via-[#17130a] to-emerald-500/10 p-5 sm:p-6">
           <div className="absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-violet-400/10 blur-3xl" aria-hidden="true" />
           <div className="absolute -right-16 top-0 h-48 w-48 rounded-full bg-emerald-400/10 blur-3xl" aria-hidden="true" />
           <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
