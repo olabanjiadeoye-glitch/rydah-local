@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
+import { RYDAH_DEFAULT_SERVICE_AREA } from "@/lib/locations";
 
 type ProviderLookup = {
   id: string;
@@ -29,7 +30,7 @@ export default function PostJobPage() {
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [service, setService] = useState("");
-  const [location, setLocation] = useState("Lekki, Lagos");
+  const [location, setLocation] = useState(RYDAH_DEFAULT_SERVICE_AREA);
   const [description, setDescription] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [jobId, setJobId] = useState("");
@@ -78,7 +79,7 @@ export default function PostJobPage() {
           );
           setAvailability(rows);
           if (rows.length > 0) {
-            const firstLocation = rows.some((row) => row.location === "Lekki, Lagos") ? "Lekki, Lagos" : rows[0].location;
+            const firstLocation = rows.some((row) => row.location === RYDAH_DEFAULT_SERVICE_AREA) ? RYDAH_DEFAULT_SERVICE_AREA : rows[0].location;
             setLocation(firstLocation);
           }
         }
