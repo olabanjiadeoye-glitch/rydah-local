@@ -268,26 +268,42 @@ export default function ProviderOnboardingPage() {
 
   async function completeLiveFaceVerification(livenessSessionId: string) {
     if (!session) return;
-    try {
-      setMessage("Live presence confirmed. Matching the live face with the identity record…");
-      const result = await callIdentityBackend(session, {
-        action: "complete_live_verification",
-        id_number: fullIdNumber,
-        session_id: livenessSessionId,
-        consent: true,
-      });
-      setMessage(result.result_text || "Live face and identity verification completed.");
-      setFullIdNumber("");
-      setSelfie(null);
-      setFaceConsent(false);
-      await load(session);
-    } catch (caught) {
-      setMessage("");
-      setError(caught instanceof Error ? caught.message : "Unable to complete live face verification.");
-      await load(session);
-    } finally {
-      setLiveFaceSaving(false);
+
+    setMessage("Live presence confirmed. Finalizing the liveness result and matching the live face with the identity record…");
+    setError("");
+
+    for (let attempt = 1; attempt <= 6; attempt += 1) {
+      try {
+        const result = await callIdentityBackend(session, {
+          action: "complete_live_verification",
+          id_number: fullIdNumber,
+          session_id: livenessSessionId,
+          consent: true,
+        });
+        setMessage(result.result_text || "Live face and identity verification completed.");
+        setFullIdNumber("");
+        setSelfie(null);
+        setFaceConsent(false);
+        await load(session);
+        setLiveFaceSaving(false);
+        return;
+      } catch (caught) {
+        const detail = caught instanceof Error ? caught.message : "Unable to complete live face verification.";
+        if (detail.includes("still being finalized") && attempt < 6) {
+          setMessage(`Verification captured. Finalizing securely… (${attempt}/6)`);
+          await new Promise((resolve) => window.setTimeout(resolve, 2000));
+          continue;
+        }
+
+        setMessage("");
+        setError(detail);
+        await load(session);
+        setLiveFaceSaving(false);
+        return;
+      }
     }
+
+    setLiveFaceSaving(false);
   }
 
   function setImmersiveVerification(active: boolean) {
