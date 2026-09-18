@@ -33,7 +33,7 @@ export default function Home() {
       <section className="relative isolate overflow-hidden border-b border-white/10">
         <div
           className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-55 sm:bg-[center_48%]"
-          style={{ backgroundImage: "url('/rydah-city-hero.webp')" }}
+          style={{ backgroundImage: "url('https://images.pexels.com/photos/36602313/pexels-photo-36602313/free-photo-of-skyline-of-lagos-at-sunset-captured-from-water.jpeg?auto=compress&fit=crop&w=1600&q=82')" }}
           aria-hidden="true"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/45 via-black/55 to-[#080808] sm:from-black/35 sm:via-black/50" aria-hidden="true" />
