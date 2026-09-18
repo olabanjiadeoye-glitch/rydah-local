@@ -69,11 +69,12 @@ async function providerAndVerificationForUser(userId: string) {
 
 function youverifyConfig() {
   const token = Deno.env.get("YOUVERIFY_SECRET_TOKEN") || "";
+  const publicMerchantID = Deno.env.get("YOUVERIFY_PUBLIC_MERCHANT_ID") || "";
   const environment = (Deno.env.get("YOUVERIFY_ENVIRONMENT") || "sandbox").toLowerCase();
   const baseUrl = Deno.env.get("YOUVERIFY_BASE_URL") || (environment === "live"
     ? "https://api.youverify.co"
     : "https://api.sandbox.youverify.co");
-  return { token, environment, baseUrl };
+  return { token, publicMerchantID, environment, baseUrl };
 }
 
 function resolveYouverifyUrl(baseUrl: string, path: string) {
@@ -100,6 +101,65 @@ async function youverify(path: string, token: string, baseUrl: string, body: Rec
   return payload;
 }
 
+async function youverifyGet(path: string, token: string, baseUrl: string) {
+  const response = await fetch(resolveYouverifyUrl(baseUrl, path), {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      token,
+    },
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload?.message || payload?.error || `Identity provider request failed (${response.status})`);
+  }
+  return payload;
+}
+
+async function generateLivenessSession(config: ReturnType<typeof youverifyConfig>, providerId: string, userId: string) {
+  let sessionPayload: any;
+  try {
+    sessionPayload = await youverify(
+      "/v2/api/identity/sdk/session/generate",
+      config.token,
+      config.baseUrl,
+      {
+        publicMerchantID: config.publicMerchantID,
+        ttlSeconds: 300,
+        metadata: { source: "rydah-local", providerId, userId },
+      },
+    );
+  } catch {
+    sessionPayload = await youverify(
+      "/v2/api/identity/sdk/liveness/session/generate",
+      config.token,
+      config.baseUrl,
+      {
+        ttlSeconds: 300,
+        metadata: { source: "rydah-local", providerId, userId },
+      },
+    );
+  }
+
+  const sessionId = String(sessionPayload?.data?.sessionId || sessionPayload?.sessionId || "");
+  if (!sessionId) throw new Error("Identity provider did not return a liveness session ID");
+
+  const deviceCorrelationId = crypto.randomUUID();
+  const tokenPayload = await youverify(
+    "/v2/api/identity/sdk/liveness/token",
+    config.token,
+    config.baseUrl,
+    {
+      publicMerchantID: config.publicMerchantID,
+      deviceCorrelationId,
+    },
+  );
+  const sessionToken = String(tokenPayload?.data?.authToken || tokenPayload?.authToken || "");
+  if (!sessionToken) throw new Error("Identity provider did not return a liveness session token");
+
+  return { sessionId, sessionToken };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -107,7 +167,7 @@ Deno.serve(async (req) => {
   try {
     const user = await getSignedInUser(req);
     const body = await req.json().catch(() => ({})) as Record<string, unknown>;
-    const action = String(body.action || "");
+    let action = String(body.action || "");
     const { provider, verification } = await providerAndVerificationForUser(user.id);
     const config = youverifyConfig();
 
@@ -115,6 +175,8 @@ Deno.serve(async (req) => {
       return json({
         ok: true,
         configured: Boolean(config.token),
+        liveness_configured: Boolean(config.token && config.publicMerchantID),
+        public_merchant_id_configured: Boolean(config.publicMerchantID),
         environment: config.environment,
         biometric_status: verification.biometric_status || "not_started",
         biometric_provider: verification.biometric_provider || null,
@@ -123,8 +185,77 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "liveness_session") {
+      if (!config.token || !config.publicMerchantID) {
+        return json({
+          error: "Live face verification needs the Youverify public merchant ID configured on the Rydah backend.",
+          setup_required: true,
+          required_secret: "YOUVERIFY_PUBLIC_MERCHANT_ID",
+        }, 503);
+      }
+
+      const { sessionId, sessionToken } = await generateLivenessSession(config, provider.id, user.id);
+      return json({
+        ok: true,
+        environment: config.environment,
+        session_id: sessionId,
+        session_token: sessionToken,
+      });
+    }
+
+    if (action === "complete_live_verification") {
+      if (body.consent !== true) return json({ error: "Consent is required before live face verification" }, 400);
+      if (!config.token) return json({ error: "Rydah face verification provider is not connected yet." }, 503);
+
+      const livenessSessionId = String(body.session_id || "").trim();
+      if (!livenessSessionId) return json({ error: "Liveness session is missing. Start the live camera check again." }, 400);
+
+      const history = await youverifyGet(
+        `/v2/api/identity/liveness?sessionId=${encodeURIComponent(livenessSessionId)}&limit=10`,
+        config.token,
+        config.baseUrl,
+      );
+      const docs = Array.isArray(history?.data?.docs) ? history.data.docs : [];
+      const liveResult = docs.find((item: any) =>
+        String(item?.sessionId || "") === livenessSessionId && item?.passed === true
+      );
+
+      if (!liveResult) {
+        const failedAt = new Date().toISOString();
+        await supabaseRequest(`provider_verifications?id=eq.${encodeURIComponent(verification.id)}`, {
+          method: "PATCH",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({
+            biometric_status: "failed",
+            biometric_result_code: "liveness_failed",
+            biometric_result_text: "Live face check did not pass. Please retry using the camera.",
+            biometric_liveness_session_id: livenessSessionId,
+            biometric_liveness_verified_at: null,
+            biometric_liveness_result: "failed",
+            biometric_updated_at: failedAt,
+            updated_at: failedAt,
+          }),
+        });
+        return json({ error: "Live face check did not pass. Please retry using the camera." }, 422);
+      }
+
+      const liveFaceImage = String(liveResult?.faceImage || "").trim();
+      if (!/^https:\/\//i.test(liveFaceImage)) {
+        return json({ error: "The liveness provider did not return a trusted live face image." }, 502);
+      }
+
+      body.selfie = liveFaceImage;
+      body.liveness_verified = true;
+      body.liveness_session_id = livenessSessionId;
+      body.use_sandbox_sample = false;
+      action = "verify_face_id";
+    }
+
     if (action === "verify_face_id") {
       if (body.consent !== true) return json({ error: "Consent is required before face and ID verification" }, 400);
+      if (config.environment === "live" && body.liveness_verified !== true) {
+        return json({ error: "A passed live camera and liveness check is required before identity matching." }, 409);
+      }
       if (!config.token) {
         return json({
           error: "Rydah face verification provider is not connected yet.",
@@ -196,6 +327,9 @@ Deno.serve(async (req) => {
           biometric_status: "pending",
           biometric_provider: "youverify",
           biometric_consent_at: now,
+          biometric_liveness_session_id: body.liveness_verified === true ? String(body.liveness_session_id || "") : verification.biometric_liveness_session_id || null,
+          biometric_liveness_verified_at: body.liveness_verified === true ? now : verification.biometric_liveness_verified_at || null,
+          biometric_liveness_result: body.liveness_verified === true ? "passed" : verification.biometric_liveness_result || null,
           biometric_updated_at: now,
           updated_at: now,
           id_last4: idNumber.slice(-4).toUpperCase(),
