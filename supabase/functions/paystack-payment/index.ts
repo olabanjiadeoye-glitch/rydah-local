@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
   try {
     const user = await getSignedInUser(req);
-    const body = await req.json() as { action?: string; job_id?: string; reference?: string; callback_url?: string };
+    const body = await req.json() as { action?: string; job_id?: string; reference?: string };
 
     if (body.action === "initialize") {
       if (!body.job_id) return json({ error: "job_id is required" }, 400);
@@ -94,7 +94,13 @@ Deno.serve(async (req) => {
       if (!email) return json({ error: "A customer email is required for Paystack" }, 409);
 
       const reference = `RYD-${Date.now()}-${crypto.randomUUID().replaceAll("-", "").slice(0, 10)}`;
-      const callbackUrl = body.callback_url && /^https?:\/\//i.test(body.callback_url) ? body.callback_url : undefined;
+      const publicOrigin = (Deno.env.get("RYDAH_PUBLIC_ORIGIN") || "https://rydahlocal.online").replace(/\/+$/, "");
+      let callbackUrl: string;
+      try {
+        callbackUrl = new URL(`/payments?job=${encodeURIComponent(job.id)}`, publicOrigin).toString();
+      } catch {
+        return json({ error: "Rydah public origin configuration is invalid" }, 500);
+      }
       const secretKey = required("PAYSTACK_SECRET_KEY");
       const isTest = secretKey.startsWith("sk_test_");
 
@@ -130,7 +136,7 @@ Deno.serve(async (req) => {
         currency: "NGN",
         reference,
         channels: ["card", "bank", "bank_transfer", "ussd"],
-        ...(callbackUrl ? { callback_url: callbackUrl } : {}),
+        callback_url: callbackUrl,
         metadata: JSON.stringify({
           job_id: job.id,
           customer_id: user.id,
