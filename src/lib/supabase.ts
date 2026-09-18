@@ -231,6 +231,28 @@ export async function restRpc<T>(fn: string, payload: unknown, token: string): P
   return (await response.json()) as T;
 }
 
+export async function invokeFunction(
+  functionName: string,
+  payload: unknown,
+  token: string,
+): Promise<Response> {
+  assertConfigured();
+
+  if (!/^[a-z0-9-]+$/.test(functionName)) {
+    throw new Error("Invalid backend function name.");
+  }
+
+  return fetchWithOptionalRefresh(
+    `${SUPABASE_URL}/functions/v1/${functionName}`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
+    token,
+    { "Content-Type": "application/json" },
+  );
+}
+
 export async function signInWithPassword(email: string, password: string): Promise<AuthSession> {
   assertConfigured();
   const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
