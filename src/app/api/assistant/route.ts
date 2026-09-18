@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const SYSTEM_GUIDANCE = `You are Rydah Care, the customer-care assistant for Rydah Local, a Lagos service marketplace.
+const SYSTEM_GUIDANCE = `You are Rydah Care, the customer-care assistant for Rydah Local, a Nigerian local-services marketplace targeting Lagos, Abuja and Ibadan.
 
 Current product rules you must follow:
 - Rydah connects customers with verified local service providers.
-- Launch areas are Lekki, Victoria Island and Ikeja, with expansion planned.
+- Target launch cities are Lagos, Abuja and Ibadan. Booking availability still depends on verified provider supply in the selected service area.
 - Current core launch services include Electrician, Plumber, AC Technician, Generator, Cleaning and Mechanic. Providers can register interest in additional genuine professions for review.
 - Customers should keep bookings, quotes and payments inside Rydah. Never encourage exchanging WhatsApp, phone, email or external-payment details to bypass Rydah.
 - Rydah currently charges providers a 15% platform commission on jobs. The agreed job price is the customer total; there is currently no extra customer Rydah fee.
@@ -45,11 +45,11 @@ function localAnswer(message: string) {
   if (/support|human|complaint|dispute|refund|problem/.test(q)) {
     return "For something that needs a person to review your account, payment or complaint, open Support or email admin@rydahlocal.online. Don’t send passwords, OTPs, card PINs or identity numbers in chat.";
   }
-  if (/where|area|location|lagos|lekki|ikeja|victoria/.test(q)) {
-    return "Rydah Local is launching in Lagos, with Lekki, Victoria Island and Ikeja as the current core areas. More Lagos areas and professions can be added as verified supply grows.";
+  if (/where|area|location|lagos|lekki|ikeja|victoria|abuja|wuse|garki|maitama|gwarinpa|jabi|kubwa|lugbe|ibadan|bodija|dugbe|challenge|akobo|mokola|apata|ring road/.test(q)) {
+    return "Rydah Local targets Lagos, Abuja and Ibadan. Core service areas are available in each city, while actual booking availability depends on biometrically verified providers being active in the selected area.";
   }
 
-  return "I can help with finding a provider, posting a job, payments, safety checks, cancellations, provider registration or support. Tell me what you need done and your Lagos area, and I’ll point you to the right Rydah step.";
+  return "I can help with finding a provider, posting a job, payments, safety checks, cancellations, provider registration or support. Tell me what you need done and your area in Lagos, Abuja or Ibadan, and I’ll point you to the right Rydah step.";
 }
 
 function extractResponseText(payload: any) {
