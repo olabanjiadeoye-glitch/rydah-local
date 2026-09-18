@@ -47,10 +47,11 @@ jobs:
           mkdir -p ci-status
           set +e
           docker run --rm \
+            --entrypoint sh \
             -v "$PWD/build/android-twa:/app" \
             -w /app \
             ghcr.io/googlechromelabs/bubblewrap:latest \
-            sh -lc 'yes | sdkmanager --licenses >/dev/null && bubblewrap build --skipPwaValidation --skipSigning' \
+            -lc 'yes | sdkmanager --licenses >/dev/null || true; bubblewrap build --skipPwaValidation --skipSigning' \
             2>&1 | tee ci-status/android-bundle.log
           EXIT_CODE=${PIPESTATUS[0]}
           exit $EXIT_CODE
