@@ -56,6 +56,7 @@ export default function ArrivalCheckPage() {
   const [capturedImages, setCapturedImages] = useState<Record<string, string>>({});
   const [consents, setConsents] = useState<Record<string, boolean>>({});
   const [cameraJobId, setCameraJobId] = useState("");
+  const [cameraFacing, setCameraFacing] = useState<"user" | "environment">("user");
   const [cameraError, setCameraError] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -108,7 +109,7 @@ export default function ArrivalCheckPage() {
     setCameraJobId("");
   }
 
-  async function startCamera(job: JobRow) {
+  async function startCamera(job: JobRow, facing: "user" | "environment" = cameraFacing) {
     setError("");
     setMessage("");
     setCameraError("");
@@ -129,12 +130,13 @@ export default function ArrivalCheckPage() {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
-          facingMode: "user",
+          facingMode: { ideal: facing },
           width: { ideal: 720 },
           height: { ideal: 960 },
         },
       });
       streamRef.current = stream;
+      setCameraFacing(facing);
       setCameraJobId(job.id);
     } catch (caught) {
       const name = caught instanceof DOMException ? caught.name : "";
@@ -146,6 +148,11 @@ export default function ArrivalCheckPage() {
         setCameraError("Unable to open the camera. Check camera permission and try again.");
       }
     }
+  }
+
+  async function flipCamera(job: JobRow) {
+    const nextFacing = cameraFacing === "user" ? "environment" : "user";
+    await startCamera(job, nextFacing);
   }
 
   function captureFace(job: JobRow) {
@@ -333,25 +340,32 @@ export default function ArrivalCheckPage() {
                                 muted
                                 playsInline
                                 autoPlay
-                                className="h-full w-full object-cover scale-x-[-1]"
+                                className={`h-full w-full object-cover ${cameraFacing === "user" ? "scale-x-[-1]" : ""}`}
                               />
                               <div className="pointer-events-none absolute inset-6 rounded-[42%] border-2 border-[#D4AF37]/70" />
                               <div className="pointer-events-none absolute inset-x-0 bottom-4 text-center text-xs font-bold text-white drop-shadow">
                                 Centre the provider&apos;s face inside the guide
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-3 p-4">
+                            <div className="grid grid-cols-3 gap-3 p-4">
                               <button
                                 type="button"
                                 onClick={() => captureFace(job)}
-                                className="rounded-xl bg-[#D4AF37] px-4 py-3 text-sm font-black text-black"
+                                className="rounded-xl bg-[#D4AF37] px-3 py-3 text-sm font-black text-black"
                               >
-                                Capture Face
+                                Capture
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void flipCamera(job)}
+                                className="rounded-xl border border-[#D4AF37]/30 px-3 py-3 text-sm font-bold text-[#E5C65A]"
+                              >
+                                Flip Camera
                               </button>
                               <button
                                 type="button"
                                 onClick={stopCamera}
-                                className="rounded-xl border border-white/15 px-4 py-3 text-sm font-bold text-zinc-300"
+                                className="rounded-xl border border-white/15 px-3 py-3 text-sm font-bold text-zinc-300"
                               >
                                 Cancel
                               </button>
