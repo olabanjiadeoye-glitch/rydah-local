@@ -1,3 +1,3 @@
 # Production deployment trigger
 
-Deployment retry requested at 2026-09-18 15:43 BST after confirming rydahlocal.online was still serving the old Lagos-only production build. Product code already contains Nigeria flag plus Lagos, Abuja and Ibadan coverage.
+Fresh production deploy requested at 2026-09-18 17:06 BST after moving rydahlocal.online from the legacy rydah-local Vercel project to rydah-local-kxjm. Purpose: force the custom domain onto the current Nigeria/Lagos-Abuja-Ibadan build and clear stale production routing.
