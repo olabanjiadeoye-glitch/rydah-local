@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+  <defs>
+    <radialGradient id="bg" cx="58%" cy="45%" r="80%">
+      <stop offset="0" stop-color="#211706"/>
+      <stop offset=".55" stop-color="#090909"/>
+      <stop offset="1" stop-color="#020202"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff2ae"/>
+      <stop offset=".32" stop-color="#e7b938"/>
+      <stop offset=".63" stop-color="#9f6507"/>
+      <stop offset="1" stop-color="#f5d46f"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="500" fill="url(#bg)"/>
+  <circle cx="850" cy="110" r="170" fill="#d4af37" opacity=".08" filter="url(#glow)"/>
+  <circle cx="110" cy="480" r="210" fill="#8f5900" opacity=".12" filter="url(#glow)"/>
+  <g transform="translate(74 78)">
+    <rect width="344" height="344" rx="74" fill="#060606" stroke="url(#gold)" stroke-width="8"/>
+    <path d="M72 50h113c54 0 87 27 87 74 0 36-20 60-53 70l56 92h-66l-50-84h-25v84H72V50Zm62 52v51h45c21 0 33-9 33-26s-12-25-33-25h-45Z" fill="url(#gold)"/>
+    <path d="M70 266c42-9 60-66 106-66 35 0 47 39 82 39 20 0 34-7 48-20" fill="none" stroke="url(#gold)" stroke-width="19" stroke-linecap="round"/>
+    <path d="M70 266c42-9 60-66 106-66 35 0 47 39 82 39 20 0 34-7 48-20" fill="none" stroke="#080808" stroke-width="10" stroke-linecap="round"/>
+    <path d="M146 129c0-25 19-44 44-44s44 19 44 44c0 31-44 72-44 72s-44-41-44-72Z" fill="url(#gold)"/>
+    <circle cx="190" cy="129" r="15" fill="#090909"/>
+  </g>
+  <g transform="translate(475 155)">
+    <text x="0" y="0" fill="#f2cd62" font-family="Arial, Helvetica, sans-serif" font-size="62" font-weight="800" letter-spacing="4">RYDAH</text>
+    <text x="0" y="64" fill="#d4af37" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700" letter-spacing="12">LOCAL</text>
+    <rect y="100" width="370" height="2" fill="#d4af37" opacity=".45"/>
+    <text x="0" y="151" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="600">Move Smart. Move Rydah.</text>
+    <text x="0" y="202" fill="#a9a9a9" font-family="Arial, Helvetica, sans-serif" font-size="20">Trusted local professionals in Lagos</text>
+  </g>
+</svg>
