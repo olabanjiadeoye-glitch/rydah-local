@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getStoredSession, type AuthSession } from "@/lib/supabase";
+import { getStoredSession, type AuthSession, invokeFunction } from "@/lib/supabase";
 
 type IdentityResponse = {
   ok?: boolean;
@@ -24,19 +24,7 @@ async function callSupabaseFunction(
   functionName: string,
   payload: Record<string, unknown>,
 ) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
-  if (!supabaseUrl || !publishableKey) throw new Error("Identity verification service is not configured.");
-
-  const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      apikey: publishableKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  const response = await invokeFunction(functionName, payload, session.access_token);
 
   const result = (await response.json().catch(() => ({}))) as IdentityResponse;
   return { response, result };
