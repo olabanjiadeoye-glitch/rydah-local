@@ -1,4 +1,4 @@
-const CACHE_NAME = "rydah-shell-v1";
+const CACHE_NAME = "rydah-shell-v2";
 const SHELL = ["/", "/rydah-icon.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -37,4 +37,68 @@ self.addEventListener("fetch", (event) => {
       )
     );
   }
+});
+
+self.addEventListener("push", (event) => {
+  let payload = {
+    title: "Rydah Local",
+    body: "You have a new Rydah update.",
+    url: "/notifications",
+    icon: "/rydah-icon.svg",
+    badge: "/rydah-icon.svg",
+  };
+
+  if (event.data) {
+    try {
+      payload = { ...payload, ...event.data.json() };
+    } catch {
+      const text = event.data.text();
+      if (text) payload.body = text;
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title || "Rydah Local", {
+      body: payload.body || "You have a new Rydah update.",
+      icon: payload.icon || "/rydah-icon.svg",
+      badge: payload.badge || "/rydah-icon.svg",
+      data: {
+        url: payload.url || "/notifications",
+      },
+      tag: "rydah-notification",
+      renotify: true,
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const requestedPath = event.notification?.data?.url || "/notifications";
+  const targetUrl = new URL(requestedPath, self.location.origin).href;
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (clientList) => {
+      for (const client of clientList) {
+        try {
+          const clientUrl = new URL(client.url);
+          if (clientUrl.origin !== self.location.origin) continue;
+
+          if ("navigate" in client) {
+            await client.navigate(targetUrl);
+          }
+          if ("focus" in client) {
+            await client.focus();
+          }
+          return;
+        } catch {
+          // Try the next controlled window.
+        }
+      }
+
+      if (self.clients.openWindow) {
+        await self.clients.openWindow(targetUrl);
+      }
+    })
+  );
 });
