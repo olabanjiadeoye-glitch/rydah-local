@@ -1,0 +1,17 @@
+{
+  "applicationId": "online.rydahlocal.app",
+  "title": "Rydah Local",
+  "shortDescription": "Book trusted local professionals, compare quotes and manage safer jobs in Lagos.",
+  "category": "Business",
+  "defaultLanguage": "en-GB",
+  "website": "https://rydahlocal.online",
+  "privacyPolicy": "https://rydahlocal.online/privacy",
+  "support": "https://rydahlocal.online/support",
+  "tagline": "Move Smart. Move Rydah.",
+  "launchMarket": "Lagos, Nigeria",
+  "branding": {
+    "background": "#080808",
+    "gold": "#D4AF37",
+    "icon": "public/rydah-icon.svg"
+  }
+}
