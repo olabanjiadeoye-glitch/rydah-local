@@ -20,7 +20,8 @@ type JobRow = {
   quote_accepted_at: string | null;
   payment_status: "unpaid" | "pending" | "paid" | "cash_due" | "failed" | "refunded";
   arrival_verified_at: string | null;
-  providers: { business_name: string; starting_price: number | null; is_verified: boolean } | null;
+  arrival_face_verified_at: string | null;
+  providers: { business_name: string; starting_price: number | null; is_verified: boolean; biometric_verified: boolean } | null;
 };
 
 type ReviewRow = {
@@ -77,7 +78,7 @@ export default function MyJobsPage() {
     try {
       const [jobRows, reviewRows] = await Promise.all([
         restGet<JobRow[]>(
-          `jobs?select=id,provider_id,service_category,location,description,is_urgent,status,created_at,quoted_amount,quote_status,quote_accepted_at,payment_status,arrival_verified_at,providers(business_name,starting_price,is_verified)&customer_id=eq.${currentSession.user.id}&order=created_at.desc`,
+          `jobs?select=id,provider_id,service_category,location,description,is_urgent,status,created_at,quoted_amount,quote_status,quote_accepted_at,payment_status,arrival_verified_at,arrival_face_verified_at,providers(business_name,starting_price,is_verified,biometric_verified)&customer_id=eq.${currentSession.user.id}&order=created_at.desc`,
           currentSession.access_token,
         ),
         restGet<ReviewRow[]>(
@@ -244,7 +245,11 @@ export default function MyJobsPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="text-2xl font-black">{job.service_category}</h3>
                         {job.is_urgent && <span className="rounded-full bg-red-500/15 px-3 py-1 text-xs font-black text-red-300">URGENT</span>}
-                        {job.providers?.is_verified && <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-400">✓ RYDAH VERIFIED</span>}
+                        {job.providers?.biometric_verified ? (
+                          <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-400">✓ BIOMETRIC VERIFIED</span>
+                        ) : job.providers?.is_verified ? (
+                          <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-black text-amber-300">ID REVIEWED • BIOMETRIC REQUIRED</span>
+                        ) : null}
                       </div>
                       <p className="mt-2 text-zinc-400">{job.location}</p>
                       <p className="mt-4 text-zinc-300">{job.description}</p>
@@ -281,10 +286,16 @@ export default function MyJobsPage() {
                   {job.status === "accepted" && job.quote_status === "accepted" && job.provider_id && (
                     <div className={`mt-5 rounded-2xl border p-5 ${job.arrival_verified_at ? "border-emerald-500/25 bg-emerald-500/10" : "border-[#D4AF37]/25 bg-[#D4AF37]/5"}`}>
                       <p className={`text-sm font-black ${job.arrival_verified_at ? "text-emerald-400" : "text-[#D4AF37]"}`}>PROVIDER ARRIVAL SAFETY CHECK</p>
-                      {job.arrival_verified_at ? (
+                      {job.arrival_face_verified_at ? (
+                        <>
+                          <p className="mt-2 text-xl font-black text-emerald-300">✓ Arrival safety checks complete</p>
+                          <p className="mt-2 text-sm text-zinc-300">The Arrival PIN and customer camera face match have both passed. The assigned provider can now start the job.</p>
+                        </>
+                      ) : job.arrival_verified_at ? (
                         <>
                           <p className="mt-2 text-xl font-black text-emerald-300">✓ Arrival PIN verified</p>
-                          <p className="mt-2 text-sm text-zinc-300">The assigned provider confirmed the one-time code from your account. Work can now begin.</p>
+                          <p className="mt-2 text-sm leading-6 text-zinc-300">One more safety step is required before work can begin: use your phone camera to verify the provider&apos;s face against their biometrically verified Rydah identity.</p>
+                          <a href="/arrival-check" className="mt-4 inline-flex rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">Continue to Camera Verification</a>
                         </>
                       ) : (
                         <>
