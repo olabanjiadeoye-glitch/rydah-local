@@ -1,8 +1,8 @@
 {
   "workflow": "Android TWA Build",
   "status": "success",
-  "runNumber": "18",
-  "sourceSha": "8b7f0ad832beb43947510fc5fe7b0448766728ed",
+  "runNumber": "19",
+  "sourceSha": "693dddd535f2095589f28e335360b961e7e5f562",
   "packageId": "online.rydahlocal.app",
   "versionCode": 1,
   "versionName": "0.1.0",
