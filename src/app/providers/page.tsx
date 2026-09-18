@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getCurrentDeviceLocation, type DeviceCoordinates } from "@/lib/device-location";
-import { distanceKm, nearestServiceArea, RYDAH_SERVICE_AREA_CENTERS } from "@/lib/locations";
+import { distanceKm, nearestServiceArea, RYDAH_SERVICE_AREA_CENTERS, RYDAH_SERVICE_AREAS, RYDAH_TARGET_CITIES } from "@/lib/locations";
 import { getStoredSession, restDelete, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 
 type Provider = {
@@ -106,16 +106,28 @@ export default function ProvidersPage() {
     return ["All", ...Array.from(new Set([...launchCategories, ...discovered])).sort((a, b) => a.localeCompare(b))];
   }, [providers]);
 
-  const locations = useMemo(() => {
-    const discovered = providers.map((provider) => provider.area).filter(Boolean);
-    return ["All Areas", ...Array.from(new Set(discovered)).sort((a, b) => a.localeCompare(b))];
-  }, [providers]);
+  const cityAreaGroups = useMemo(
+    () => RYDAH_TARGET_CITIES.map((city) => ({
+      city,
+      areas: RYDAH_SERVICE_AREAS.filter((area) => area.endsWith(`, ${city}`) || area === `Other ${city} area`),
+    })),
+    [],
+  );
 
   const visibleProviders = useMemo(() => {
     let result = providers.filter((provider) => {
       const search = activeSearch.trim().toLowerCase();
       const matchesSearch = !search || provider.name.toLowerCase().includes(search) || provider.category.toLowerCase().includes(search) || provider.area.toLowerCase().includes(search) || provider.bio.toLowerCase().includes(search);
-      const matchesLocation = location === "All Areas" || provider.area === location;
+      const selectedCity = location.startsWith("All ") && location !== "All Areas"
+        ? location.slice(4)
+        : null;
+      const matchesLocation =
+        location === "All Areas"
+        || provider.area === location
+        || Boolean(selectedCity && (
+          provider.area.endsWith(`, ${selectedCity}`)
+          || provider.area === `Other ${selectedCity} area`
+        ));
       const matchesCategory = category === "All" || provider.category === category;
       return matchesSearch && matchesLocation && matchesCategory;
     });
@@ -214,7 +226,17 @@ export default function ProvidersPage() {
           <input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && setActiveSearch(query)} placeholder="Search electrician, carpenter, cleaner, area or provider..." className="mt-3 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <select value={location} onChange={(e) => setLocation(e.target.value)} className="rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
-              {locations.map((item) => <option key={item}>{item}</option>)}
+              <option value="All Areas">All Areas — Lagos, Abuja & Ibadan</option>
+              <optgroup label="Target cities">
+                {RYDAH_TARGET_CITIES.map((city) => (
+                  <option key={city} value={`All ${city}`}>{`All ${city}`}</option>
+                ))}
+              </optgroup>
+              {cityAreaGroups.map((group) => (
+                <optgroup key={group.city} label={group.city}>
+                  {group.areas.map((area) => <option key={area} value={area}>{area}</option>)}
+                </optgroup>
+              ))}
             </select>
             <select value={sort} onChange={(e) => setSort(e.target.value)} className="rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
               <option>Recommended</option><option>Nearest to Me</option><option>Highest Rated</option><option>Lowest Starting Price</option>
@@ -265,7 +287,9 @@ export default function ProvidersPage() {
         {visibleProviders.length === 0 ? (
           <div className="rounded-3xl border border-white/10 bg-[#121212] p-8 text-center">
             <p className="text-xl font-bold">No available verified providers found</p>
-            <p className="mt-2 text-zinc-500">Try another service or area. Rydah only shows providers who are verified and currently available.</p>
+            <p className="mt-2 text-zinc-500">
+              No biometric-verified provider is currently available for this selection. Lagos, Abuja and Ibadan remain Rydah target cities, and supply will appear here as verified providers come online.
+            </p>
             <a href="/post-job" className="mt-5 inline-block rounded-xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Post a Job</a>
           </div>
         ) : (
