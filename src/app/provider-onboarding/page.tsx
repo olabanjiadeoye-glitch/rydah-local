@@ -290,6 +290,10 @@ export default function ProviderOnboardingPage() {
     }
   }
 
+  function setImmersiveVerification(active: boolean) {
+    window.dispatchEvent(new CustomEvent("rydah:immersive-verification", { detail: { active } }));
+  }
+
   async function startLiveFaceVerification() {
     if (!session || !verification) return;
     if (!fullIdNumber.trim()) {
@@ -302,6 +306,7 @@ export default function ProviderOnboardingPage() {
     }
 
     setLiveFaceSaving(true);
+    setImmersiveVerification(true);
     setError("");
     setMessage("Preparing secure live camera verification…");
 
@@ -338,21 +343,25 @@ export default function ProviderOnboardingPage() {
         },
         allowAudio: true,
         onSuccess: () => {
+          setImmersiveVerification(false);
           void completeLiveFaceVerification(livenessSessionId);
         },
         onFailure: (data: any) => {
           const detail = data?.error?.message || data?.error?.key || "Live face check failed. Please try again.";
+          setImmersiveVerification(false);
           setMessage("");
           setError(String(detail));
           setLiveFaceSaving(false);
         },
         onClose: () => {
+          setImmersiveVerification(false);
           setLiveFaceSaving(false);
         },
       });
 
       yvLiveness.start();
     } catch (caught) {
+      setImmersiveVerification(false);
       setMessage("");
       setError(caught instanceof Error ? caught.message : "Unable to start live face verification.");
       setLiveFaceSaving(false);
