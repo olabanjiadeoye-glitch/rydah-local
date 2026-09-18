@@ -64,7 +64,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-10">
+      <section className="mx-auto max-w-6xl px-5 py-8 sm:py-10">
         <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-black tracking-widest text-[#D4AF37]">POPULAR SERVICES</p>
@@ -73,12 +73,20 @@ export default function Home() {
           <span className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-500">Lagos • Abuja • Ibadan • Warri • Port Harcourt</span>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
           {services.map((service) => (
-            <a key={service.name} href={`/providers?category=${encodeURIComponent(service.name)}`} className="group rounded-3xl border border-white/10 bg-[#121212] p-6 transition hover:-translate-y-1 hover:border-[#D4AF37]/50">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#D4AF37]/10 text-3xl">{service.icon}</div>
-              <h3 className="mt-5 text-xl font-black group-hover:text-[#D4AF37]">{service.name}</h3>
-              <p className="mt-2 text-zinc-500">{service.description}</p>
+            <a
+              key={service.name}
+              href={`/providers?category=${encodeURIComponent(service.name)}`}
+              className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-[#121212] p-4 transition hover:border-[#D4AF37]/50 sm:block sm:rounded-3xl sm:p-6 sm:hover:-translate-y-1"
+            >
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#D4AF37]/10 text-2xl sm:h-14 sm:w-14 sm:rounded-2xl sm:text-3xl">
+                {service.icon}
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-lg font-black group-hover:text-[#D4AF37] sm:mt-5 sm:text-xl">{service.name}</h3>
+                <p className="mt-1 text-sm leading-5 text-zinc-500 sm:mt-2 sm:text-base sm:leading-normal">{service.description}</p>
+              </div>
             </a>
           ))}
         </div>
