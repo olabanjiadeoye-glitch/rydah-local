@@ -125,6 +125,7 @@ export default function ProviderOnboardingPage() {
   const [fullIdNumber, setFullIdNumber] = useState("");
   const [selfie, setSelfie] = useState<File | null>(null);
   const [faceConsent, setFaceConsent] = useState(false);
+  const [autoFinalizingSessionId, setAutoFinalizingSessionId] = useState("");
 
   useEffect(() => {
     const currentSession = getStoredSession();
@@ -135,6 +136,33 @@ export default function ProviderOnboardingPage() {
     setSession(currentSession);
     void load(currentSession);
   }, []);
+
+  useEffect(() => {
+    const pendingSessionId = verification?.biometric_liveness_session_id || "";
+    const shouldFinalize =
+      verification?.biometric_status === "pending" &&
+      Boolean(pendingSessionId) &&
+      Boolean(fullIdNumber.trim()) &&
+      faceConsent &&
+      !liveFaceSaving &&
+      autoFinalizingSessionId !== pendingSessionId;
+
+    if (!shouldFinalize) return;
+
+    setAutoFinalizingSessionId(pendingSessionId);
+    const timer = window.setTimeout(() => {
+      void completeLiveFaceVerification(pendingSessionId);
+    }, 600);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    verification?.biometric_status,
+    verification?.biometric_liveness_session_id,
+    fullIdNumber,
+    faceConsent,
+    liveFaceSaving,
+    autoFinalizingSessionId,
+  ]);
 
   async function load(currentSession: AuthSession) {
     setLoading(true);
@@ -340,6 +368,7 @@ export default function ProviderOnboardingPage() {
       return;
     }
 
+    setAutoFinalizingSessionId("");
     setLiveFaceSaving(true);
     setImmersiveVerification(true);
     setError("");
@@ -377,8 +406,11 @@ export default function ProviderOnboardingPage() {
           showPoweredBy: true,
         },
         allowAudio: true,
-        onSuccess: () => {
+        onSuccess: (data: any) => {
           setImmersiveVerification(false);
+          setMessage(data?.passed === true
+            ? "Live camera check passed. Finalizing securely…"
+            : "Live camera completed. Confirming the result securely…");
           window.setTimeout(() => {
             void completeLiveFaceVerification(livenessSessionId);
           }, 1200);
