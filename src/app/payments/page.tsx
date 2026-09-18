@@ -162,11 +162,9 @@ export default function PaymentsPage() {
     setMessage("Opening secure Paystack checkout…");
 
     try {
-      const callbackUrl = `${window.location.origin}/payments?job=${encodeURIComponent(job.id)}`;
       const result = await callPaymentBackend(session, {
         action: "initialize",
         job_id: job.id,
-        callback_url: callbackUrl,
       });
 
       if (!result.authorization_url) throw new Error("Paystack did not return a checkout link.");
