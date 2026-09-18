@@ -239,9 +239,13 @@ export default function ProvidersPage() {
             <p className="text-xs text-zinc-600">{status}</p>
           </div>
           <input value={query} onChange={(e) => setQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && runProviderSearch()} placeholder="Search electrician, carpenter, cleaner, area or provider..." className="mt-3 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <select value={location} onChange={(e) => setLocation(e.target.value)} className="rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
-              <option value="All Areas">All Areas — Lagos, Abuja, Ibadan, Warri & Port Harcourt</option>
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <select
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className="w-full min-w-0 max-w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
+            >
+              <option value="All Areas">All Areas — 5 Cities</option>
               <optgroup label="Target cities">
                 {RYDAH_TARGET_CITIES.map((city) => (
                   <option key={city} value={`All ${city}`}>{`All ${city}`}</option>
@@ -253,8 +257,15 @@ export default function ProvidersPage() {
                 </optgroup>
               ))}
             </select>
-            <select value={sort} onChange={(e) => setSort(e.target.value)} className="rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
-              <option>Recommended</option><option>Nearest to Me</option><option>Highest Rated</option><option>Lowest Starting Price</option>
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="w-full min-w-0 max-w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
+            >
+              <option>Recommended</option>
+              <option>Nearest to Me</option>
+              <option>Highest Rated</option>
+              <option>Lowest Starting Price</option>
             </select>
           </div>
           <div className="mt-3 flex flex-wrap items-center gap-3">
