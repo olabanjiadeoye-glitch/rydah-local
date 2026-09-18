@@ -4,7 +4,7 @@ export default function PrivacyPage() {
       <article className="mx-auto max-w-3xl">
         <a href="/" className="text-sm font-black tracking-[0.2em] text-[#D4AF37]">RYDAH LOCAL</a>
         <h1 className="mt-4 text-4xl font-black">Privacy Notice</h1>
-        <p className="mt-3 text-sm text-zinc-500">Effective: 17 September 2026</p>
+        <p className="mt-3 text-sm text-zinc-500">Effective: 18 September 2026</p>
 
         <div className="mt-8 space-y-8 text-sm leading-7 text-zinc-300">
           <section>
@@ -28,6 +28,16 @@ export default function PrivacyPage() {
           </section>
 
           <section>
+            <h2 className="text-xl font-black text-white">Safety reports and disputes</h2>
+            <p className="mt-2">If you use the Safety Center or Resolution Centre, Rydah stores the related job reference, report or dispute category, the description you provide, review status, support responses, and limited audit information. Safety and dispute records may be retained where reasonably necessary for user protection, fraud prevention, transaction handling, legal obligations, or resolving complaints.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-black text-white">Device notifications</h2>
+            <p className="mt-2">If you opt in to device notifications, Rydah stores a browser push-subscription endpoint and cryptographic subscription keys associated with your account so job, safety, payment, dispute, and verification updates can be delivered to that device. You can disable notifications for a device from the Notifications page. Push subscription data is removed when the related account is deleted.</p>
+          </section>
+
+          <section>
             <h2 className="text-xl font-black text-white">Payments and commission</h2>
             <p className="mt-2">Online payments and eligible provider commission settlements are processed by Paystack. Rydah Local does not ask users to enter card details directly into Rydah pages. Payment and settlement records may be retained so we can reconcile jobs, commissions, provider earnings, disputes, chargebacks, refunds, and support requests.</p>
           </section>
@@ -39,7 +49,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-xl font-black text-white">How we use information</h2>
-            <p className="mt-2">We use information to create and secure accounts, match customers with providers, process jobs and payments, verify providers, conduct arrival safety checks, prevent off-platform abuse and fraud, support marketplace expansion, provide customer care, maintain records, improve the service, and comply with legal or regulatory obligations.</p>
+            <p className="mt-2">We use information to create and secure accounts, match customers with providers, process jobs and payments, verify providers, conduct arrival safety checks, deliver opted-in device notifications, investigate safety reports and disputes, prevent off-platform abuse and fraud, support marketplace operations, provide customer care, maintain records, improve the service, and comply with legal or regulatory obligations.</p>
           </section>
 
           <section>
@@ -54,7 +64,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-xl font-black text-white">Your choices and rights</h2>
-            <p className="mt-2">Depending on applicable law, you may have rights to request access, correction, deletion, restriction, objection, or information about the handling of your personal data. Some records may need to be retained where required for transactions, fraud prevention, disputes, safety, or legal obligations.</p>
+            <p className="mt-2">Depending on applicable law, you may have rights to request access, correction, deletion, restriction, objection, or information about the handling of your personal data. When an account deletion is completed, Rydah removes the authentication account and anonymises retained job/provider personal information. Limited transaction, dispute and safety audit records may remain where reasonably necessary for financial reconciliation, fraud prevention, safety, legal obligations, or resolving claims.</p>
             <p className="mt-3">To request deletion of your Rydah account and associated personal data, use our <a className="font-bold text-[#D4AF37]" href="/delete-account">account deletion page</a>.</p>
           </section>
 
