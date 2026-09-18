@@ -89,3 +89,28 @@ jobs:
             --title "Rydah Android CI build ${{ github.run_number }}" \
             --notes "Unsigned Android App Bundle for package online.rydahlocal.app. CI validation only; not ready for Play upload until permanent signing is configured." \
             --prerelease
+
+      - name: Record Android CI status
+        if: always()
+        env:
+          BUILD_STATUS: ${{ job.status }}
+          RUN_NUMBER: ${{ github.run_number }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          mkdir -p ci-status
+          cat > ci-status/android-twa.json <<EOF
+          {
+            "workflow": "Android TWA Build",
+            "status": "$BUILD_STATUS",
+            "runNumber": "$RUN_NUMBER",
+            "sourceSha": "$SOURCE_SHA",
+            "packageId": "online.rydahlocal.app",
+            "versionCode": 1,
+            "versionName": "0.1.0"
+          }
+          EOF
+          git config user.name "rydah-ci"
+          git config user.email "actions@users.noreply.github.com"
+          git add ci-status/android-twa.json
+          git commit -m "Record Android CI status [skip ci]" || true
+          git push
