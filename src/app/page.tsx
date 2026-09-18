@@ -34,7 +34,7 @@ export default function Home() {
         <div className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-[#D4AF37]/10 blur-3xl" />
         <div className="relative mx-auto max-w-6xl px-5 py-14 sm:py-20">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-2 text-xs font-black tracking-wider text-[#D4AF37]">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" /> NOW LAUNCHING IN LAGOS
+            <span className="h-2 w-2 rounded-full bg-emerald-400" /> TARGET CITIES: LAGOS • ABUJA • IBADAN
           </div>
 
           <h1 className="mt-8 max-w-5xl text-5xl font-black leading-[0.98] tracking-tight sm:text-7xl lg:text-8xl">
@@ -66,7 +66,7 @@ export default function Home() {
             <p className="text-xs font-black tracking-widest text-[#D4AF37]">POPULAR SERVICES</p>
             <h2 className="mt-2 text-3xl font-black sm:text-4xl">What do you need done?</h2>
           </div>
-          <span className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-500">Lagos launch marketplace</span>
+          <span className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-500">Lagos • Abuja • Ibadan</span>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -83,7 +83,7 @@ export default function Home() {
           <div>
             <p className="text-xs font-black tracking-widest text-[#D4AF37]">PROFESSION NOT LISTED?</p>
             <h3 className="mt-2 text-2xl font-black">Rydah is built to grow beyond six trades.</h3>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">Create a Service Provider account and register your genuine profession and Lagos service area for marketplace review.</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">Create a Service Provider account and register your genuine profession and service area in Lagos, Abuja or Ibadan for marketplace review.</p>
           </div>
           <a href="/sign-in" className="mt-5 inline-block shrink-0 rounded-2xl bg-white px-5 py-4 text-sm font-black text-black sm:mt-0">Join as a Provider</a>
         </div>
