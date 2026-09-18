@@ -1,0 +1,42 @@
+{
+  "packageId": "online.rydahlocal.app",
+  "host": "rydahlocal.online",
+  "name": "Rydah Local",
+  "launcherName": "Rydah",
+  "display": "standalone",
+  "themeColor": "#080808",
+  "themeColorDark": "#080808",
+  "navigationColor": "#080808",
+  "navigationColorDark": "#080808",
+  "navigationDividerColor": "#080808",
+  "navigationDividerColorDark": "#080808",
+  "backgroundColor": "#080808",
+  "enableNotifications": false,
+  "startUrl": "/",
+  "iconUrl": "https://rydahlocal.online/rydah-icon.svg",
+  "maskableIconUrl": "https://rydahlocal.online/rydah-icon.svg",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android-keystore",
+    "alias": "rydah-upload"
+  },
+  "appVersionCode": 1,
+  "appVersion": "0.1.0",
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://rydahlocal.online/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://rydahlocal.online/",
+  "minSdkVersion": 23,
+  "orientation": "default",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": []
+}
