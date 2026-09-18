@@ -98,6 +98,7 @@ export default function SessionToolbar() {
           <a href="/providers" className={goldLink}>Marketplace</a>
           <a href="/arrival-check" className={neutralLink}>Arrival Check</a>
           <a href="/safety" className={`${baseLink} border-red-500/30 text-red-300`}>Safety Center</a>
+          <a href="/disputes" className={neutralLink}>Resolution Centre</a>
           <a href="/my-jobs" className="shrink-0 rounded-xl bg-[#D4AF37] px-4 py-2 text-sm font-bold text-black">My Jobs</a>
         </>
       )}
@@ -112,6 +113,7 @@ export default function SessionToolbar() {
           <a href="/payouts" className={goldLink}>Payouts</a>
           <a href="/providers" className={neutralLink}>Marketplace</a>
           <a href="/safety" className={`${baseLink} border-red-500/30 text-red-300`}>Safety Center</a>
+          <a href="/disputes" className={neutralLink}>Resolution Centre</a>
         </>
       )}
 
@@ -124,6 +126,8 @@ export default function SessionToolbar() {
           <a href="/admin/finance" className={adminLink}>Finance</a>
           <a href="/payout-admin" className={adminLink}>Payout Admin</a>
           <a href="/admin/safety" className={`${baseLink} border-red-500/40 text-red-300`}>Safety Review</a>
+          <a href="/admin/disputes" className={adminLink}>Disputes</a>
+          <a href="/admin/account-deletions" className={adminLink}>Deletions</a>
           <a href="/providers" className={neutralLink}>Marketplace</a>
         </>
       )}
