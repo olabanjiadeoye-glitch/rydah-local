@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SessionToolbar from "./session-toolbar";
 import RydahSplash from "./rydah-splash";
+import PwaRegister from "./pwa-register";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -71,6 +72,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col pb-24 md:pb-28">
+        <PwaRegister />
         <RydahSplash />
         {children}
         <SessionToolbar />
