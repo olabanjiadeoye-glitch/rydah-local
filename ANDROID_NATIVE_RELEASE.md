@@ -13,7 +13,7 @@ Treat this identifier as permanent for the Android/Google Play application. Do n
 - Package: `online.rydahlocal.app`
 - Website: https://rydahlocal.online
 - Tagline: Move Smart. Move Rydah.
-- Primary launch market: Lagos, Nigeria
+- Target launch cities: Lagos, Abuja and Ibadan, Nigeria
 - Theme: deep black + premium gold
 
 ## Native packaging approach
