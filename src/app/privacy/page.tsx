@@ -18,6 +18,11 @@ export default function PrivacyPage() {
           </section>
 
           <section>
+            <h2 className="text-xl font-black text-white">Provider biometric verification</h2>
+            <p className="mt-2">Provider verification may use a live camera liveness session and face-to-ID matching through Rydah&apos;s identity-verification provider. The verification provider may process live face images or video required to perform the check. Rydah is designed to retain the verification outcome, provider session reference, timestamps and limited audit information rather than the raw liveness image or video itself. Providers must consent before starting this check.</p>
+          </section>
+
+          <section>
             <h2 className="text-xl font-black text-white">Arrival camera checks</h2>
             <p className="mt-2">For providers who have completed supported biometric enrolment, a customer may use a phone camera during an active job arrival check to compare the person present with the provider&apos;s verified reference. The camera image is transmitted for the comparison and Rydah is designed to retain the match result, confidence information, timestamps, and audit details rather than the arrival camera image itself.</p>
           </section>
