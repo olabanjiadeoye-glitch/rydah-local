@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getStoredSession, restGet, restPatch, type AuthSession } from "@/lib/supabase";
+import {
+  getStoredSession,
+  restGet,
+  restPatch,
+  restRpc,
+  type AuthSession,
+} from "@/lib/supabase";
 
 type NotificationRow = {
   id: string;
@@ -13,6 +19,13 @@ type NotificationRow = {
   created_at: string;
 };
 
+type PushConfig = {
+  public_key: string | null;
+  enabled: boolean;
+};
+
+type PushState = "checking" | "enabled" | "disabled" | "blocked" | "unsupported";
+
 function timeLabel(value: string) {
   const date = new Date(value);
   return date.toLocaleString("en-GB", {
@@ -23,12 +36,30 @@ function timeLabel(value: string) {
   });
 }
 
+function urlBase64ToUint8Array(value: string) {
+  const padding = "=".repeat((4 - (value.length % 4)) % 4);
+  const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = window.atob(base64);
+  return Uint8Array.from([...raw].map((character) => character.charCodeAt(0)));
+}
+
+function subscriptionKeys(subscription: PushSubscription) {
+  const json = subscription.toJSON();
+  const p256dh = json.keys?.p256dh || "";
+  const auth = json.keys?.auth || "";
+  if (!p256dh || !auth) throw new Error("The browser did not return valid push encryption keys.");
+  return { p256dh, auth };
+}
+
 export default function NotificationsPage() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [items, setItems] = useState<NotificationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushState, setPushState] = useState<PushState>("checking");
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
 
   const unreadCount = useMemo(() => items.filter((item) => !item.read_at).length, [items]);
 
@@ -40,6 +71,7 @@ export default function NotificationsPage() {
     }
     setSession(current);
     void load(current);
+    void detectPushState(current);
   }, []);
 
   async function load(current: AuthSession) {
@@ -55,6 +87,139 @@ export default function NotificationsPage() {
       setError(caught instanceof Error ? caught.message : "Unable to load notifications.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function detectPushState(current: AuthSession) {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+      setPushState("unsupported");
+      return;
+    }
+
+    if (Notification.permission === "denied") {
+      setPushState("blocked");
+      return;
+    }
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription) {
+        setPushState("disabled");
+        return;
+      }
+
+      const keys = subscriptionKeys(subscription);
+      await restRpc<string>(
+        "save_push_subscription",
+        {
+          p_endpoint: subscription.endpoint,
+          p_p256dh: keys.p256dh,
+          p_auth: keys.auth,
+          p_user_agent: navigator.userAgent,
+        },
+        current.access_token,
+      );
+      setPushState("enabled");
+    } catch {
+      setPushState("disabled");
+    }
+  }
+
+  async function enablePush() {
+    if (!session) return;
+    setPushBusy(true);
+    setError("");
+    setMessage("");
+
+    try {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+        setPushState("unsupported");
+        throw new Error("Push notifications are not supported on this browser or device.");
+      }
+
+      const configRows = await restGet<PushConfig[]>(
+        "push_config?select=public_key,enabled&id=eq.true&limit=1",
+        session.access_token,
+      );
+      const config = configRows[0];
+      if (!config?.enabled || !config.public_key) {
+        throw new Error("Rydah device notifications are not ready yet.");
+      }
+
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        setPushState(permission === "denied" ? "blocked" : "disabled");
+        throw new Error(
+          permission === "denied"
+            ? "Notifications are blocked for Rydah in your browser settings."
+            : "Notification permission was not granted.",
+        );
+      }
+
+      const registration = await navigator.serviceWorker.ready;
+      let subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(config.public_key),
+        });
+      }
+
+      const keys = subscriptionKeys(subscription);
+      await restRpc<string>(
+        "save_push_subscription",
+        {
+          p_endpoint: subscription.endpoint,
+          p_p256dh: keys.p256dh,
+          p_auth: keys.auth,
+          p_user_agent: navigator.userAgent,
+        },
+        session.access_token,
+      );
+
+      setPushState("enabled");
+      setMessage("Device notifications are enabled for this browser.");
+      await registration.showNotification("Rydah notifications enabled", {
+        body: "Important job, safety, payment and verification updates can now appear on this device.",
+        icon: "/rydah-icon.svg",
+        badge: "/rydah-icon.svg",
+        data: { url: "/notifications" },
+      });
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to enable device notifications.");
+    } finally {
+      setPushBusy(false);
+    }
+  }
+
+  async function disablePush() {
+    if (!session) return;
+    setPushBusy(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+
+      if (subscription) {
+        await restRpc<void>(
+          "remove_push_subscription",
+          { p_endpoint: subscription.endpoint },
+          session.access_token,
+        );
+        await subscription.unsubscribe();
+      }
+
+      setPushState("disabled");
+      setMessage("Device notifications are disabled for this browser.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to disable device notifications.");
+    } finally {
+      setPushBusy(false);
     }
   }
 
@@ -99,6 +264,14 @@ export default function NotificationsPage() {
     }
   }
 
+  const pushLabel = pushState === "enabled"
+    ? "Device notifications enabled"
+    : pushState === "blocked"
+      ? "Notifications blocked in browser"
+      : pushState === "unsupported"
+        ? "Notifications unsupported on this device"
+        : "Enable device notifications";
+
   return (
     <main className="min-h-screen bg-[#080808] text-white">
       <header className="border-b border-white/10">
@@ -112,11 +285,41 @@ export default function NotificationsPage() {
       </header>
 
       <section className="mx-auto max-w-4xl px-5 py-10">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="rounded-3xl border border-[#D4AF37]/20 bg-[#121212] p-5">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-black text-[#E5C65A]">DEVICE NOTIFICATIONS</p>
+              <p className="mt-1 max-w-xl text-sm leading-6 text-zinc-400">
+                Opt in to receive job, safety, dispute, payment and verification updates even when the Rydah page is not open.
+              </p>
+            </div>
+            {pushState === "enabled" ? (
+              <button
+                type="button"
+                disabled={pushBusy}
+                onClick={() => void disablePush()}
+                className="rounded-xl border border-white/15 px-4 py-3 text-sm font-bold text-zinc-300 disabled:opacity-40"
+              >
+                {pushBusy ? "Updating…" : "Disable on this device"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={pushBusy || pushState === "blocked" || pushState === "unsupported" || pushState === "checking"}
+                onClick={() => void enablePush()}
+                className="rounded-xl bg-[#D4AF37] px-4 py-3 text-sm font-black text-black disabled:opacity-40"
+              >
+                {pushBusy ? "Enabling…" : pushLabel}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">YOUR UPDATES</p>
             <h2 className="mt-1 text-3xl font-black">Stay up to date</h2>
-            <p className="mt-2 text-zinc-400">Job progress, provider activity and verification updates appear here.</p>
+            <p className="mt-2 text-zinc-400">Job progress, provider activity, safety and verification updates appear here.</p>
           </div>
           <button
             type="button"
@@ -128,6 +331,7 @@ export default function NotificationsPage() {
           </button>
         </div>
 
+        {message && <div className="mt-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">{message}</div>}
         {error && <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
         {loading ? (
