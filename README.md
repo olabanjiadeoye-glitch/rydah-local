@@ -1,9 +1,17 @@
 # Rydah Local
 
-Rydah Local is a Lagos-first local-services marketplace that connects customers with verified service providers. The product includes provider onboarding and identity/liveness verification, quotes, arrival verification, job tracking, Paystack payments, provider earnings/payouts, reviews, notifications, admin controls, and installable web/Android app delivery.
+Rydah Local is a Nigerian local-services marketplace targeting Lagos, Abuja and Ibadan and connecting customers with verified service providers. The product includes provider onboarding and identity/liveness verification, quotes, arrival verification, job tracking, Paystack payments, provider earnings/payouts, reviews, notifications, admin controls, and installable web/Android app delivery.
 
 Production web origin: `https://rydahlocal.online`  
 Android package ID: `online.rydahlocal.app`
+
+## Target launch cities
+
+- Lagos
+- Abuja
+- Ibadan
+
+Booking availability in each service area depends on active, verified provider supply.
 
 ## Stack
 
