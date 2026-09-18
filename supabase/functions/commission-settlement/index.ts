@@ -82,6 +82,19 @@ Deno.serve(async (req) => {
     if (!provider) return json({ error: "Provider profile not found" }, 404);
 
     if (body.action === "initialize") {
+      const checkoutSettingKey = isTest ? "paystack_test_checkout_enabled" : "payment_gateway_live_enabled";
+      const modeResponse = await supabaseRequest(
+        `platform_settings?key=eq.${checkoutSettingKey}&select=value_numeric&limit=1`,
+      );
+      const modeRows = await modeResponse.json() as Array<{ value_numeric: number | string }>;
+      if (Number(modeRows[0]?.value_numeric ?? 0) !== 1) {
+        return json({
+          error: isTest
+            ? "Paystack test checkout is currently disabled by Rydah."
+            : "Live Paystack checkout is not enabled yet.",
+        }, 503);
+      }
+
       if (!user.email) return json({ error: "Your provider account needs an email address before commission can be settled." }, 409);
 
       const pendingResponse = await supabaseRequest(
