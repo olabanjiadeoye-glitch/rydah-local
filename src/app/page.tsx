@@ -33,8 +33,12 @@ export default function Home() {
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-[#D4AF37]/10 blur-3xl" />
         <div className="relative mx-auto max-w-6xl px-5 py-14 sm:py-20">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-2 text-xs font-black tracking-wider text-[#D4AF37]">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" /> TARGET CITIES: LAGOS • ABUJA • IBADAN
+          <div
+            className="inline-flex items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-2"
+            aria-label="Nigeria"
+            title="Nigeria"
+          >
+            <span className="text-3xl leading-none" role="img" aria-hidden="true">🇳🇬</span>
           </div>
 
           <h1 className="mt-8 max-w-5xl text-5xl font-black leading-[0.98] tracking-tight sm:text-7xl lg:text-8xl">
