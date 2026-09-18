@@ -232,7 +232,7 @@ export default function PayoutsPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-5xl px-5 py-7 sm:py-6">
+      <section className="mx-auto max-w-5xl px-5 py-6 sm:py-8">
         {!provider ? (
           <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">No provider profile found.</div>
         ) : (

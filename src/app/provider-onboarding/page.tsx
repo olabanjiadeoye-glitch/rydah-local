@@ -675,7 +675,7 @@ export default function ProviderOnboardingPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#080808] px-5 py-7 sm:py-6 text-white">
+      <main className="min-h-screen bg-[#080808] px-5 py-6 sm:py-8 text-white">
         <div className="mx-auto max-w-xl">
           <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">
             Loading your setup…

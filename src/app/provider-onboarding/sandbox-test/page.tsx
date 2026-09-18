@@ -132,7 +132,7 @@ export default function SandboxFaceTestPage() {
 
   return (
     <main className="min-h-screen bg-[#080808] text-white">
-      <section className="mx-auto max-w-2xl px-5 py-7 sm:py-6">
+      <section className="mx-auto max-w-2xl px-5 py-6 sm:py-8">
         <p className="text-sm font-black tracking-[0.22em] text-[#D4AF37]">RYDAH LOCAL</p>
         <h1 className="mt-2 text-3xl font-black">Youverify Sandbox Test</h1>
         <p className="mt-3 text-sm leading-6 text-zinc-400">

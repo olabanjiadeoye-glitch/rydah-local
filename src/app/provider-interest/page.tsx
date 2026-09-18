@@ -145,7 +145,7 @@ export default function ProviderInterestPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-4xl px-5 py-7 sm:py-6">
+      <section className="mx-auto max-w-4xl px-5 py-6 sm:py-8">
         <div className="rounded-3xl border border-[#D4AF37]/25 bg-gradient-to-br from-[#17130a] to-[#101010] p-5 sm:p-6">
           <p className="text-xs font-black tracking-[0.2em] text-[#D4AF37]">DON&apos;T SEE YOUR TRADE?</p>
           <h2 className="mt-3 text-3xl font-black">Tell Rydah what you do.</h2>

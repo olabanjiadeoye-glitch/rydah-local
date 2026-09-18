@@ -110,7 +110,7 @@ export default function ChangeProviderIdPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-3xl px-5 py-7 sm:py-6">
+      <section className="mx-auto max-w-3xl px-5 py-6 sm:py-8">
         {loading ? (
           <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">Loading verification details…</div>
         ) : !provider || !verification ? (
