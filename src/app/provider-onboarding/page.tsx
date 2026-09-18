@@ -44,6 +44,12 @@ type IdentityResponse = {
   result_text?: string;
   error?: string;
   setup_required?: boolean;
+  environment?: string;
+  configured?: boolean;
+  liveness_configured?: boolean;
+  public_merchant_id_configured?: boolean;
+  session_id?: string;
+  session_token?: string;
 };
 
 const idTypes: VerificationRow["id_type"][] = [
@@ -102,6 +108,9 @@ export default function ProviderOnboardingPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [faceSaving, setFaceSaving] = useState(false);
+  const [liveFaceSaving, setLiveFaceSaving] = useState(false);
+  const [identityEnvironment, setIdentityEnvironment] = useState("sandbox");
+  const [livenessConfigured, setLivenessConfigured] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -147,6 +156,12 @@ export default function ProviderOnboardingPage() {
       );
       const currentVerification = verificationRows[0] ?? null;
       setVerification(currentVerification);
+
+      const identityStatus = await callIdentityBackend(currentSession, { action: "status" }).catch(() => null);
+      if (identityStatus) {
+        setIdentityEnvironment(identityStatus.environment || "sandbox");
+        setLivenessConfigured(Boolean(identityStatus.liveness_configured));
+      }
 
       if (currentVerification) {
         setLegalName(currentVerification.legal_name);
@@ -248,6 +263,99 @@ export default function ProviderOnboardingPage() {
       await load(session);
     } finally {
       setFaceSaving(false);
+    }
+  }
+
+  async function completeLiveFaceVerification(livenessSessionId: string) {
+    if (!session) return;
+    try {
+      setMessage("Live presence confirmed. Matching the live face with the identity record…");
+      const result = await callIdentityBackend(session, {
+        action: "complete_live_verification",
+        id_number: fullIdNumber,
+        session_id: livenessSessionId,
+        consent: true,
+      });
+      setMessage(result.result_text || "Live face and identity verification completed.");
+      setFullIdNumber("");
+      setSelfie(null);
+      setFaceConsent(false);
+      await load(session);
+    } catch (caught) {
+      setMessage("");
+      setError(caught instanceof Error ? caught.message : "Unable to complete live face verification.");
+      await load(session);
+    } finally {
+      setLiveFaceSaving(false);
+    }
+  }
+
+  async function startLiveFaceVerification() {
+    if (!session || !verification) return;
+    if (!fullIdNumber.trim()) {
+      setError("Enter the full ID number for this verification only.");
+      return;
+    }
+    if (!faceConsent) {
+      setError("You must consent to the live face and ID check before continuing.");
+      return;
+    }
+
+    setLiveFaceSaving(true);
+    setError("");
+    setMessage("Preparing secure live camera verification…");
+
+    try {
+      const credentials = await callIdentityBackend(session, { action: "liveness_session" });
+      if (!credentials.session_id || !credentials.session_token) {
+        throw new Error("Live verification session could not be created.");
+      }
+
+      const module = await import("youverify-liveness-web");
+      const YouverifyLiveness = module.default;
+      const [firstName, ...rest] = verification.legal_name.trim().split(/\s+/);
+      const livenessSessionId = credentials.session_id;
+
+      const yvLiveness = new YouverifyLiveness({
+        presentation: "modal",
+        sessionId: credentials.session_id,
+        sessionToken: credentials.session_token,
+        entityId: provider?.id,
+        sandboxEnvironment: (credentials.environment || identityEnvironment) !== "live",
+        tasks: [
+          { id: "motions", difficulty: "medium", maxNods: 2, maxBlinks: 2, timeout: 30000 },
+          { id: "complete-the-circle", difficulty: "medium", timeout: 30000 },
+        ],
+        user: {
+          firstName: firstName || "Provider",
+          lastName: rest.join(" ") || undefined,
+        },
+        branding: {
+          name: "Rydah",
+          color: "#D4AF37",
+          hideLogoOnMobile: true,
+          showPoweredBy: true,
+        },
+        allowAudio: true,
+        onSuccess: () => {
+          void completeLiveFaceVerification(livenessSessionId);
+        },
+        onFailure: (data: any) => {
+          const detail = data?.error?.message || data?.error?.key || "Live face check failed. Please try again.";
+          setMessage("");
+          setError(String(detail));
+          setLiveFaceSaving(false);
+        },
+        onClose: () => {
+          setLiveFaceSaving(false);
+        },
+      });
+
+      yvLiveness.start();
+    } catch (caught) {
+      setMessage("");
+      setError(caught instanceof Error ? caught.message : "Unable to start live face verification.");
+      setLiveFaceSaving(false);
     }
   }
 
@@ -377,28 +485,51 @@ export default function ProviderOnboardingPage() {
 
                 {biometricStatus !== "verified" && (
                   faceMatchSupported ? (
-                    <form onSubmit={verifyFaceAndId} className="mt-6 grid gap-4 md:grid-cols-2">
+                    <div className="mt-6 grid gap-4 md:grid-cols-2">
                       <label className="block md:col-span-2">
                         <span className="text-sm font-bold">Full {verification.id_type} number</span>
                         <input required value={fullIdNumber} onChange={(e) => setFullIdNumber(e.target.value)} autoComplete="off" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none" placeholder={verification.id_type === "NIN" ? "Enter full NIN" : "Enter passport number"} />
-                        <span className="mt-2 block text-xs text-zinc-500">Used for this verification request only. Rydah does not store the complete number.</span>
+                        <span className="mt-2 block text-xs text-zinc-500">Used only for this verification request. Rydah keeps the final four characters and verification result, not the complete ID number.</span>
                       </label>
 
-                      <label className="block md:col-span-2">
-                        <span className="text-sm font-bold">Selfie / clear face photo</span>
-                        <input required={!(verification.id_type === "NIN" && fullIdNumber.replace(/\s+/g, "").trim() === "11111111111")} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setSelfie(e.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-sm text-zinc-300" />
-                        <span className="mt-2 block text-xs text-zinc-500">For normal verification, choose a clear front-facing image. For the sandbox NIN 11111111111, no file is required because Rydah uses the identity provider's official sandbox test image. Before live launch, Rydah will require a live selfie/liveness check.</span>
-                      </label>
+                      <div className="md:col-span-2 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 p-5">
+                        <p className="text-sm font-black text-[#D4AF37]">LIVE FACE VERIFICATION</p>
+                        <p className="mt-2 text-sm leading-6 text-zinc-300">Rydah uses the device camera for a real-time liveness challenge such as blinking and head movement. The verification provider confirms live presence before the captured face is matched with the NIN or passport record.</p>
+                        <div className="mt-4 grid gap-2 text-xs text-zinc-500 sm:grid-cols-3">
+                          <span>✓ Android & iPhone camera</span>
+                          <span>✓ Desktop webcam</span>
+                          <span>✓ Anti-photo/replay check</span>
+                        </div>
+                      </div>
 
                       <label className="md:col-span-2 flex items-start gap-3 rounded-2xl border border-white/10 p-4 text-sm text-zinc-300">
                         <input type="checkbox" checked={faceConsent} onChange={(e) => setFaceConsent(e.target.checked)} className="mt-1" />
-                        <span>I consent to Rydah sending my ID number and selfie to its identity-verification provider solely to verify my identity and face match.</span>
+                        <span>I consent to Rydah and its identity-verification provider using a live camera session solely to verify liveness and match my face with my selected identity record.</span>
                       </label>
 
-                      <button disabled={faceSaving || !fullIdNumber.trim() || (!selfie && !(verification.id_type === "NIN" && fullIdNumber.replace(/\s+/g, "").trim() === "11111111111")) || !faceConsent} className="md:col-span-2 rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-40">
-                        {faceSaving ? "Checking Face & ID…" : "Verify Face & ID"}
-                      </button>
-                    </form>
+                      {livenessConfigured ? (
+                        <button type="button" disabled={liveFaceSaving || !fullIdNumber.trim() || !faceConsent} onClick={() => void startLiveFaceVerification()} className="md:col-span-2 rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-40">
+                          {liveFaceSaving ? "Starting Secure Camera…" : "Open Live Camera & Verify"}
+                        </button>
+                      ) : identityEnvironment === "sandbox" ? (
+                        <form onSubmit={verifyFaceAndId} className="md:col-span-2 grid gap-4">
+                          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-200">
+                            Live liveness is built but the Youverify public merchant ID still needs to be connected. Sandbox fallback remains available only for testing.
+                          </div>
+                          <label className="block">
+                            <span className="text-sm font-bold">Sandbox face image (test only)</span>
+                            <input required={!(verification.id_type === "NIN" && fullIdNumber.replace(/\s+/g, "").trim() === "11111111111")} type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setSelfie(e.target.files?.[0] ?? null)} className="mt-2 block w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-sm text-zinc-300" />
+                          </label>
+                          <button disabled={faceSaving || !fullIdNumber.trim() || (!selfie && !(verification.id_type === "NIN" && fullIdNumber.replace(/\s+/g, "").trim() === "11111111111")) || !faceConsent} className="rounded-2xl border border-[#D4AF37]/35 px-5 py-4 font-black text-[#D4AF37] disabled:opacity-40">
+                            {faceSaving ? "Running Sandbox Check…" : "Run Sandbox Face Match"}
+                          </button>
+                        </form>
+                      ) : (
+                        <div className="md:col-span-2 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-200">
+                          Live biometric verification is required for production. Provider work remains blocked until the live liveness service is connected.
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div className="mt-5 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-4 text-sm text-[#E7C85A]">
                       Automated face-to-ID matching currently supports NIN and International Passport. Change the selected ID type and resubmit your identity details to use automated face matching.
