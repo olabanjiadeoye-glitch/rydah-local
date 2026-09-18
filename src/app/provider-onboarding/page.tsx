@@ -344,7 +344,9 @@ export default function ProviderOnboardingPage() {
         allowAudio: true,
         onSuccess: () => {
           setImmersiveVerification(false);
-          void completeLiveFaceVerification(livenessSessionId);
+          window.setTimeout(() => {
+            void completeLiveFaceVerification(livenessSessionId);
+          }, 1200);
         },
         onFailure: (data: any) => {
           const detail = data?.error?.message || data?.error?.key || "Live face check failed. Please try again.";
@@ -355,7 +357,9 @@ export default function ProviderOnboardingPage() {
         },
         onClose: () => {
           setImmersiveVerification(false);
-          setLiveFaceSaving(false);
+          window.setTimeout(() => {
+            void completeLiveFaceVerification(livenessSessionId);
+          }, 1500);
         },
       });
 
