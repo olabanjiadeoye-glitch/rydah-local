@@ -41,7 +41,7 @@ export default function ProvidersPage() {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [session, setSession] = useState<AuthSession | null>(null);
-  const [status, setStatus] = useState("Loading verified providers...");
+  const [status, setStatus] = useState("Loading biometric-verified providers...");
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function ProvidersPage() {
     const load = async () => {
       try {
         const rows = await restGet<DbProvider[]>(
-          "providers?select=id,slug,business_name,service_category,location,description,rating,jobs_completed,starting_price&is_verified=eq.true&is_available=eq.true&order=rating.desc,business_name.asc",
+          "providers?select=id,slug,business_name,service_category,location,description,rating,jobs_completed,starting_price&is_verified=eq.true&biometric_verified=eq.true&is_available=eq.true&order=rating.desc,business_name.asc",
           storedSession?.access_token,
         );
 
@@ -70,7 +70,7 @@ export default function ProvidersPage() {
           price: row.starting_price ?? 0,
           bio: row.description || "Verified local professional on Rydah Local.",
         })));
-        setStatus("Live verified provider data");
+        setStatus("Live biometric-verified provider data");
         setLoadError("");
 
         if (storedSession) {
@@ -238,7 +238,7 @@ export default function ProvidersPage() {
       <section className="mx-auto max-w-6xl px-5 pb-10">
         <div className="rounded-3xl border border-red-500/20 bg-red-950/20 p-6">
           <p className="text-xs font-bold tracking-widest text-red-400">NEED URGENT HELP?</p>
-          <h3 className="mt-2 text-xl font-bold">Post your job and Rydah will auto-match an available verified provider.</h3>
+          <h3 className="mt-2 text-xl font-bold">Post your job and Rydah will auto-match an available biometric-verified provider.</h3>
           <a href="/post-job?urgent=1" className="mt-5 inline-block rounded-xl bg-white px-5 py-3 font-bold text-black">Post a Job</a>
         </div>
       </section>
