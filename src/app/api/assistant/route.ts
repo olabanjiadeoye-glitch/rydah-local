@@ -7,6 +7,7 @@ Current product rules you must follow:
 - Target launch cities are Lagos, Abuja, Ibadan, Warri and Port Harcourt. Booking availability still depends on verified provider supply in the selected service area.
 - Current core launch services include Electrician, Plumber, AC Technician, Generator, Cleaning and Mechanic. Providers can register interest in additional genuine professions for review.
 - Customers should keep bookings, quotes and payments inside Rydah. Never encourage exchanging WhatsApp, phone, email or external-payment details to bypass Rydah.
+- Providers pay a one-time ₦500 registration fee and a ₦500 monthly provider subscription. The monthly subscription requires an approved Nigerian bank Direct Debit mandate and must remain active for the provider to receive jobs.
 - Rydah currently charges providers a 15% platform commission on jobs. The agreed job price is the customer total; there is currently no extra customer Rydah fee.
 - Paystack is the preferred secure payment method. Cash is only available for eligible jobs up to ₦5,000, and provider commission remains owed to Rydah on cash jobs.
 - Before work starts, customers can use the Arrival PIN safety check. Where the provider has completed biometric enrolment, Rydah can also require a camera face match.
@@ -28,7 +29,7 @@ function localAnswer(message: string) {
     return "Rydah Local is not an emergency service. If anyone is in immediate danger or needs urgent medical, fire or police help, contact the appropriate emergency service now. For a non-emergency repair, I can help you post an urgent Rydah job.";
   }
   if (/pay|payment|paystack|cash|card|commission|fee/.test(q)) {
-    return "Paystack is Rydah’s preferred secure payment route. The provider quote is the customer’s agreed job price, and Rydah currently deducts a 15% commission from provider earnings. Cash is only available on eligible jobs up to ₦5,000. Keep payment inside the Rydah flow so your booking and payment record remain protected.";
+    return "Paystack is Rydah’s preferred secure payment route. Providers pay a one-time ₦500 registration fee plus ₦500 per month through an approved Nigerian bank Direct Debit subscription, and Rydah currently deducts a 15% commission from job earnings. The provider quote is the customer’s agreed job price. Cash is only available on eligible jobs up to ₦5,000. Keep payment inside the Rydah flow so your booking and payment record remain protected.";
   }
   if (/safe|safety|verify|verified|arrival|pin|face|identity/.test(q)) {
     return "Use providers showing the Rydah Verified badge. After a quote is accepted and the provider arrives, use the one-time Arrival PIN before work starts. Where biometric enrolment is available, Rydah can also compare the provider’s live camera image with the verified identity record.";
@@ -37,7 +38,7 @@ function localAnswer(message: string) {
     return "I can help you find a provider. Tap “Find a Provider” to browse verified professionals, or “Post a Job” and Rydah will match an available verified provider for your service and area.";
   }
   if (/profession|trade|not listed|join|become|work on rydah|service provider/.test(q)) {
-    return "Service providers can create a Provider account and complete verification. If your profession is not one of the launch categories, use “Add Your Profession” in the provider area to register your trade and service area for Rydah review.";
+    return "Service providers can create a Provider account, pay the ₦500 registration fee, activate the ₦500/month Direct Debit subscription, and complete verification. If your profession is not one of the launch categories, use “Add Your Profession” in the provider area to register your trade and service area for Rydah review.";
   }
   if (/cancel|cancellation/.test(q)) {
     return "Customers can cancel eligible jobs before work starts from My Jobs. Once work has started, contact Rydah Support if you need help resolving a problem.";

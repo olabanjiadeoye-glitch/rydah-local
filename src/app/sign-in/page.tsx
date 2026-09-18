@@ -154,7 +154,7 @@ export default function SignInPage() {
 
                 <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-400">
                   {role === "provider"
-                    ? "Provider accounts continue to profile setup and verification before receiving jobs."
+                    ? "Provider accounts require a ₦500 one-time registration fee and a ₦500 monthly subscription paid by approved Nigerian bank Direct Debit before receiving jobs. Verification is also required."
                     : "Customer accounts can browse verified providers, post jobs and track payments."}
                 </div>
 

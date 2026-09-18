@@ -23,8 +23,9 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-black text-white">Payments, cash, and commission</h2>
-            <p className="mt-2">Where online payment is offered, payments are processed through Paystack. Rydah Local currently applies a 15% platform commission to eligible provider earnings. The customer-facing job price and provider settlement amount are shown where applicable. When an eligible customer selects cash, the related Rydah commission remains payable by the provider. Rydah may temporarily restrict new job acceptance when a provider reaches a stated unpaid cash-commission threshold until that commission is settled. Payment processor fees, reversals, refunds, disputes, chargebacks, and settlement timing may affect final amounts and availability.</p>
+            <h2 className="text-xl font-black text-white">Provider registration, subscription, payments, cash, and commission</h2>
+            <p className="mt-2">Service providers are charged a one-time ₦500 registration fee and a ₦500 monthly provider subscription. The monthly subscription is collected through an approved Nigerian bank Direct Debit mandate where supported by the provider&apos;s bank. Providers must keep the subscription active to remain available for new Rydah jobs. If a recurring debit fails, is revoked, or the subscription becomes inactive, Rydah may take the provider profile offline until billing is restored.</p>
+            <p className="mt-2">Where online job payment is offered, payments are processed through Paystack. Rydah Local currently applies a 15% platform commission to eligible provider earnings. The customer-facing job price and provider settlement amount are shown where applicable. When an eligible customer selects cash, the related Rydah commission remains payable by the provider. Rydah may temporarily restrict new job acceptance when a provider reaches a stated unpaid cash-commission threshold until that commission is settled. Payment processor fees, reversals, refunds, disputes, chargebacks, and settlement timing may affect final amounts and availability.</p>
           </section>
 
           <section>

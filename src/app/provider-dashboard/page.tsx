@@ -8,6 +8,7 @@ import {
   restInsert,
   restPatch,
   restRpc,
+  invokeFunction,
   type AuthSession,
 } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
@@ -35,6 +36,21 @@ type ProviderVerificationRow = {
 
 type PlatformSettingRow = {
   value_numeric: number | string | null;
+};
+
+type ProviderBillingState = {
+  mode: "test" | "live";
+  provider_id: string | null;
+  registration_fee_naira: number;
+  monthly_fee_naira: number;
+  registration_status: "unpaid" | "pending" | "paid" | "failed" | "waived";
+  registration_paid_at: string | null;
+  mandate_status: "not_started" | "pending" | "active" | "failed" | "revoked";
+  subscription_status: "inactive" | "pending" | "active" | "past_due" | "non_renewing" | "cancelled";
+  subscription_started_at: string | null;
+  last_subscription_paid_at: string | null;
+  next_payment_at: string | null;
+  billing_ready: boolean;
 };
 
 type JobStatus = "open" | "matched" | "accepted" | "in_progress" | "completed" | "cancelled";
@@ -89,6 +105,8 @@ export default function ProviderDashboardPage() {
   const [message, setMessage] = useState("");
   const [quoteDrafts, setQuoteDrafts] = useState<Record<string, string>>({});
   const [arrivalCodes, setArrivalCodes] = useState<Record<string, string>>({});
+  const [billing, setBilling] = useState<ProviderBillingState | null>(null);
+  const [billingBusy, setBillingBusy] = useState(false);
 
   const [businessName, setBusinessName] = useState("");
   const [category, setCategory] = useState("Electrician");
@@ -110,13 +128,117 @@ export default function ProviderDashboardPage() {
       return;
     }
     setSession(currentSession);
-    void loadDashboard(currentSession);
+    void (async () => {
+      await loadDashboard(currentSession);
+      const billingReturn = new URLSearchParams(window.location.search).get("billing");
+      if (billingReturn === "registration") {
+        await verifyRegistrationPayment(currentSession);
+      } else if (billingReturn === "mandate") {
+        await verifyDirectDebit(currentSession);
+      }
+      if (billingReturn) {
+        window.history.replaceState({}, "", "/provider-dashboard");
+      }
+    })();
   }, []);
+
+  async function callProviderBilling(currentSession: AuthSession, action: string) {
+    const response = await invokeFunction("provider-billing", { action }, currentSession.access_token);
+    const payload = await response.json().catch(() => ({})) as {
+      error?: string;
+      message?: string;
+      authorization_url?: string;
+      redirect_url?: string;
+      billing?: ProviderBillingState;
+      status?: string;
+    };
+    if (!response.ok) throw new Error(payload.error || payload.message || "Provider billing request failed.");
+    if (payload.billing) setBilling(payload.billing);
+    return payload;
+  }
+
+  async function loadBilling(currentSession: AuthSession) {
+    const payload = await callProviderBilling(currentSession, "status");
+    return payload.billing ?? null;
+  }
+
+  async function startRegistrationPayment() {
+    if (!session) return;
+    setBillingBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const payload = await callProviderBilling(session, "initialize_registration");
+      if (payload.authorization_url) {
+        window.location.assign(payload.authorization_url);
+        return;
+      }
+      setMessage("Your provider registration fee is already confirmed.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to start provider registration payment.");
+    } finally {
+      setBillingBusy(false);
+    }
+  }
+
+  async function verifyRegistrationPayment(currentSession: AuthSession = session as AuthSession) {
+    if (!currentSession) return;
+    setBillingBusy(true);
+    setError("");
+    try {
+      const payload = await callProviderBilling(currentSession, "verify_registration");
+      if (payload.status === "paid") {
+        setMessage("₦500 provider registration fee confirmed. Create your provider profile, then activate the ₦500/month Direct Debit subscription.");
+      }
+      await loadDashboard(currentSession);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to verify provider registration payment.");
+    } finally {
+      setBillingBusy(false);
+    }
+  }
+
+  async function startDirectDebit() {
+    if (!session) return;
+    setBillingBusy(true);
+    setError("");
+    setMessage("");
+    try {
+      const payload = await callProviderBilling(session, "initialize_mandate");
+      if (payload.redirect_url) {
+        window.location.assign(payload.redirect_url);
+        return;
+      }
+      setMessage("Your monthly Direct Debit subscription is already active.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to start Direct Debit setup.");
+    } finally {
+      setBillingBusy(false);
+    }
+  }
+
+  async function verifyDirectDebit(currentSession: AuthSession = session as AuthSession) {
+    if (!currentSession) return;
+    setBillingBusy(true);
+    setError("");
+    try {
+      const payload = await callProviderBilling(currentSession, "verify_mandate");
+      setMessage(payload.message || (payload.status === "active"
+        ? "₦500/month Direct Debit subscription is active."
+        : "Direct Debit approval is still pending with your bank."));
+      await loadDashboard(currentSession);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to verify Direct Debit setup.");
+    } finally {
+      setBillingBusy(false);
+    }
+  }
 
   async function loadDashboard(currentSession: AuthSession) {
     setLoading(true);
     setError("");
     try {
+      await loadBilling(currentSession);
       const providerRows = await restGet<ProviderRow[]>(
         `providers?user_id=eq.${currentSession.user.id}&select=*`,
         currentSession.access_token,
@@ -200,6 +322,10 @@ export default function ProviderDashboardPage() {
   async function createProviderProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!session) return;
+    if (!billing || !["paid", "waived"].includes(billing.registration_status)) {
+      setError("Pay the ₦500 Rydah provider registration fee before creating your provider profile.");
+      return;
+    }
     if (containsOffPlatformContact(description)) {
       setError(offPlatformContactMessage);
       return;
@@ -218,7 +344,7 @@ export default function ProviderDashboardPage() {
           location,
           description: description.trim(),
           starting_price: Number(startingPrice),
-          is_available: true,
+          is_available: false,
           is_verified: false,
         },
         session.access_token,
@@ -226,7 +352,8 @@ export default function ProviderDashboardPage() {
       if (!created[0]) throw new Error("Provider profile was not returned by the backend.");
       setProvider(created[0]);
       setJobs([]);
-      setMessage("Provider profile created. Complete verification before taking jobs.");
+      await loadBilling(session);
+      setMessage("Provider profile created. Set up the ₦500/month Direct Debit subscription, then complete verification before taking jobs.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to create provider profile.");
     } finally {
@@ -236,6 +363,10 @@ export default function ProviderDashboardPage() {
 
   async function toggleAvailability() {
     if (!session || !provider) return;
+    if (!billing?.billing_ready && !provider.is_available) {
+      setError("Your ₦500 monthly Direct Debit subscription must be active before you can go available.");
+      return;
+    }
     setSavingProfile(true);
     setError("");
     try {
@@ -354,6 +485,83 @@ export default function ProviderDashboardPage() {
         {message && <div className="mb-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">{message}</div>}
         {error && <div className="mb-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
+        {role === "provider" && billing && (
+          <div className="mb-6 rounded-3xl border border-[#D4AF37]/30 bg-gradient-to-br from-[#17130a] to-[#0d0d0d] p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">PROVIDER BILLING</p>
+                <h2 className="mt-2 text-2xl font-black">Keep your Rydah provider account active</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+                  Provider membership is ₦{billing.registration_fee_naira.toLocaleString()} once for registration, then ₦{billing.monthly_fee_naira.toLocaleString()} every month by approved Nigerian bank Direct Debit.
+                </p>
+              </div>
+              <span className={`rounded-full px-3 py-2 text-xs font-black ${billing.billing_ready ? "bg-emerald-500/15 text-emerald-300" : "bg-amber-500/15 text-amber-300"}`}>
+                {billing.billing_ready ? "BILLING ACTIVE" : billing.mode === "test" ? "TEST BILLING" : "ACTION REQUIRED"}
+              </span>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-xs font-black text-zinc-500">REGISTRATION</p>
+                <p className="mt-1 text-lg font-black">₦{billing.registration_fee_naira.toLocaleString()} one-time</p>
+                <p className="mt-1 text-sm text-zinc-400">Status: {label(billing.registration_status)}</p>
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                <p className="text-xs font-black text-zinc-500">MONTHLY SUBSCRIPTION</p>
+                <p className="mt-1 text-lg font-black">₦{billing.monthly_fee_naira.toLocaleString()} / month</p>
+                <p className="mt-1 text-sm text-zinc-400">Direct Debit: {label(billing.subscription_status)}</p>
+              </div>
+            </div>
+
+            {billing.mode === "test" && (
+              <p className="mt-4 rounded-xl border border-blue-500/20 bg-blue-500/10 p-3 text-xs leading-5 text-blue-200">
+                Rydah payments are currently in Paystack test mode. This setup validates the billing flow without taking live money.
+              </p>
+            )}
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              {!["paid", "waived"].includes(billing.registration_status) ? (
+                <button
+                  type="button"
+                  disabled={billingBusy}
+                  onClick={() => void startRegistrationPayment()}
+                  className="rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black disabled:opacity-50"
+                >
+                  {billingBusy ? "Please wait…" : `Pay ₦${billing.registration_fee_naira.toLocaleString()} Registration`}
+                </button>
+              ) : provider && billing.subscription_status !== "active" ? (
+                <>
+                  <button
+                    type="button"
+                    disabled={billingBusy}
+                    onClick={() => void startDirectDebit()}
+                    className="rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black disabled:opacity-50"
+                  >
+                    {billingBusy ? "Please wait…" : "Set Up Monthly Direct Debit"}
+                  </button>
+                  {billing.mandate_status === "pending" && (
+                    <button
+                      type="button"
+                      disabled={billingBusy}
+                      onClick={() => void verifyDirectDebit()}
+                      className="rounded-2xl border border-[#D4AF37]/40 px-5 py-3 text-sm font-black text-[#E5C65A] disabled:opacity-50"
+                    >
+                      Check Bank Approval
+                    </button>
+                  )}
+                </>
+              ) : billing.billing_ready ? (
+                <p className="text-sm font-bold text-emerald-300">
+                  ✓ Registration paid and monthly Direct Debit subscription active
+                  {billing.next_payment_at ? ` • next billing: ${new Date(billing.next_payment_at).toLocaleDateString("en-GB")}` : ""}
+                </p>
+              ) : (
+                <p className="text-sm font-bold text-zinc-400">Create your provider profile to continue to Direct Debit setup.</p>
+              )}
+            </div>
+          </div>
+        )}
+
         {role !== "provider" && !provider ? (
           <div className="rounded-3xl border border-white/10 bg-[#121212] p-7">
             <h2 className="text-2xl font-black">This is a customer account</h2>
@@ -405,7 +613,12 @@ export default function ProviderDashboardPage() {
                 <textarea required minLength={20} value={description} onChange={(e) => setDescription(e.target.value)} className="mt-2 min-h-32 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none" />
                 <span className="mt-2 block text-xs text-zinc-500">Do not include phone numbers, email addresses, WhatsApp details or external links. Customers should book through Rydah.</span>
               </label>
-              <button disabled={savingProfile} className="md:col-span-2 rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-50">Create Provider Profile</button>
+              <button
+                disabled={savingProfile || !billing || !["paid", "waived"].includes(billing.registration_status)}
+                className="md:col-span-2 rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-50"
+              >
+                {!billing || !["paid", "waived"].includes(billing.registration_status) ? "Pay Registration Fee First" : "Create Provider Profile"}
+              </button>
             </form>
           </div>
         ) : (
@@ -433,7 +646,13 @@ export default function ProviderDashboardPage() {
                     </div>
                     {gpsMessage && <p className="mt-2 text-xs leading-5 text-emerald-300">{gpsMessage}</p>}
                   </div>
-                  <button disabled={savingProfile} onClick={() => void toggleAvailability()} className={`rounded-2xl px-5 py-3 text-sm font-black ${provider.is_available ? "bg-emerald-500/15 text-emerald-400" : "bg-zinc-800 text-zinc-400"}`}>{provider.is_available ? "● Available now" : "○ Offline"}</button>
+                  <button
+                    disabled={savingProfile || (!provider.is_available && !billing?.billing_ready)}
+                    onClick={() => void toggleAvailability()}
+                    className={`rounded-2xl px-5 py-3 text-sm font-black disabled:cursor-not-allowed disabled:opacity-50 ${provider.is_available ? "bg-emerald-500/15 text-emerald-400" : "bg-zinc-800 text-zinc-400"}`}
+                  >
+                    {provider.is_available ? "● Available now" : billing?.billing_ready ? "○ Offline" : "Billing required"}
+                  </button>
                 </div>
               </div>
               <div className="rounded-3xl border border-white/10 bg-[#121212] p-6">
