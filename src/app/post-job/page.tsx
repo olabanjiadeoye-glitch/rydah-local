@@ -3,7 +3,8 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
-import { RYDAH_DEFAULT_SERVICE_AREA } from "@/lib/locations";
+import { getCurrentDeviceLocation, type DeviceCoordinates } from "@/lib/device-location";
+import { RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
 
 type ProviderLookup = {
   id: string;
@@ -35,6 +36,9 @@ export default function PostJobPage() {
   const [submitted, setSubmitted] = useState(false);
   const [jobId, setJobId] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [gpsCoordinates, setGpsCoordinates] = useState<DeviceCoordinates | null>(null);
+  const [gpsBusy, setGpsBusy] = useState(false);
+  const [gpsMessage, setGpsMessage] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -103,10 +107,54 @@ export default function PostJobPage() {
     [availability, location],
   );
 
-  const changeLocation = (nextLocation: string) => {
+  const changeLocation = (nextLocation: string, keepGps = false) => {
     setLocation(nextLocation);
     const servicesThere = availability.filter((row) => row.location === nextLocation).map((row) => row.service_category);
     if (!servicesThere.includes(service)) setService("");
+    if (!keepGps) {
+      setGpsCoordinates(null);
+      setGpsMessage("");
+    }
+  };
+
+  const useCurrentLocation = async () => {
+    setGpsBusy(true);
+    setError("");
+    setGpsMessage("");
+
+    try {
+      const coordinates = await getCurrentDeviceLocation();
+      setGpsCoordinates(coordinates);
+
+      const nearest = nearestServiceArea(
+        coordinates.latitude,
+        coordinates.longitude,
+        RYDAH_SERVICE_AREAS,
+      );
+
+      if (!nearest) {
+        setGpsMessage(`GPS captured with about ${Math.round(coordinates.accuracy)} m accuracy. Choose your service area manually.`);
+        return;
+      }
+
+      if (!selectedProvider && liveLocations.includes(nearest.area)) {
+        changeLocation(nearest.area, true);
+        setGpsMessage(`GPS found you near ${nearest.area} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
+        return;
+      }
+
+      if (!selectedProvider && !liveLocations.includes(nearest.area)) {
+        setGpsMessage(`GPS found you near ${nearest.area}, but no biometric-verified provider is currently live in that area. Your coordinates will stay with this request if you choose an available area manually.`);
+        return;
+      }
+
+      setGpsMessage(`GPS captured for this job • accuracy about ${Math.round(coordinates.accuracy)} m. The selected provider's service area remains ${selectedProvider?.location ?? location}.`);
+    } catch (caught) {
+      setGpsCoordinates(null);
+      setError(caught instanceof Error ? caught.message : "Unable to use your current location.");
+    } finally {
+      setGpsBusy(false);
+    }
   };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -149,6 +197,11 @@ export default function PostJobPage() {
           provider_id: providerId,
           service_category: service,
           location,
+          latitude: gpsCoordinates?.latitude ?? null,
+          longitude: gpsCoordinates?.longitude ?? null,
+          location_accuracy_m: gpsCoordinates?.accuracy ?? null,
+          location_source: gpsCoordinates ? "gps" : "manual",
+          location_updated_at: gpsCoordinates ? new Date().toISOString() : null,
           description: description.trim(),
           is_urgent: urgent,
           status: "open",
@@ -247,6 +300,30 @@ export default function PostJobPage() {
                 {liveLocations.map((item) => <option key={item}>{item}</option>)}
               </select>
             )}
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                disabled={gpsBusy}
+                onClick={() => void useCurrentLocation()}
+                className="rounded-xl border border-[#D4AF37]/35 px-4 py-2.5 text-sm font-black text-[#E5C65A] disabled:opacity-40"
+              >
+                {gpsBusy ? "Finding GPS…" : "📍 Use My Current Location"}
+              </button>
+              {gpsCoordinates && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGpsCoordinates(null);
+                    setGpsMessage("");
+                  }}
+                  className="rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-zinc-400"
+                >
+                  Clear GPS
+                </button>
+              )}
+            </div>
+            {gpsMessage && <p className="mt-2 text-xs leading-5 text-emerald-300">{gpsMessage}</p>}
+            <p className="mt-2 text-xs leading-5 text-zinc-500">GPS is optional. Rydah only stores job coordinates after you tap the GPS button; manual area selection always remains available.</p>
 
             {!selectedProvider && availability.length === 0 && (
               <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-950/20 p-4 text-sm text-amber-200">No real verified providers are currently online. Please check back shortly.</div>

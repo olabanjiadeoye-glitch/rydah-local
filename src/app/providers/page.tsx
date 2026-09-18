@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getCurrentDeviceLocation, type DeviceCoordinates } from "@/lib/device-location";
+import { distanceKm, nearestServiceArea, RYDAH_SERVICE_AREA_CENTERS } from "@/lib/locations";
 import { getStoredSession, restDelete, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 
 type Provider = {
@@ -43,6 +45,9 @@ export default function ProvidersPage() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [status, setStatus] = useState("Loading biometric-verified providers...");
   const [loadError, setLoadError] = useState("");
+  const [userCoordinates, setUserCoordinates] = useState<DeviceCoordinates | null>(null);
+  const [gpsBusy, setGpsBusy] = useState(false);
+  const [gpsMessage, setGpsMessage] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -117,8 +122,46 @@ export default function ProvidersPage() {
 
     if (sort === "Highest Rated") result = [...result].sort((a, b) => b.rating - a.rating);
     if (sort === "Lowest Starting Price") result = [...result].sort((a, b) => a.price - b.price);
+    if (sort === "Nearest to Me" && userCoordinates) {
+      result = [...result].sort((a, b) => {
+        const centerA = RYDAH_SERVICE_AREA_CENTERS[a.area];
+        const centerB = RYDAH_SERVICE_AREA_CENTERS[b.area];
+        const distanceA = centerA
+          ? distanceKm(userCoordinates.latitude, userCoordinates.longitude, centerA.latitude, centerA.longitude)
+          : Number.POSITIVE_INFINITY;
+        const distanceB = centerB
+          ? distanceKm(userCoordinates.latitude, userCoordinates.longitude, centerB.latitude, centerB.longitude)
+          : Number.POSITIVE_INFINITY;
+        return distanceA - distanceB;
+      });
+    }
     return result;
-  }, [providers, activeSearch, location, sort, category]);
+  }, [providers, activeSearch, location, sort, category, userCoordinates]);
+
+  async function useCurrentLocation() {
+    setGpsBusy(true);
+    setLoadError("");
+    setGpsMessage("");
+
+    try {
+      const coordinates = await getCurrentDeviceLocation();
+      setUserCoordinates(coordinates);
+      setLocation("All Areas");
+      setSort("Nearest to Me");
+
+      const nearest = nearestServiceArea(coordinates.latitude, coordinates.longitude);
+      setGpsMessage(
+        nearest
+          ? `GPS ready • nearest Rydah target area: ${nearest.area} • accuracy about ${Math.round(coordinates.accuracy)} m. Providers are sorted using their service-area centres, not their private live location.`
+          : `GPS ready • accuracy about ${Math.round(coordinates.accuracy)} m. Providers are sorted by supported service area.`,
+      );
+    } catch (caught) {
+      setUserCoordinates(null);
+      setLoadError(caught instanceof Error ? caught.message : "Unable to use your current location.");
+    } finally {
+      setGpsBusy(false);
+    }
+  }
 
   async function toggleFavorite(provider: Provider) {
     const alreadySaved = favorites.includes(provider.id);
@@ -168,9 +211,33 @@ export default function ProvidersPage() {
               {locations.map((item) => <option key={item}>{item}</option>)}
             </select>
             <select value={sort} onChange={(e) => setSort(e.target.value)} className="rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
-              <option>Recommended</option><option>Highest Rated</option><option>Lowest Starting Price</option>
+              <option>Recommended</option><option>Nearest to Me</option><option>Highest Rated</option><option>Lowest Starting Price</option>
             </select>
           </div>
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              disabled={gpsBusy}
+              onClick={() => void useCurrentLocation()}
+              className="rounded-xl border border-[#D4AF37]/35 px-4 py-2.5 text-sm font-black text-[#E5C65A] disabled:opacity-40"
+            >
+              {gpsBusy ? "Finding GPS…" : "📍 Find Providers Near Me"}
+            </button>
+            {userCoordinates && (
+              <button
+                type="button"
+                onClick={() => {
+                  setUserCoordinates(null);
+                  setSort("Recommended");
+                  setGpsMessage("");
+                }}
+                className="rounded-xl border border-white/10 px-3 py-2 text-xs font-bold text-zinc-400"
+              >
+                Clear GPS
+              </button>
+            )}
+          </div>
+          {gpsMessage && <p className="mt-2 text-xs leading-5 text-emerald-300">{gpsMessage}</p>}
           <button onClick={() => setActiveSearch(query)} className="mt-4 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black">Search Providers</button>
         </div>
       </section>
@@ -205,6 +272,16 @@ export default function ProvidersPage() {
                     <div>
                       <div className="flex flex-wrap items-center gap-2"><h3 className="font-bold">{provider.name}</h3><span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-400">✓ VERIFIED</span></div>
                       <p className="mt-1 text-sm text-zinc-400">{provider.category} • {provider.area}</p>
+                      {userCoordinates && RYDAH_SERVICE_AREA_CENTERS[provider.area] && (
+                        <p className="mt-1 text-xs text-emerald-300">
+                          ~{distanceKm(
+                            userCoordinates.latitude,
+                            userCoordinates.longitude,
+                            RYDAH_SERVICE_AREA_CENTERS[provider.area].latitude,
+                            RYDAH_SERVICE_AREA_CENTERS[provider.area].longitude,
+                          ).toFixed(1)} km from you (service-area estimate)
+                        </p>
+                      )}
                     </div>
                   </div>
                   <button onClick={() => void toggleFavorite(provider)} aria-label="Toggle favourite" className="text-2xl">{favorites.includes(provider.id) ? "♥" : "♡"}</button>

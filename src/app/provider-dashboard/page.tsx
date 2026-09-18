@@ -11,7 +11,8 @@ import {
   type AuthSession,
 } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
-import { RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS } from "@/lib/locations";
+import { getCurrentDeviceLocation } from "@/lib/device-location";
+import { RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
 
 type ProviderRow = {
   id: string;
@@ -90,6 +91,8 @@ export default function ProviderDashboardPage() {
   const [location, setLocation] = useState(RYDAH_DEFAULT_SERVICE_AREA);
   const [description, setDescription] = useState("");
   const [startingPrice, setStartingPrice] = useState("");
+  const [gpsBusy, setGpsBusy] = useState(false);
+  const [gpsMessage, setGpsMessage] = useState("");
 
   const openJobs = useMemo(
     () => jobs.filter((job) => !["completed", "cancelled"].includes(job.status)).length,
@@ -148,6 +151,43 @@ export default function ProviderDashboardPage() {
       setError(caught instanceof Error ? caught.message : "Unable to load provider dashboard.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function useProviderGps() {
+    if (!session) return;
+
+    setGpsBusy(true);
+    setError("");
+    setGpsMessage("");
+
+    try {
+      const coordinates = await getCurrentDeviceLocation();
+      const nearest = nearestServiceArea(
+        coordinates.latitude,
+        coordinates.longitude,
+        RYDAH_SERVICE_AREAS,
+      );
+
+      if (!nearest) throw new Error("Rydah could not match your GPS position to a supported service area.");
+
+      setLocation(nearest.area);
+      setGpsMessage(`GPS matched your service area to ${nearest.area} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
+
+      if (provider) {
+        const updated = await restPatch<ProviderRow[]>(
+          "providers",
+          `id=eq.${provider.id}`,
+          { location: nearest.area },
+          session.access_token,
+        );
+        if (updated[0]) setProvider(updated[0]);
+        setMessage(`Provider service area updated to ${nearest.area} from your device GPS.`);
+      }
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to use your current location.");
+    } finally {
+      setGpsBusy(false);
     }
   }
 
@@ -330,7 +370,25 @@ export default function ProviderDashboardPage() {
               </label>
               <label className="block">
                 <span className="text-sm font-bold">Location</span>
-                <select value={location} onChange={(e) => setLocation(e.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">{locations.map((item) => <option key={item}>{item}</option>)}</select>
+                <select
+                  value={location}
+                  onChange={(e) => {
+                    setLocation(e.target.value);
+                    setGpsMessage("");
+                  }}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
+                >
+                  {locations.map((item) => <option key={item}>{item}</option>)}
+                </select>
+                <button
+                  type="button"
+                  disabled={gpsBusy}
+                  onClick={() => void useProviderGps()}
+                  className="mt-2 rounded-xl border border-[#D4AF37]/35 px-3 py-2 text-xs font-black text-[#E5C65A] disabled:opacity-40"
+                >
+                  {gpsBusy ? "Finding GPS…" : "📍 Detect Service Area"}
+                </button>
+                {gpsMessage && <span className="mt-2 block text-xs leading-5 text-emerald-300">{gpsMessage}</span>}
               </label>
               <label className="block">
                 <span className="text-sm font-bold">Starting price (₦)</span>
@@ -356,7 +414,18 @@ export default function ProviderDashboardPage() {
                     </div>
                     <p className="mt-2 text-zinc-400">{provider.service_category} • {provider.location}</p>
                     {provider.description && <p className="mt-4 text-sm leading-6 text-zinc-400">{provider.description}</p>}
-                    <a href="/provider-interest" className="mt-4 inline-block text-sm font-bold text-[#D4AF37]">Offer another profession →</a>
+                    <div className="mt-4 flex flex-wrap items-center gap-3">
+                      <button
+                        type="button"
+                        disabled={gpsBusy}
+                        onClick={() => void useProviderGps()}
+                        className="rounded-xl border border-[#D4AF37]/35 px-3 py-2 text-xs font-black text-[#E5C65A] disabled:opacity-40"
+                      >
+                        {gpsBusy ? "Finding GPS…" : "📍 Update Area from GPS"}
+                      </button>
+                      <a href="/provider-interest" className="text-sm font-bold text-[#D4AF37]">Offer another profession →</a>
+                    </div>
+                    {gpsMessage && <p className="mt-2 text-xs leading-5 text-emerald-300">{gpsMessage}</p>}
                   </div>
                   <button disabled={savingProfile} onClick={() => void toggleAvailability()} className={`rounded-2xl px-5 py-3 text-sm font-black ${provider.is_available ? "bg-emerald-500/15 text-emerald-400" : "bg-zinc-800 text-zinc-400"}`}>{provider.is_available ? "● Available now" : "○ Offline"}</button>
                 </div>

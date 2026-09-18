@@ -3,7 +3,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
-import { RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS } from "@/lib/locations";
+import { getCurrentDeviceLocation } from "@/lib/device-location";
+import { RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
 
 type InterestRow = {
   id: string;
@@ -32,6 +33,8 @@ export default function ProviderInterestPage() {
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [gpsBusy, setGpsBusy] = useState(false);
+  const [gpsMessage, setGpsMessage] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
@@ -58,6 +61,29 @@ export default function ProviderInterestPage() {
       setError(caught instanceof Error ? caught.message : "Unable to load your profession interests.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function useGpsArea() {
+    setGpsBusy(true);
+    setError("");
+    setGpsMessage("");
+
+    try {
+      const coordinates = await getCurrentDeviceLocation();
+      const nearest = nearestServiceArea(
+        coordinates.latitude,
+        coordinates.longitude,
+        RYDAH_SERVICE_AREAS,
+      );
+      if (!nearest) throw new Error("Rydah could not match your GPS position to a supported service area.");
+
+      setLocation(nearest.area);
+      setGpsMessage(`GPS matched you to ${nearest.area} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to use your current location.");
+    } finally {
+      setGpsBusy(false);
     }
   }
 
@@ -137,9 +163,25 @@ export default function ProviderInterestPage() {
 
           <label className="block">
             <span className="text-sm font-bold">Main service area</span>
-            <select value={location} onChange={(event) => setLocation(event.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
+            <select
+              value={location}
+              onChange={(event) => {
+                setLocation(event.target.value);
+                setGpsMessage("");
+              }}
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
+            >
               {RYDAH_SERVICE_AREAS.map((area) => <option key={area}>{area}</option>)}
             </select>
+            <button
+              type="button"
+              disabled={gpsBusy}
+              onClick={() => void useGpsArea()}
+              className="mt-2 rounded-xl border border-[#D4AF37]/35 px-3 py-2 text-xs font-black text-[#E5C65A] disabled:opacity-40"
+            >
+              {gpsBusy ? "Finding GPS…" : "📍 Detect My Service Area"}
+            </button>
+            {gpsMessage && <span className="mt-2 block text-xs leading-5 text-emerald-300">{gpsMessage}</span>}
           </label>
 
           <label className="block">
