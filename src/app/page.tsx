@@ -111,11 +111,11 @@ export default function Home() {
 
       <section className="mx-auto max-w-6xl px-5 py-10">
         <div className="grid gap-5 lg:grid-cols-2">
-          <div className="rounded-3xl border border-red-500/20 bg-red-950/20 p-8">
-            <p className="text-xs font-black tracking-widest text-red-400">URGENT HELP</p>
+          <div className="rounded-3xl border border-[#D4AF37]/25 bg-gradient-to-br from-[#17130a] to-[#0d0d0d] p-8 shadow-[0_18px_50px_rgba(212,175,55,0.06)]">
+            <p className="text-xs font-black tracking-widest text-amber-400">URGENT HELP</p>
             <h2 className="mt-3 text-3xl font-black">Need someone quickly?</h2>
             <p className="mt-3 leading-7 text-zinc-400">Post an urgent request and Rydah will look for a suitable verified professional. Rydah Local is not an emergency service.</p>
-            <a href="/post-job?urgent=1" className="mt-6 inline-block rounded-2xl bg-white px-6 py-4 font-black text-black">Request Urgent Help</a>
+            <a href="/post-job?urgent=1" className="mt-6 inline-block rounded-2xl bg-[#D4AF37] px-6 py-4 font-black text-black transition hover:bg-[#E4C04A]">Request Urgent Help</a>
           </div>
 
           <div className="rounded-3xl border border-[#D4AF37]/20 bg-[#121212] p-8">
