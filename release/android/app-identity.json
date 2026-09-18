@@ -1,0 +1,16 @@
+{
+  "appName": "Rydah Local",
+  "applicationId": "online.rydahlocal.app",
+  "versionName": "0.1.0",
+  "versionCode": 1,
+  "website": "https://rydahlocal.online",
+  "startUrl": "https://rydahlocal.online/",
+  "themeColor": "#080808",
+  "backgroundColor": "#080808",
+  "brandColor": "#D4AF37",
+  "tagline": "Move Smart. Move Rydah.",
+  "category": "BUSINESS",
+  "supportUrl": "https://rydahlocal.online/support",
+  "privacyPolicyUrl": "https://rydahlocal.online/privacy",
+  "status": "approved-for-native-packaging"
+}
