@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
+import { RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS } from "@/lib/locations";
 
 type InterestRow = {
   id: string;
@@ -15,17 +16,6 @@ type InterestRow = {
   created_at: string;
 };
 
-const lagosAreas = [
-  "Lekki, Lagos",
-  "Victoria Island, Lagos",
-  "Ikeja, Lagos",
-  "Ajah, Lagos",
-  "Surulere, Lagos",
-  "Yaba, Lagos",
-  "Mainland, Lagos",
-  "Other Lagos area",
-];
-
 function statusStyle(status: InterestRow["status"]) {
   if (status === "approved") return "bg-emerald-500/15 text-emerald-300";
   if (status === "declined") return "bg-red-500/15 text-red-300";
@@ -37,7 +27,7 @@ export default function ProviderInterestPage() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [interests, setInterests] = useState<InterestRow[]>([]);
   const [profession, setProfession] = useState("");
-  const [location, setLocation] = useState("Lekki, Lagos");
+  const [location, setLocation] = useState(RYDAH_DEFAULT_SERVICE_AREA);
   const [experienceYears, setExperienceYears] = useState("1");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(true);
@@ -148,7 +138,7 @@ export default function ProviderInterestPage() {
           <label className="block">
             <span className="text-sm font-bold">Main service area</span>
             <select value={location} onChange={(event) => setLocation(event.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
-              {lagosAreas.map((area) => <option key={area}>{area}</option>)}
+              {RYDAH_SERVICE_AREAS.map((area) => <option key={area}>{area}</option>)}
             </select>
           </label>
 
