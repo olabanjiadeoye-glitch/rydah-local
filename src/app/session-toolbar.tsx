@@ -92,7 +92,7 @@ export default function SessionToolbar() {
       {access.role === "provider" && (
         <>
           {notifications}
-          <a href="/provider-dashboard" className={goldLink}>Dashboard</a>
+          <a href="/provider-work" className={goldLink}>Dashboard</a>
           <a href="/provider-onboarding" className={neutralLink}>Verify Profile</a>
           <a href="/provider-interest" className={neutralLink}>Add Profession</a>
           <a href="/earnings" className={goldLink}>Earnings</a>
