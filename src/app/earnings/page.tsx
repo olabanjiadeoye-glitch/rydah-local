@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getStoredSession, restGet, type AuthSession } from "@/lib/supabase";
+import { getStoredSession, restGet, type AuthSession, invokeFunction } from "@/lib/supabase";
 
 type ProviderRow = {
   id: string;
@@ -57,19 +57,8 @@ function commissionStatusLabel(value: string) {
 }
 
 async function callCommissionBackend(session: AuthSession, payload: Record<string, unknown>) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
-  if (!supabaseUrl || !publishableKey) throw new Error("Commission settlement service is not configured.");
+  const response = await invokeFunction("commission-settlement", payload, session.access_token);
 
-  const response = await fetch(`${supabaseUrl}/functions/v1/commission-settlement`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      apikey: publishableKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
   const result = (await response.json().catch(() => ({}))) as CommissionBackendResponse;
   if (!response.ok) throw new Error(result.error || "Unable to process commission settlement.");
   return result;
