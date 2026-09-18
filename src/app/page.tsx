@@ -1,4 +1,5 @@
 import RydahCareAssistant from "./rydah-care-assistant";
+import BrandLogo from "./brand-logo";
 
 const services = [
   { name: "Electrician", icon: "⚡", description: "Electrical repairs & installation" },
@@ -21,9 +22,7 @@ export default function Home() {
     <main className="min-h-screen bg-[#080808] text-white">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#080808]/90 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
-          <a href="/" className="text-xl font-black tracking-tight">
-            RYDAH <span className="text-[#D4AF37]">LOCAL</span>
-          </a>
+          <a href="/" aria-label="Rydah Local home"><BrandLogo /></a>
           <div className="flex items-center gap-2">
             <a href="/providers" className="hidden rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-300 sm:inline-block">Browse</a>
             <a href="/sign-in" className="rounded-full border border-[#D4AF37]/50 px-5 py-2.5 text-sm font-semibold text-[#D4AF37]">Sign In</a>
@@ -138,7 +137,7 @@ export default function Home() {
       </section>
 
       <footer className="mt-12 border-t border-white/10 px-5 py-12 text-center">
-        <p className="font-black">RYDAH <span className="text-[#D4AF37]">LOCAL</span></p>
+        <div className="flex justify-center"><BrandLogo /></div>
         <p className="mt-3 text-sm text-zinc-600">Trusted local help. Booked the Rydah way.</p>
         <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm">
           <a href="/support" className="text-[#D4AF37]">Support</a>
