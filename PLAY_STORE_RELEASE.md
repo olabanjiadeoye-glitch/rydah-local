@@ -10,10 +10,15 @@
 - Brand colours: Deep Black `#080808`, Premium Gold `#D4AF37`
 - App icon source: `/public/rydah-icon.svg`
 
-## Recommended Android package name
+## Approved Android package name
 `online.rydahlocal.app`
 
-**Important:** confirm the package name before the first Play Console upload. A Play package name becomes a permanent app identifier and should not be changed casually after publication.
+**Status: APPROVED.** This is now the canonical Android/Google Play application ID for Rydah Local. Treat it as permanent for production releases.
+
+## Initial release identity
+- applicationId / namespace: `online.rydahlocal.app`
+- versionCode: `1`
+- versionName: `0.1.0`
 
 ## Store listing
 ### App title
@@ -69,10 +74,10 @@ Before production submission:
 - Run customer -> quote -> arrival -> start job -> complete -> payment end-to-end testing.
 - Confirm account deletion/data request flow and store data-safety answers.
 - Test Android camera/liveness, notifications, payments and login recovery on real devices.
-- Produce an Android App Bundle (AAB) targeting Google Play's current API requirement.
+- Produce an Android App Bundle (AAB) using `online.rydahlocal.app`.
 - Configure Play App Signing and secure the upload key.
 - Complete Google Play developer identity/device verification.
-- Complete required closed testing if the Play Console account is subject to it.
+- Complete required testing before production if the Play Console account is subject to it.
 
 ## Current web/PWA identity
-The production web app now exposes Rydah Local install metadata, black/gold branding, standalone display mode, and the Rydah icon for supported browsers/devices.
+The production web app exposes Rydah Local install metadata, black/gold branding, standalone display mode, and the Rydah icon for supported browsers/devices.
