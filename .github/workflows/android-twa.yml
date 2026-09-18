@@ -51,7 +51,18 @@ jobs:
             -v "$PWD/build/android-twa:/app" \
             -w /app \
             ghcr.io/googlechromelabs/bubblewrap:latest \
-            -lc 'yes | sdkmanager --licenses >/dev/null || true; bubblewrap build --skipPwaValidation --skipSigning' \
+            -lc '
+              SDKMANAGER="$(find /root/.bubblewrap/android_sdk -type f -name sdkmanager 2>/dev/null | head -n 1)"
+              if [ -z "$SDKMANAGER" ]; then
+                echo "Bubblewrap Android sdkmanager not found"
+                find /root/.bubblewrap -maxdepth 6 -type f -name sdkmanager -print || true
+                exit 127
+              fi
+              echo "Using sdkmanager: $SDKMANAGER"
+              yes | "$SDKMANAGER" --licenses >/dev/null || true
+              "$SDKMANAGER" "platforms;android-36" "build-tools;35.0.0"
+              bubblewrap build --skipPwaValidation --skipSigning
+            ' \
             2>&1 | tee ci-status/android-bundle.log
           EXIT_CODE=${PIPESTATUS[0]}
           exit $EXIT_CODE
