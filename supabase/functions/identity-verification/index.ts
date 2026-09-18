@@ -111,7 +111,11 @@ async function youverifyGet(path: string, token: string, baseUrl: string) {
   });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(payload?.message || payload?.error || `Identity provider request failed (${response.status})`);
+    const providerMessage = String(payload?.message || payload?.error || "");
+    if (response.status === 403 && providerMessage.toLowerCase().includes("permission denied")) {
+      throw new Error("Youverify API key does not have permission to read liveness history. Update the sandbox API key permissions, then try Check Latest Verification Result again.");
+    }
+    throw new Error(providerMessage || `Identity provider request failed (${response.status})`);
   }
   return payload;
 }
