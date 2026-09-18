@@ -43,6 +43,7 @@ export default function SignInPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -72,13 +73,13 @@ export default function SignInPage() {
 
     try {
       if (mode === "forgot") {
-        await requestPasswordReset(email.trim(), `${PRODUCTION_ORIGIN}/reset-password`);
+        await requestPasswordReset(email.trim().toLowerCase(), `${PRODUCTION_ORIGIN}/reset-password`);
         setMessage("Password reset email sent. Open the newest email and tap the reset link.");
         return;
       }
 
       if (mode === "sign-in") {
-        const session = await signInWithPassword(email, password);
+        const session = await signInWithPassword(email.trim().toLowerCase(), password);
         saveSession(session);
         await sendToCorrectArea(session, nextPath);
         return;
@@ -89,7 +90,7 @@ export default function SignInPage() {
 
       const nextQuery = role === "customer" && nextPath ? `&next=${encodeURIComponent(nextPath)}` : "";
       const result = await signUpWithPassword({
-        email,
+        email: email.trim().toLowerCase(),
         password,
         fullName,
         role,
@@ -136,8 +137,8 @@ export default function SignInPage() {
 
           {mode !== "forgot" && (
             <div className="mt-6 grid grid-cols-2 gap-2 rounded-2xl bg-[#1A1A1A] p-1">
-              <button type="button" onClick={() => setMode("sign-in")} className={`rounded-xl px-3 py-3 font-bold ${mode === "sign-in" ? "bg-[#D4AF37] text-black" : "text-zinc-400"}`}>Sign In</button>
-              <button type="button" onClick={() => setMode("sign-up")} className={`rounded-xl px-3 py-3 font-bold ${mode === "sign-up" ? "bg-[#D4AF37] text-black" : "text-zinc-400"}`}>Create Account</button>
+              <button type="button" onClick={() => { setMode("sign-in"); setShowPassword(false); }} className={`rounded-xl px-3 py-3 font-bold ${mode === "sign-in" ? "bg-[#D4AF37] text-black" : "text-zinc-400"}`}>Sign In</button>
+              <button type="button" onClick={() => { setMode("sign-up"); setShowPassword(false); }} className={`rounded-xl px-3 py-3 font-bold ${mode === "sign-up" ? "bg-[#D4AF37] text-black" : "text-zinc-400"}`}>Create Account</button>
             </div>
           )}
 
@@ -166,8 +167,29 @@ export default function SignInPage() {
 
             {mode !== "forgot" && (
               <>
-                <label className="mt-5 block text-sm font-bold">Password</label>
-                <input required minLength={mode === "sign-up" ? 8 : 1} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={mode === "sign-up" ? "8+ chars, upper/lowercase & number" : "Your password"} autoComplete={mode === "sign-up" ? "new-password" : "current-password"} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+                <label className="mt-5 block text-sm font-bold" htmlFor="rydah-password">Password</label>
+                <input
+                  id="rydah-password"
+                  required
+                  minLength={mode === "sign-up" ? 8 : 1}
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder={mode === "sign-up" ? "8+ chars, upper/lowercase & number" : "Your password"}
+                  autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
+                  spellCheck={false}
+                  autoCapitalize="none"
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600"
+                />
+                <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-300">
+                  <input
+                    type="checkbox"
+                    checked={showPassword}
+                    onChange={(e) => setShowPassword(e.target.checked)}
+                    className="h-4 w-4 accent-[#D4AF37]"
+                  />
+                  <span>Show password before continuing</span>
+                </label>
                 {mode === "sign-up" && <p className="mt-2 text-xs text-zinc-500">Use at least 8 characters with uppercase, lowercase and a number.</p>}
               </>
             )}
@@ -175,17 +197,26 @@ export default function SignInPage() {
             {message && <div className="mt-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">{message}</div>}
             {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
-            <button disabled={loading} type="submit" className="mt-6 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black disabled:opacity-60">
+            <button
+              disabled={
+                loading ||
+                !email.trim() ||
+                (mode !== "forgot" && !password) ||
+                (mode === "sign-up" && !fullName.trim())
+              }
+              type="submit"
+              className="mt-6 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black disabled:cursor-not-allowed disabled:opacity-40"
+            >
               {loading ? "Please wait..." : mode === "forgot" ? "Send Reset Email" : mode === "sign-in" ? "Sign In" : "Create Account"}
             </button>
           </form>
 
           {mode === "sign-in" && (
-            <button type="button" onClick={() => { setMode("forgot"); setError(""); setMessage(""); }} className="mt-5 w-full text-center text-sm font-semibold text-[#D4AF37]">Forgot password?</button>
+            <button type="button" onClick={() => { setMode("forgot"); setShowPassword(false); setError(""); setMessage(""); }} className="mt-5 w-full text-center text-sm font-semibold text-[#D4AF37]">Forgot password?</button>
           )}
 
           {mode === "forgot" && (
-            <button type="button" onClick={() => { setMode("sign-in"); setError(""); setMessage(""); }} className="mt-5 w-full text-center text-sm font-semibold text-[#D4AF37]">Back to sign in</button>
+            <button type="button" onClick={() => { setMode("sign-in"); setShowPassword(false); setError(""); setMessage(""); }} className="mt-5 w-full text-center text-sm font-semibold text-[#D4AF37]">Back to sign in</button>
           )}
         </div>
       </section>
