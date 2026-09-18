@@ -1,13 +1,13 @@
 {
   "workflow": "Android TWA Build",
   "status": "failure",
-  "runNumber": "6",
-  "sourceSha": "865a56007f466540deb97dcaebc1e20dad775025",
+  "runNumber": "7",
+  "sourceSha": "ddddf53ae0f439f77c64a5ec1c30d90c63698362",
   "packageId": "online.rydahlocal.app",
   "versionCode": 1,
   "versionName": "0.1.0",
   "steps": {
-    "androidSdk": "failure",
+    "androidSdk": "skipped",
     "bubblewrapInstall": "skipped",
     "generateProject": "skipped",
     "bundle": "skipped",
