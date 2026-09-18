@@ -87,9 +87,9 @@ Deno.serve(async (req) => {
     if (action === "list_banks") {
       await providerForUser(user.id);
       const payload = await paystack("bank?country=nigeria&currency=NGN&perPage=100");
-      const banks = (payload.data || [])
-        .filter((bank: any) => bank.active !== false && bank.code)
-        .map((bank: any) => ({ name: bank.name, code: String(bank.code) }));
+      const banks = ((payload.data || []) as Array<{ active?: boolean; code?: string | number; name?: string }>)
+        .filter((bank) => bank.active !== false && bank.code)
+        .map((bank) => ({ name: bank.name || "Bank", code: String(bank.code) }));
       return json({ banks });
     }
 
