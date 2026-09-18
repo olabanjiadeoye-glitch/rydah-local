@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getStoredSession, restGet, restRpc, type AuthSession, invokeFunction } from "@/lib/supabase";
+import { useEffect, useRef, useState } from "react";
+import { getStoredSession, invokeFunction, restGet, restRpc, type AuthSession } from "@/lib/supabase";
 
 type JobRow = {
   id: string;
@@ -13,7 +13,11 @@ type JobRow = {
   arrival_verified_at: string | null;
   arrival_face_verified_at: string | null;
   arrival_face_result: string | null;
-  providers: { business_name: string; is_verified: boolean } | null;
+  providers: {
+    business_name: string;
+    is_verified: boolean;
+    biometric_verified: boolean;
+  } | null;
 };
 
 type FaceResult = {
@@ -26,17 +30,17 @@ type FaceResult = {
   error?: string;
 };
 
-async function fileToDataUrl(file: File) {
-  return await new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("Unable to read the camera image."));
-    reader.readAsDataURL(file);
-  });
-}
-
 async function callArrivalFaceBackend(session: AuthSession, jobId: string, faceImage: string) {
-  const response = await invokeFunction("arrival-face-verification", { action: "verify_arrival_face", job_id: jobId, face_image: faceImage, consent: true }, session.access_token);
+  const response = await invokeFunction(
+    "arrival-face-verification",
+    {
+      action: "verify_arrival_face",
+      job_id: jobId,
+      face_image: faceImage,
+      consent: true,
+    },
+    session.access_token,
+  );
 
   const result = (await response.json().catch(() => ({}))) as FaceResult;
   if (!response.ok) throw new Error(result.error || "Unable to verify the provider camera image.");
@@ -49,10 +53,14 @@ export default function ArrivalCheckPage() {
   const [loading, setLoading] = useState(true);
   const [busyJobId, setBusyJobId] = useState("");
   const [pins, setPins] = useState<Record<string, string>>({});
-  const [photos, setPhotos] = useState<Record<string, File | null>>({});
+  const [capturedImages, setCapturedImages] = useState<Record<string, string>>({});
   const [consents, setConsents] = useState<Record<string, boolean>>({});
+  const [cameraJobId, setCameraJobId] = useState("");
+  const [cameraError, setCameraError] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     const currentSession = getStoredSession();
@@ -62,14 +70,27 @@ export default function ArrivalCheckPage() {
     }
     setSession(currentSession);
     void load(currentSession);
+
+    return () => {
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    };
   }, []);
+
+  useEffect(() => {
+    if (!cameraJobId || !videoRef.current || !streamRef.current) return;
+    videoRef.current.srcObject = streamRef.current;
+    void videoRef.current.play().catch(() => {
+      setCameraError("The camera opened but the preview could not start. Close it and try again.");
+    });
+  }, [cameraJobId]);
 
   async function load(currentSession: AuthSession) {
     setLoading(true);
     setError("");
     try {
       const rows = await restGet<JobRow[]>(
-        `jobs?select=id,provider_id,service_category,location,status,quote_status,arrival_verified_at,arrival_face_verified_at,arrival_face_result,providers(business_name,is_verified)&status=eq.accepted&quote_status=eq.accepted&order=created_at.desc`,
+        "jobs?select=id,provider_id,service_category,location,status,quote_status,arrival_verified_at,arrival_face_verified_at,arrival_face_result,providers(business_name,is_verified,biometric_verified)&status=eq.accepted&quote_status=eq.accepted&order=created_at.desc",
         currentSession.access_token,
       );
       setJobs(rows);
@@ -78,6 +99,81 @@ export default function ArrivalCheckPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function stopCamera() {
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setCameraJobId("");
+  }
+
+  async function startCamera(job: JobRow) {
+    setError("");
+    setMessage("");
+    setCameraError("");
+
+    if (!job.providers?.biometric_verified) {
+      setError("This provider has not completed biometric enrolment, so camera matching is not available.");
+      return;
+    }
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraError("Live camera access is not supported in this browser. Open Rydah in Chrome or the Rydah Android app.");
+      return;
+    }
+
+    stopCamera();
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: "user",
+          width: { ideal: 720 },
+          height: { ideal: 960 },
+        },
+      });
+      streamRef.current = stream;
+      setCameraJobId(job.id);
+    } catch (caught) {
+      const name = caught instanceof DOMException ? caught.name : "";
+      if (name === "NotAllowedError" || name === "SecurityError") {
+        setCameraError("Camera permission was blocked. Allow camera access for Rydah, then try again.");
+      } else if (name === "NotFoundError" || name === "OverconstrainedError") {
+        setCameraError("No suitable front camera was found on this device.");
+      } else {
+        setCameraError("Unable to open the camera. Check camera permission and try again.");
+      }
+    }
+  }
+
+  function captureFace(job: JobRow) {
+    const video = videoRef.current;
+    if (!video || video.videoWidth <= 0 || video.videoHeight <= 0) {
+      setCameraError("The camera is not ready yet. Wait a moment and try Capture again.");
+      return;
+    }
+
+    const maxWidth = 720;
+    const scale = Math.min(1, maxWidth / video.videoWidth);
+    const width = Math.max(1, Math.round(video.videoWidth * scale));
+    const height = Math.max(1, Math.round(video.videoHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d");
+    if (!context) {
+      setCameraError("Unable to capture the camera image. Please try again.");
+      return;
+    }
+
+    context.drawImage(video, 0, 0, width, height);
+    const image = canvas.toDataURL("image/jpeg", 0.84);
+    setCapturedImages((current) => ({ ...current, [job.id]: image }));
+    setCameraError("");
+    stopCamera();
   }
 
   async function issuePin(job: JobRow) {
@@ -98,9 +194,9 @@ export default function ArrivalCheckPage() {
 
   async function verifyFace(job: JobRow) {
     if (!session) return;
-    const photo = photos[job.id];
-    if (!photo) {
-      setError("Take a clear camera photo of the provider first.");
+    const image = capturedImages[job.id];
+    if (!image) {
+      setError("Open the camera and capture the provider first.");
       return;
     }
     if (!consents[job.id]) {
@@ -110,12 +206,16 @@ export default function ArrivalCheckPage() {
 
     setBusyJobId(job.id);
     setError("");
-    setMessage("Comparing the camera image with the provider's verified Rydah identity…");
+    setMessage("Comparing this fresh camera image with the provider's verified Rydah identity…");
+
     try {
-      const image = await fileToDataUrl(photo);
       const result = await callArrivalFaceBackend(session, job.id, image);
       setMessage(result.result_text || "Provider camera face match completed.");
-      setPhotos((current) => ({ ...current, [job.id]: null }));
+      setCapturedImages((current) => {
+        const next = { ...current };
+        delete next[job.id];
+        return next;
+      });
       setConsents((current) => ({ ...current, [job.id]: false }));
       await load(session);
     } catch (caught) {
@@ -143,7 +243,9 @@ export default function ArrivalCheckPage() {
         <div className="rounded-3xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 p-6">
           <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">BEFORE WORK STARTS</p>
           <h2 className="mt-2 text-3xl font-black">Confirm the right provider arrived</h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-300">Use the one-time Arrival PIN first. For providers enrolled in Rydah biometric verification, you can then use your phone camera to compare the person at your door with the provider's verified identity.</p>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-300">
+            First verify the one-time Arrival PIN. Then, for biometrically enrolled providers, open your phone camera and capture a fresh face image while the provider is physically present. Rydah compares it with that provider&apos;s verified identity.
+          </p>
         </div>
 
         {message && <div className="mt-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">{message}</div>}
@@ -162,13 +264,21 @@ export default function ArrivalCheckPage() {
               const busy = busyJobId === job.id;
               const pin = pins[job.id] || "";
               const providerName = job.providers?.business_name || "Assigned provider";
+              const biometricReady = Boolean(job.providers?.biometric_verified);
+              const image = capturedImages[job.id] || "";
+              const cameraOpen = cameraJobId === job.id;
+
               return (
                 <article key={job.id} className="rounded-3xl border border-white/10 bg-[#121212] p-6">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="text-2xl font-black">{providerName}</h3>
-                        {job.providers?.is_verified && <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-400">✓ RYDAH VERIFIED</span>}
+                        {biometricReady ? (
+                          <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-black text-emerald-400">✓ BIOMETRIC VERIFIED</span>
+                        ) : job.providers?.is_verified ? (
+                          <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-black text-amber-300">ID REVIEWED • BIOMETRIC REQUIRED</span>
+                        ) : null}
                       </div>
                       <p className="mt-2 text-zinc-400">{job.service_category} • {job.location}</p>
                     </div>
@@ -195,7 +305,8 @@ export default function ArrivalCheckPage() {
                   </div>
 
                   <div className="mt-4 rounded-2xl border border-white/10 bg-[#0D0D0D] p-5">
-                    <p className="text-sm font-black text-[#D4AF37]">2. CAMERA FACE MATCH</p>
+                    <p className="text-sm font-black text-[#D4AF37]">2. LIVE CAMERA FACE MATCH</p>
+
                     {job.arrival_face_verified_at ? (
                       <>
                         <p className="mt-3 font-bold text-emerald-300">✓ Provider face matched</p>
@@ -203,18 +314,109 @@ export default function ArrivalCheckPage() {
                       </>
                     ) : !job.arrival_verified_at ? (
                       <p className="mt-2 text-sm text-zinc-500">Complete the Arrival PIN first. The camera check unlocks afterwards.</p>
+                    ) : !biometricReady ? (
+                      <div className="mt-3 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+                        <p className="font-bold text-amber-200">Camera match unavailable</p>
+                        <p className="mt-1 text-sm leading-6 text-zinc-400">This provider has not completed Rydah biometric enrolment. Work should remain blocked until the provider completes the required verification.</p>
+                      </div>
                     ) : (
                       <>
-                        <p className="mt-2 text-sm leading-6 text-zinc-400">Hand the phone to the provider and take a clear front-facing camera image. Rydah sends it securely for comparison with the provider's verified reference. Rydah stores the match result, not this camera image.</p>
-                        <label className="mt-4 block">
-                          <span className="text-sm font-bold">Provider camera image</span>
-                          <input type="file" accept="image/jpeg,image/png,image/webp" capture="user" onChange={(event) => setPhotos((current) => ({ ...current, [job.id]: event.target.files?.[0] ?? null }))} className="mt-2 block w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-sm text-zinc-300" />
-                        </label>
+                        <p className="mt-2 text-sm leading-6 text-zinc-400">
+                          Ask the provider to face the phone in good light with glasses, masks or hats removed where practical. Open the front camera and capture a fresh image while the provider is physically present.
+                        </p>
+
+                        {cameraOpen && (
+                          <div className="mt-4 overflow-hidden rounded-3xl border border-[#D4AF37]/30 bg-black">
+                            <div className="relative aspect-[3/4] w-full">
+                              <video
+                                ref={videoRef}
+                                muted
+                                playsInline
+                                autoPlay
+                                className="h-full w-full object-cover scale-x-[-1]"
+                              />
+                              <div className="pointer-events-none absolute inset-6 rounded-[42%] border-2 border-[#D4AF37]/70" />
+                              <div className="pointer-events-none absolute inset-x-0 bottom-4 text-center text-xs font-bold text-white drop-shadow">
+                                Centre the provider&apos;s face inside the guide
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 p-4">
+                              <button
+                                type="button"
+                                onClick={() => captureFace(job)}
+                                className="rounded-xl bg-[#D4AF37] px-4 py-3 text-sm font-black text-black"
+                              >
+                                Capture Face
+                              </button>
+                              <button
+                                type="button"
+                                onClick={stopCamera}
+                                className="rounded-xl border border-white/15 px-4 py-3 text-sm font-bold text-zinc-300"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {cameraError && (
+                          <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">
+                            {cameraError}
+                          </div>
+                        )}
+
+                        {image ? (
+                          <div className="mt-4">
+                            <p className="text-sm font-bold">Fresh camera capture</p>
+                            <div className="mt-2 overflow-hidden rounded-2xl border border-white/10 bg-black">
+                              <img src={image} alt="Fresh provider camera capture" className="max-h-[420px] w-full object-contain" />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCapturedImages((current) => {
+                                  const next = { ...current };
+                                  delete next[job.id];
+                                  return next;
+                                });
+                                void startCamera(job);
+                              }}
+                              className="mt-3 rounded-xl border border-white/15 px-4 py-2 text-sm font-bold text-zinc-300"
+                            >
+                              Retake Photo
+                            </button>
+                          </div>
+                        ) : !cameraOpen ? (
+                          <button
+                            type="button"
+                            onClick={() => void startCamera(job)}
+                            className="mt-4 rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black"
+                          >
+                            Open Front Camera
+                          </button>
+                        ) : null}
+
                         <label className="mt-4 flex items-start gap-3 rounded-2xl border border-white/10 p-4 text-sm text-zinc-300">
-                          <input type="checkbox" checked={Boolean(consents[job.id])} onChange={(event) => setConsents((current) => ({ ...current, [job.id]: event.target.checked }))} className="mt-1" />
-                          <span>Provider: I consent to this camera image being used only to compare me with my verified Rydah identity for this job arrival.</span>
+                          <input
+                            type="checkbox"
+                            checked={Boolean(consents[job.id])}
+                            onChange={(event) => setConsents((current) => ({ ...current, [job.id]: event.target.checked }))}
+                            className="mt-1"
+                          />
+                          <span>Provider: I consent to this fresh camera image being used only to compare me with my verified Rydah identity for this job arrival.</span>
                         </label>
-                        <button disabled={busy || !photos[job.id] || !consents[job.id]} onClick={() => void verifyFace(job)} className="mt-4 rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black disabled:opacity-40">{busy ? "Checking…" : "Verify Provider Face"}</button>
+
+                        <button
+                          disabled={busy || !image || !consents[job.id]}
+                          onClick={() => void verifyFace(job)}
+                          className="mt-4 w-full rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black disabled:opacity-40"
+                        >
+                          {busy ? "Checking…" : "Verify Provider Face"}
+                        </button>
+
+                        <p className="mt-3 text-xs leading-5 text-zinc-500">
+                          Rydah sends this capture securely for comparison and stores the match result and audit details, not the camera image itself. This check is an additional safety control and does not replace normal judgment.
+                        </p>
                       </>
                     )}
                   </div>
