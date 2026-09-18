@@ -20,6 +20,7 @@ export default function SupportPage() {
         <div className="mt-10 flex flex-wrap gap-3">
           <a href="/privacy" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Privacy</a>
           <a href="/terms" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Terms</a>
+          <a href="/delete-account" className="rounded-xl border border-red-500/30 px-4 py-2 font-bold text-red-300">Delete Account</a>
           <a href="/" className="rounded-xl bg-[#D4AF37] px-4 py-2 font-bold text-black">Home</a>
         </div>
       </section>
