@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { updatePasswordWithRecoveryToken } from "@/lib/supabase";
 import BrandLogo from "../brand-logo";
@@ -73,8 +74,8 @@ export default function ResetPasswordPage() {
     <main className="min-h-screen bg-[#080808] text-white">
       <header className="border-b border-white/10">
         <div className="mx-auto flex max-w-xl items-center justify-between px-5 py-5">
-          <a href="/" aria-label="Rydah Local home"><BrandLogo compact /></a>
-          <a href="/sign-in" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Sign in</a>
+          <Link href="/" aria-label="Rydah Local home"><BrandLogo compact /></Link>
+          <Link href="/sign-in" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Sign in</Link>
         </div>
       </header>
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   getStoredSession,
@@ -280,7 +281,7 @@ export default function NotificationsPage() {
             <p className="text-sm font-black tracking-[0.22em] text-[#D4AF37]">RYDAH LOCAL</p>
             <h1 className="mt-1 text-2xl font-black">Notifications</h1>
           </div>
-          <a href="/" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Home</a>
+          <Link href="/" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Home</Link>
         </div>
       </header>
 

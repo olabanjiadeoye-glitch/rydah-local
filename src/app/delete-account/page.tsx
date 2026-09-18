@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { getStoredSession, restGet, restInsertMinimal, type AuthSession } from "@/lib/supabase";
 import BrandLogo from "../brand-logo";
@@ -78,7 +79,7 @@ export default function DeleteAccountPage() {
   return (
     <main className="min-h-screen bg-[#080808] px-5 py-7 sm:py-6 text-white">
       <section className="mx-auto max-w-2xl">
-        <a href="/" aria-label="Rydah Local home"><BrandLogo /></a>
+        <Link href="/" aria-label="Rydah Local home"><BrandLogo /></Link>
 
         <h1 className="mt-6 text-4xl font-black">Delete your Rydah account</h1>
         <p className="mt-4 leading-7 text-zinc-400">
@@ -105,12 +106,12 @@ export default function DeleteAccountPage() {
             <p className="mt-2 text-sm leading-6 text-zinc-400">
               For security, sign in to the Rydah account you want deleted before submitting the request.
             </p>
-            <a
+            <Link
               href="/sign-in?next=%2Fdelete-account"
               className="mt-5 inline-flex rounded-2xl bg-[#D4AF37] px-5 py-3 font-black text-black"
             >
               Sign in to request deletion
-            </a>
+            </Link>
           </div>
         ) : existing ? (
           <div className="mt-7 rounded-3xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-6">
@@ -165,9 +166,9 @@ export default function DeleteAccountPage() {
         )}
 
         <div className="mt-6 flex flex-wrap gap-3 text-sm">
-          <a href="/privacy" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Privacy Notice</a>
-          <a href="/support" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Support</a>
-          <a href="/" className="rounded-xl bg-[#D4AF37] px-4 py-2 font-bold text-black">Home</a>
+          <Link href="/privacy" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Privacy Notice</Link>
+          <Link href="/support" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Support</Link>
+          <Link href="/" className="rounded-xl bg-[#D4AF37] px-4 py-2 font-bold text-black">Home</Link>
         </div>
       </section>
     </main>

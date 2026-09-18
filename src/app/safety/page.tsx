@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { resolveUserAccess, type RydahRole } from "@/lib/access";
 import {
@@ -194,7 +195,7 @@ export default function SafetyPage() {
     <main className="min-h-screen bg-[#080808] px-5 py-6 text-white">
       <section className="mx-auto max-w-4xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <a href="/" aria-label="Rydah Local home"><BrandLogo /></a>
+          <Link href="/" aria-label="Rydah Local home"><BrandLogo /></Link>
           <a href={role === "provider" ? "/provider-work" : "/my-jobs"} className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">
             Back to jobs
           </a>

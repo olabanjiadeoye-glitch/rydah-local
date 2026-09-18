@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getCurrentDeviceLocation, type DeviceCoordinates } from "@/lib/device-location";
 import { distanceKm, nearestServiceArea, RYDAH_SERVICE_AREA_CENTERS, RYDAH_SERVICE_AREAS, RYDAH_TARGET_CITIES } from "@/lib/locations";
@@ -226,8 +227,8 @@ export default function ProvidersPage() {
             <h1 className="mt-1 text-2xl font-black">Find a Provider</h1>
           </div>
           <div className="flex gap-2">
-            {session && <a href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</a>}
-            <a href="/" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Home</a>
+            {session && <Link href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</Link>}
+            <Link href="/" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Home</Link>
           </div>
         </div>
       </header>
@@ -317,7 +318,7 @@ export default function ProvidersPage() {
             <p className="mt-2 text-zinc-500">
               No biometric-verified provider is currently available for this selection. Lagos, Abuja, Ibadan, Warri and Port Harcourt remain Rydah target cities, and supply will appear here as verified providers come online.
             </p>
-            <a href="/post-job" className="mt-5 inline-block rounded-xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Post a Job</a>
+            <Link href="/post-job" className="mt-5 inline-block rounded-xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Post a Job</Link>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -365,7 +366,7 @@ export default function ProvidersPage() {
             <h3 className="mt-2 text-xl font-black">Your profession isn&apos;t listed?</h3>
             <p className="mt-2 text-sm text-zinc-400">Service providers can register a genuine profession for Rydah marketplace review instead of choosing the wrong category.</p>
           </div>
-          <a href="/provider-interest" className="mt-4 inline-block shrink-0 rounded-xl bg-white px-5 py-3 font-black text-black sm:mt-0">Add Your Profession</a>
+          <Link href="/provider-interest" className="mt-4 inline-block shrink-0 rounded-xl bg-white px-5 py-3 font-black text-black sm:mt-0">Add Your Profession</Link>
         </div>
       </section>
 
@@ -373,7 +374,7 @@ export default function ProvidersPage() {
         <div className="rounded-3xl border border-red-500/20 bg-red-950/20 p-6">
           <p className="text-xs font-bold tracking-widest text-red-400">NEED URGENT HELP?</p>
           <h3 className="mt-2 text-xl font-bold">Post your job and Rydah will auto-match an available biometric-verified provider.</h3>
-          <a href="/post-job?urgent=1" className="mt-5 inline-block rounded-xl bg-white px-5 py-3 font-bold text-black">Post a Job</a>
+          <Link href="/post-job?urgent=1" className="mt-5 inline-block rounded-xl bg-white px-5 py-3 font-bold text-black">Post a Job</Link>
         </div>
       </section>
 

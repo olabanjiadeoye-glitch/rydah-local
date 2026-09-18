@@ -1,3 +1,4 @@
+import Link from "next/link";
 import RydahCareAssistant from "./rydah-care-assistant";
 import BrandLogo from "./brand-logo";
 
@@ -33,10 +34,10 @@ export default function Home() {
     <main className="min-h-screen overflow-x-hidden bg-[#080808] text-white">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#080808]/88 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
-          <a href="/" aria-label="Rydah Local home"><BrandLogo /></a>
+          <Link href="/" aria-label="Rydah Local home"><BrandLogo /></Link>
           <div className="flex items-center gap-2">
-            <a href="/providers" className="hidden rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-300 transition hover:border-[#D4AF37]/40 hover:text-white sm:inline-block">Browse</a>
-            <a href="/sign-in" className="rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/5 px-5 py-2.5 text-sm font-semibold text-[#D4AF37] transition hover:bg-[#D4AF37]/10">Sign In</a>
+            <Link href="/providers" className="hidden rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-zinc-300 transition hover:border-[#D4AF37]/40 hover:text-white sm:inline-block">Browse</Link>
+            <Link href="/sign-in" className="rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/5 px-5 py-2.5 text-sm font-semibold text-[#D4AF37] transition hover:bg-[#D4AF37]/10">Sign In</Link>
           </div>
         </div>
       </header>
@@ -68,9 +69,9 @@ export default function Home() {
             </p>
 
             <div className="mt-9 grid max-w-3xl gap-3 sm:grid-cols-3">
-              <a href="/providers" className="rounded-2xl bg-gradient-to-r from-[#E8C447] to-[#F8DE79] px-5 py-4 text-center text-base font-black text-black shadow-[0_14px_40px_rgba(212,175,55,0.25)] transition hover:-translate-y-0.5">Find a Provider</a>
-              <a href="/post-job" className="rounded-2xl border border-white/25 bg-black/60 px-5 py-4 text-center text-base font-black text-white backdrop-blur-md transition hover:border-[#D4AF37]/60 hover:bg-black/70">Post a Job</a>
-              <a href="/sign-in" className="rounded-2xl border border-white/25 bg-white/10 px-5 py-4 text-center text-base font-black text-white backdrop-blur-md transition hover:border-[#D4AF37]/60 hover:bg-white/15">Join Rydah</a>
+              <Link href="/providers" className="rounded-2xl bg-gradient-to-r from-[#E8C447] to-[#F8DE79] px-5 py-4 text-center text-base font-black text-black shadow-[0_14px_40px_rgba(212,175,55,0.25)] transition hover:-translate-y-0.5">Find a Provider</Link>
+              <Link href="/post-job" className="rounded-2xl border border-white/25 bg-black/60 px-5 py-4 text-center text-base font-black text-white backdrop-blur-md transition hover:border-[#D4AF37]/60 hover:bg-black/70">Post a Job</Link>
+              <Link href="/sign-in" className="rounded-2xl border border-white/25 bg-white/10 px-5 py-4 text-center text-base font-black text-white backdrop-blur-md transition hover:border-[#D4AF37]/60 hover:bg-white/15">Join Rydah</Link>
             </div>
 
             <div className="mt-7 grid max-w-4xl gap-3 sm:grid-cols-3">
@@ -118,7 +119,7 @@ export default function Home() {
             <h3 className="mt-2 text-2xl font-black">Rydah is built to grow beyond six trades.</h3>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300">Create a Service Provider account and register your genuine profession and service area for marketplace review.</p>
           </div>
-          <a href="/sign-in" className="mt-5 inline-block shrink-0 rounded-2xl bg-white px-5 py-4 text-sm font-black text-black transition hover:bg-zinc-100 sm:mt-0">Join as a Provider</a>
+          <Link href="/sign-in" className="mt-5 inline-block shrink-0 rounded-2xl bg-white px-5 py-4 text-sm font-black text-black transition hover:bg-zinc-100 sm:mt-0">Join as a Provider</Link>
         </div>
       </section>
 
@@ -184,7 +185,7 @@ export default function Home() {
             <p className="relative text-xs font-black tracking-widest text-amber-300">URGENT HELP</p>
             <h2 className="relative mt-3 text-3xl font-black">Need someone quickly?</h2>
             <p className="relative mt-3 leading-7 text-zinc-300">Post an urgent request and Rydah will look for a suitable verified professional. Rydah Local is not an emergency service.</p>
-            <a href="/post-job?urgent=1" className="relative mt-6 inline-block rounded-2xl bg-gradient-to-r from-[#D4AF37] to-amber-300 px-6 py-4 font-black text-black transition hover:-translate-y-0.5">Request Urgent Help</a>
+            <Link href="/post-job?urgent=1" className="relative mt-6 inline-block rounded-2xl bg-gradient-to-r from-[#D4AF37] to-amber-300 px-6 py-4 font-black text-black transition hover:-translate-y-0.5">Request Urgent Help</Link>
           </div>
 
           <div className="relative overflow-hidden rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-cyan-500/15 via-blue-500/10 to-[#0d0d0d] p-5 sm:p-6">
@@ -216,9 +217,9 @@ export default function Home() {
         <div className="flex justify-center"><BrandLogo /></div>
         <p className="mt-3 text-sm text-zinc-500">Trusted local help. Booked the Rydah way.</p>
         <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm">
-          <a href="/support" className="text-[#D4AF37]">Support</a>
-          <a href="/privacy" className="text-zinc-400">Privacy</a>
-          <a href="/terms" className="text-zinc-400">Terms</a>
+          <Link href="/support" className="text-[#D4AF37]">Support</Link>
+          <Link href="/privacy" className="text-zinc-400">Privacy</Link>
+          <Link href="/terms" className="text-zinc-400">Terms</Link>
           <a href="mailto:admin@rydahlocal.online" className="text-zinc-400">admin@rydahlocal.online</a>
         </div>
         <p className="mt-5 text-sm text-zinc-700">© 2026 Rydah Local</p>
