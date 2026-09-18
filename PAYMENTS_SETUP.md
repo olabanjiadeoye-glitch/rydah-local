@@ -33,3 +33,20 @@ Cash remains available only for jobs of ₦5,000 or less.
 ## Test before live mode
 
 Use Paystack test mode first. Confirm that a successful payment changes `payments.status` and `jobs.payment_status` to `paid`, stores the gateway reference/channel/transaction ID, and records Rydah commission plus provider net earnings. Confirm that repeated callbacks do not create a duplicate reference.
+
+
+## Provider registration and monthly subscription
+
+Provider marketplace access is gated by provider billing:
+
+1. Provider creates a Provider account.
+2. Provider pays a one-time ₦500 registration fee through Paystack.
+3. After registration is confirmed, the provider creates their provider profile.
+4. Provider approves a Nigerian bank Direct Debit mandate through Paystack.
+5. Rydah creates a ₦500 monthly Paystack subscription using that Direct Debit authorization.
+6. The provider must keep registration paid and the monthly subscription active before going available, receiving jobs, sending quotes or changing job status.
+7. Failed, disabled or non-renewing subscriptions take the provider profile offline until billing is restored.
+
+Provider billing is currently tied to the same Paystack environment as Rydah checkout. While `payment_gateway_live_enabled` is 0 and the Paystack secret is a test key, the provider billing flow remains in test mode and does not collect live provider money.
+
+Rydah stores Paystack billing references/statuses, not full Direct Debit bank credentials.

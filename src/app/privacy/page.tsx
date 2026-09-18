@@ -43,8 +43,9 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-xl font-black text-white">Payments and commission</h2>
-            <p className="mt-2">Online payments and eligible provider commission settlements are processed by Paystack. Rydah Local does not ask users to enter card details directly into Rydah pages. Payment and settlement records may be retained so we can reconcile jobs, commissions, provider earnings, disputes, chargebacks, refunds, and support requests.</p>
+            <h2 className="text-xl font-black text-white">Payments, provider billing and commission</h2>
+            <p className="mt-2">Online payments, provider registration fees, monthly provider subscriptions and eligible provider commission settlements are processed by Paystack. For the monthly provider subscription, the provider is redirected to Paystack to approve a Nigerian bank Direct Debit mandate. Rydah stores billing status and limited Paystack references needed to manage the subscription, such as mandate, customer and subscription identifiers; Rydah does not ask providers to enter their full Direct Debit bank credentials into Rydah pages.</p>
+            <p className="mt-2">Rydah Local does not ask users to enter card details directly into Rydah pages. Payment, billing and settlement records may be retained so we can reconcile registrations, subscriptions, jobs, commissions, provider earnings, disputes, chargebacks, refunds, failed recurring payments and support requests.</p>
           </section>
 
           <section>
