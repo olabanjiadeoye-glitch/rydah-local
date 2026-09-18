@@ -3,10 +3,12 @@
 import { FormEvent, useEffect, useState } from "react";
 import {
   getStoredSession,
+  invokeFunction,
   restGet,
   restInsert,
   restPatch,
-  type AuthSession,, invokeFunction } from "@/lib/supabase";
+  type AuthSession,
+} from "@/lib/supabase";
 
 type ProviderRow = {
   id: string;
