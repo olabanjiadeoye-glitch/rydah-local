@@ -10,7 +10,7 @@ on:
       - ".github/workflows/android-twa.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-android:
@@ -65,3 +65,15 @@ jobs:
             build/android-twa/app-release-unsigned.apk
             build/android-twa/app-release-signed.apk
             build/android-twa/twa-manifest.json
+
+      - name: Publish CI prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="android-ci-${{ github.run_number }}"
+          gh release create "$TAG" \
+            build/android-twa/app-release-bundle.aab \
+            --repo "${{ github.repository }}" \
+            --title "Rydah Android CI build ${{ github.run_number }}" \
+            --notes "Unsigned Android App Bundle for package online.rydahlocal.app. CI validation only; not ready for Play upload until permanent signing is configured." \
+            --prerelease
