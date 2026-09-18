@@ -37,11 +37,21 @@ jobs:
       - name: Install Android API 36
         id: android_sdk
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          which sdkmanager
-          sdkmanager --version
-          yes | sdkmanager --licenses >/dev/null || true
-          sdkmanager --install "platforms;android-36"
+          mkdir -p ci-status
+          set +e
+          {
+            echo "ANDROID_HOME=$ANDROID_HOME"
+            echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+            echo "sdkmanager path:"
+            which sdkmanager
+            echo "sdkmanager version:"
+            sdkmanager --version
+            echo "Installing API 36:"
+            yes | sdkmanager --licenses >/dev/null || true
+            sdkmanager --install "platforms;android-36"
+          } 2>&1 | tee ci-status/android-sdk.log
+          EXIT_CODE=${PIPESTATUS[0]}
+          exit $EXIT_CODE
 
       - name: Install Bubblewrap
         id: bubblewrap_install
@@ -132,5 +142,6 @@ jobs:
           git config user.name "rydah-ci"
           git config user.email "actions@users.noreply.github.com"
           git add ci-status/android-twa.json
+          if [ -f ci-status/android-sdk.log ]; then git add ci-status/android-sdk.log; fi
           git commit -m "Record Android CI status [skip ci]" || true
           git push
