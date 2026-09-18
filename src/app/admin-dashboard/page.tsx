@@ -163,6 +163,8 @@ export default function AdminDashboardPage() {
             <a href="/admin/finance" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Finance</a>
             <a href="/payout-admin" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Payouts</a>
             <a href="/admin/safety" className="rounded-full border border-red-500/30 px-4 py-2 text-sm text-red-300">Safety</a>
+            <a href="/admin/disputes" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Disputes</a>
+            <a href="/admin/account-deletions" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Deletions</a>
             <a href="/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Marketplace</a>
           </div>
         </div>
@@ -272,6 +274,8 @@ export default function AdminDashboardPage() {
                   <a href="/payout-admin" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Provider Payouts</p><p className="mt-1 text-sm text-zinc-500">Review and settle withdrawal requests.</p></a>
                   <a href="/notifications" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Notifications</p><p className="mt-1 text-sm text-zinc-500">See verification and job updates.</p></a>
                   <a href="/admin/safety" className="rounded-2xl border border-red-500/20 bg-red-950/10 p-5"><p className="font-black text-red-200">Safety Review</p><p className="mt-1 text-sm text-zinc-500">Review job-linked safety reports and urgent concerns.</p></a>
+                  <a href="/admin/disputes" className="rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5"><p className="font-black text-[#E5C65A]">Disputes & Refunds</p><p className="mt-1 text-sm text-zinc-500">Review complaints and controlled refund requests.</p></a>
+                  <a href="/admin/account-deletions" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Account Deletions</p><p className="mt-1 text-sm text-zinc-500">Complete anonymisation and deletion requests.</p></a>
                 </div>
               </section>
             </div>
