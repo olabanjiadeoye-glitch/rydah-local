@@ -18,10 +18,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://rydahlocal.online"),
   title: {
-    default: "Rydah Local | Trusted Local Professionals in Lagos",
+    default: "Rydah Local | Trusted Local Professionals in Lagos, Abuja & Ibadan",
     template: "%s | Rydah Local",
   },
-  description: "Book trusted local professionals, review quotes, verify provider arrival and manage secure Rydah jobs across Lagos.",
+  description: "Book trusted local professionals, review quotes, verify provider arrival and manage secure Rydah jobs across Lagos, Abuja and Ibadan.",
   applicationName: "Rydah Local",
   manifest: "/manifest.webmanifest",
   icons: {
@@ -45,13 +45,13 @@ export const metadata: Metadata = {
     url: "https://rydahlocal.online",
     siteName: "Rydah Local",
     title: "Rydah Local | Move Smart. Move Rydah.",
-    description: "Trusted local professionals, real work and safer service bookings across Lagos.",
+    description: "Trusted local professionals, real work and safer service bookings across Lagos, Abuja and Ibadan.",
     images: [{ url: "/rydah-icon.svg", alt: "Rydah Local" }],
   },
   twitter: {
     card: "summary",
     title: "Rydah Local",
-    description: "Move Smart. Move Rydah. Trusted local professionals across Lagos.",
+    description: "Move Smart. Move Rydah. Trusted local professionals across Lagos, Abuja and Ibadan.",
     images: ["/rydah-icon.svg"],
   },
   robots: {
