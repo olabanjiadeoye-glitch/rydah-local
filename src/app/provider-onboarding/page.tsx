@@ -149,8 +149,8 @@ export default function ProviderOnboardingPage() {
 
     if (!shouldFinalize) return;
 
-    setAutoFinalizingSessionId(pendingSessionId);
     const timer = window.setTimeout(() => {
+      setAutoFinalizingSessionId(pendingSessionId);
       void completeLiveFaceVerification(pendingSessionId);
     }, 600);
 
@@ -161,7 +161,6 @@ export default function ProviderOnboardingPage() {
     fullIdNumber,
     faceConsent,
     liveFaceSaving,
-    autoFinalizingSessionId,
   ]);
 
   async function load(currentSession: AuthSession) {
@@ -342,9 +341,9 @@ export default function ProviderOnboardingPage() {
           continue;
         }
 
+        await load(activeSession);
         setMessage("");
         setError(detail);
-        await load(activeSession);
         setLiveFaceSaving(false);
         return;
       }
