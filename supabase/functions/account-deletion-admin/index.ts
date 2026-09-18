@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: {
         apikey: serviceKey,
-        Authorization: req.headers.get("authorization") ?? "",
+        Authorization: `Bearer ${serviceKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ p_user_id: deletionRequest.user_id }),
