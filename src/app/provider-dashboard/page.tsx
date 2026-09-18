@@ -51,6 +51,10 @@ type JobRow = {
   contact_name: string | null;
   contact_email: string | null;
   contact_phone: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  location_accuracy_m: number | null;
+  location_source: string;
   created_at: string;
   quoted_amount: number | null;
   quote_status: QuoteStatus;
@@ -438,7 +442,7 @@ export default function ProviderDashboardPage() {
             </div>
 
             <div className="mt-6 rounded-3xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-5 text-sm leading-6 text-zinc-300">
-              <strong className="text-[#D4AF37]">Keep Rydah jobs on-platform.</strong> Customer phone and email are released only after the customer accepts your quote. Direct provider access to hidden contact fields is blocked by the Rydah backend, not just hidden on screen.
+              <strong className="text-[#D4AF37]">Keep Rydah jobs on-platform.</strong> Customer phone, email and private job GPS coordinates are released only after the customer accepts your quote. Direct provider access to hidden contact or GPS fields is blocked by the Rydah backend, not just hidden on screen.
             </div>
 
             <div className="mt-8">
@@ -479,6 +483,26 @@ export default function ProviderDashboardPage() {
                           <div><p className="text-zinc-500">Phone</p><p className="mt-1 font-bold">{contactReleased ? (job.contact_phone || "Not provided") : "Released after quote acceptance"}</p></div>
                           <div><p className="text-zinc-500">Email</p><p className="mt-1 break-all font-bold">{contactReleased ? (job.contact_email || "Not provided") : "Released after quote acceptance"}</p></div>
                         </div>
+
+                        {contactReleased && job.latitude != null && job.longitude != null && (
+                          <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm">
+                            <div className="min-w-0 flex-1">
+                              <p className="font-black text-emerald-300">📍 Customer GPS available</p>
+                              <p className="mt-1 text-xs leading-5 text-zinc-400">
+                                Shared for this accepted job only
+                                {job.location_accuracy_m != null ? ` • accuracy about ${Math.round(job.location_accuracy_m)} m` : ""}.
+                              </p>
+                            </div>
+                            <a
+                              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${job.latitude},${job.longitude}`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-xl bg-[#D4AF37] px-4 py-2.5 text-xs font-black text-black"
+                            >
+                              Open GPS Directions
+                            </a>
+                          </div>
+                        )}
 
                         {quoteEditable && (
                           <div className="mt-5 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 p-5">
