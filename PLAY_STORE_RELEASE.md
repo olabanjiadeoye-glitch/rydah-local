@@ -7,7 +7,7 @@
 - Support: https://rydahlocal.online/support
 - Privacy policy: https://rydahlocal.online/privacy
 - Account deletion URL: https://rydahlocal.online/delete-account
-- Primary market at launch: Lagos, Nigeria
+- Target launch cities: Lagos, Abuja and Ibadan, Nigeria
 - Brand colours: Deep Black `#080808`, Premium Gold `#D4AF37`
 - App icon source: `/public/rydah-icon.svg`
 
@@ -26,10 +26,10 @@
 Rydah Local
 
 ### Short description
-Book trusted local professionals, compare quotes and manage safer jobs in Lagos.
+Book trusted local professionals and manage safer jobs across Lagos, Abuja and Ibadan.
 
 ### Full description
-Rydah Local helps customers find and engage trusted local professionals across Lagos.
+Rydah Local helps customers find and engage trusted local professionals across Lagos, Abuja and Ibadan.
 
 Post a service request, receive provider quotes, review job details and keep the service journey on-platform. Rydah includes provider identity and biometric verification, arrival safety checks, job status tracking, notifications and supported payment flows.
 
@@ -49,7 +49,7 @@ For service providers:
 - Track active work and earnings
 - Manage supported settlements and payouts
 
-Rydah Local is launching in Lagos with expansion planned as the marketplace grows.
+Rydah Local targets Lagos, Abuja and Ibadan at launch. Availability in each area depends on active, verified provider supply.
 
 Move Smart. Move Rydah.
 
