@@ -10,9 +10,9 @@ const services = [
 ];
 
 const trustSteps = [
-  { title: "Verified professionals", text: "Provider profiles are reviewed before the Rydah Verified badge is activated." },
+  { title: "Biometric-verified professionals", text: "Eligible providers complete live camera liveness plus ID face matching before they can receive new Rydah jobs." },
   { title: "Quote before work", text: "See and accept the provider quote inside Rydah before work starts." },
-  { title: "Arrival safety check", text: "Use the one-time Arrival PIN and, where enabled, provider camera face matching." },
+  { title: "Arrival safety check", text: "Use the one-time Arrival PIN and provider face matching before work starts." },
   { title: "Protected payment trail", text: "Use secure Paystack checkout so the job, commission and payment record stay inside Rydah." },
 ];
 
