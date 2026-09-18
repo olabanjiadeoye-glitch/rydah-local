@@ -24,6 +24,10 @@ export const RYDAH_SERVICE_AREAS = [
   "Akobo, Ibadan",
   "Mokola, Ibadan",
   "Apata, Ibadan",
+  "Oluyole, Ibadan",
+  "Akala, Ibadan",
+  "Jericho, Ibadan",
+  "Iyaganku, Ibadan",
   "Other Ibadan area",
 ] as const;
 
