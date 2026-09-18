@@ -9,6 +9,7 @@ import {
   type AuthSession,
 } from "@/lib/supabase";
 import { canAccessPath, destinationForAccess, resolveUserAccess } from "@/lib/access";
+import BrandLogo from "../brand-logo";
 
 const PRODUCTION_ORIGIN = "https://rydahlocal.online";
 
@@ -119,7 +120,7 @@ export default function SignInPage() {
     <main className="min-h-screen bg-[#080808] text-white">
       <header className="border-b border-white/10">
         <div className="mx-auto flex max-w-xl items-center justify-between px-5 py-5">
-          <p className="font-black">RYDAH <span className="text-[#D4AF37]">LOCAL</span></p>
+          <a href="/" aria-label="Rydah Local home"><BrandLogo compact /></a>
           <a href="/" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Home</a>
         </div>
       </header>
