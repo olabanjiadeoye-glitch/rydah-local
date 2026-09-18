@@ -125,8 +125,8 @@ export default function SignInPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-xl px-5 py-12">
-        <div className="rounded-3xl border border-white/10 bg-[#121212] p-7">
+      <section className="mx-auto max-w-xl px-5 py-6">
+        <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">
           <h1 className="text-3xl font-black">{title}</h1>
           <p className="mt-3 text-zinc-400">
             {mode === "forgot"

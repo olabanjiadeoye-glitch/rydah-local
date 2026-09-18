@@ -191,7 +191,7 @@ export default function SafetyPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#080808] px-5 py-8 text-white">
+    <main className="min-h-screen bg-[#080808] px-5 py-6 text-white">
       <section className="mx-auto max-w-4xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <a href="/" aria-label="Rydah Local home"><BrandLogo /></a>
@@ -200,7 +200,7 @@ export default function SafetyPage() {
           </a>
         </div>
 
-        <div className="mt-8 rounded-3xl border border-red-500/20 bg-red-950/20 p-6">
+        <div className="mt-6 rounded-3xl border border-red-500/20 bg-red-950/20 p-6">
           <p className="text-xs font-black tracking-[0.18em] text-red-300">SAFETY CENTER</p>
           <h1 className="mt-2 text-3xl font-black">Report a concern or share job details</h1>
           <p className="mt-3 text-sm leading-6 text-zinc-300">
@@ -212,7 +212,7 @@ export default function SafetyPage() {
         {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
         {loading ? (
-          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">Loading Safety Center…</div>
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">Loading Safety Center…</div>
         ) : (
           <>
             <form onSubmit={submitIncident} className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-6">

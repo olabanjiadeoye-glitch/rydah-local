@@ -232,7 +232,7 @@ export default function ProvidersPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-5 py-8">
+      <section className="mx-auto max-w-6xl px-5 py-6">
         <div className="rounded-3xl border border-white/10 bg-[#121212] p-5">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs font-bold tracking-widest text-zinc-500">SEARCH VERIFIED PROFESSIONALS</p>
@@ -302,7 +302,7 @@ export default function ProvidersPage() {
         </div>
       </section>
 
-      <section id="provider-results" className="mx-auto max-w-6xl scroll-mt-6 px-5 py-8">
+      <section id="provider-results" className="mx-auto max-w-6xl scroll-mt-6 px-5 py-6">
         {searchMessage && <div className="mb-4 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-4 py-3 text-sm text-[#E5C65A]">{searchMessage} {visibleProviders.length} verified provider{visibleProviders.length === 1 ? "" : "s"} currently available.</div>}
         <div className="mb-5 flex items-end justify-between">
           <div><p className="text-xs font-bold tracking-widest text-[#D4AF37]">VERIFIED & AVAILABLE</p><h2 className="mt-1 text-2xl font-bold">Ready to take a job</h2></div>
@@ -312,7 +312,7 @@ export default function ProvidersPage() {
         {loadError && <div className="mb-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{loadError}</div>}
 
         {visibleProviders.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-8 text-center">
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-center">
             <p className="text-xl font-bold">No available verified providers found</p>
             <p className="mt-2 text-zinc-500">
               No biometric-verified provider is currently available for this selection. Lagos, Abuja, Ibadan, Warri and Port Harcourt remain Rydah target cities, and supply will appear here as verified providers come online.
@@ -359,7 +359,7 @@ export default function ProvidersPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-5 pb-6">
-        <div className="rounded-3xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
+        <div className="rounded-3xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-6 sm:flex sm:items-center sm:justify-between sm:gap-4">
           <div>
             <p className="text-xs font-black tracking-widest text-[#D4AF37]">PROVIDERS</p>
             <h3 className="mt-2 text-xl font-black">Your profession isn&apos;t listed?</h3>

@@ -37,13 +37,13 @@ export default function VerificationStatusPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#080808] px-5 py-10 text-white">
+    <main className="min-h-screen bg-[#080808] px-5 py-7 sm:py-6 text-white">
       <section className="mx-auto max-w-2xl">
         <p className="text-sm font-black tracking-[0.2em] text-[#D4AF37]">RYDAH LOCAL</p>
         <h1 className="mt-2 text-3xl font-black">Face & ID connection status</h1>
         <p className="mt-2 text-sm text-zinc-400">This page checks whether the external identity-verification service is connected. It does not display or expose the secret key.</p>
 
-        <div className="mt-7 rounded-3xl border border-white/10 bg-[#121212] p-7">
+        <div className="mt-7 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">
           {loading ? (
             <p className="text-zinc-400">Checking connection…</p>
           ) : error ? (
