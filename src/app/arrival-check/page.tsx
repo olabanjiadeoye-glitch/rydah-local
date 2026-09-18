@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { getStoredSession, invokeFunction, restGet, restRpc, type AuthSession } from "@/lib/supabase";
@@ -243,7 +244,7 @@ export default function ArrivalCheckPage() {
             <p className="text-sm font-black tracking-[0.22em] text-[#D4AF37]">RYDAH LOCAL</p>
             <h1 className="mt-1 text-2xl font-black">Provider Arrival Safety Check</h1>
           </div>
-          <a href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</a>
+          <Link href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</Link>
         </div>
       </header>
 

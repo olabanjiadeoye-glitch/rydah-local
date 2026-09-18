@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, type AuthSession, invokeFunction } from "@/lib/supabase";
 
@@ -189,7 +190,7 @@ export default function EarningsPage() {
             <p className="text-sm font-black tracking-[0.22em] text-[#D4AF37]">RYDAH LOCAL</p>
             <h1 className="mt-1 text-2xl font-black">Earnings</h1>
           </div>
-          <a href="/provider-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Provider Dashboard</a>
+          <Link href="/provider-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Provider Dashboard</Link>
         </div>
       </header>
 

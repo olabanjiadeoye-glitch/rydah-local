@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
@@ -236,7 +237,7 @@ export default function PostJobPage() {
             <p className="text-xs font-bold tracking-[0.2em] text-[#D4AF37]">RYDAH LOCAL</p>
             <h1 className="mt-1 text-2xl font-black">Post a Job</h1>
           </div>
-          <a href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</a>
+          <Link href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</Link>
         </div>
       </header>
 
@@ -248,8 +249,8 @@ export default function PostJobPage() {
             <p className="mt-3 text-zinc-400">Your {urgent ? "urgent " : ""}request has been assigned to an available biometric-verified provider.</p>
             {jobId && <p className="mt-3 text-xs text-zinc-600">Request ID: {jobId.slice(0, 8)}</p>}
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <a href="/my-jobs" className="rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black">Track My Job</a>
-              <a href="/providers" className="rounded-2xl border border-white/10 px-5 py-4 font-bold">Browse Providers</a>
+              <Link href="/my-jobs" className="rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black">Track My Job</Link>
+              <Link href="/providers" className="rounded-2xl border border-white/10 px-5 py-4 font-bold">Browse Providers</Link>
             </div>
           </div>
         ) : (

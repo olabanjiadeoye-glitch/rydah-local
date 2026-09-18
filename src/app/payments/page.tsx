@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession, invokeFunction } from "@/lib/supabase";
 
@@ -223,7 +224,7 @@ export default function PaymentsPage() {
             <p className="text-sm font-black tracking-[0.22em] text-[#D4AF37]">RYDAH LOCAL</p>
             <h1 className="mt-1 text-2xl font-black">Payment</h1>
           </div>
-          <a href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</a>
+          <Link href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</Link>
         </div>
       </header>
 

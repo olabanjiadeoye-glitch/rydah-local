@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getStoredSession, restGet, restPatch, type AuthSession } from "@/lib/supabase";
 
@@ -89,7 +90,7 @@ export default function AdminServiceInterestsPage() {
             <p className="text-sm font-black tracking-[0.22em] text-[#D4AF37]">RYDAH ADMIN</p>
             <h1 className="mt-1 text-2xl font-black">New Profession Interests</h1>
           </div>
-          <a href="/admin-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Admin Dashboard</a>
+          <Link href="/admin-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Admin Dashboard</Link>
         </div>
       </header>
 

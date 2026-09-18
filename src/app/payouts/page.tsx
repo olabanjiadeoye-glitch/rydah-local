@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, type AuthSession, invokeFunction } from "@/lib/supabase";
 
@@ -226,8 +227,8 @@ export default function PayoutsPage() {
             <h1 className="mt-1 text-2xl font-black">Provider Settlements</h1>
           </div>
           <div className="flex gap-2">
-            <a href="/earnings" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Earnings</a>
-            <a href="/provider-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Dashboard</a>
+            <Link href="/earnings" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Earnings</Link>
+            <Link href="/provider-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Dashboard</Link>
           </div>
         </div>
       </header>
