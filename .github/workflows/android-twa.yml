@@ -33,14 +33,17 @@ jobs:
           java-version: "17"
 
       - name: Install Android API 36
+        id: android_sdk
         run: |
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Install Bubblewrap
+        id: bubblewrap_install
         run: npm install --global @bubblewrap/cli
 
       - name: Generate Android project
+        id: generate
         run: |
           mkdir -p build/android-twa
           cp release/android/twa-manifest.json build/android-twa/twa-manifest.json
@@ -48,11 +51,13 @@ jobs:
           bubblewrap update --skipVersionUpgrade --manifest=. --androidSdkPath="$ANDROID_HOME"
 
       - name: Build unsigned Android App Bundle
+        id: bundle
         run: |
           cd build/android-twa
           bubblewrap build --skipPwaValidation --skipSigning --manifest=.
 
       - name: Generate Google Play image assets
+        id: play_assets
         run: |
           sudo apt-get update
           sudo apt-get install -y librsvg2-bin
@@ -61,6 +66,7 @@ jobs:
           rsvg-convert -w 1024 -h 500 release/google-play/feature-graphic.svg -o build/play-assets/rydah-feature-1024x500.png
 
       - name: Upload Android build artifacts
+        id: upload_artifacts
         uses: actions/upload-artifact@v4
         with:
           name: rydah-local-android-unsigned
@@ -74,6 +80,7 @@ jobs:
             build/play-assets/rydah-feature-1024x500.png
 
       - name: Publish CI prerelease
+        id: prerelease
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -103,7 +110,16 @@ jobs:
             "sourceSha": "$SOURCE_SHA",
             "packageId": "online.rydahlocal.app",
             "versionCode": 1,
-            "versionName": "0.1.0"
+            "versionName": "0.1.0",
+            "steps": {
+              "androidSdk": "${{ steps.android_sdk.outcome }}",
+              "bubblewrapInstall": "${{ steps.bubblewrap_install.outcome }}",
+              "generateProject": "${{ steps.generate.outcome }}",
+              "bundle": "${{ steps.bundle.outcome }}",
+              "playAssets": "${{ steps.play_assets.outcome }}",
+              "uploadArtifacts": "${{ steps.upload_artifacts.outcome }}",
+              "prerelease": "${{ steps.prerelease.outcome }}"
+            }
           }
           EOF
           git config user.name "rydah-ci"
