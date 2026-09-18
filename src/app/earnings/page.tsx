@@ -151,8 +151,7 @@ export default function EarningsPage() {
     setError("");
     setMessage("Opening secure Paystack commission checkout…");
     try {
-      const callbackUrl = `${window.location.origin}/earnings`;
-      const result = await callCommissionBackend(session, { action: "initialize", callback_url: callbackUrl });
+      const result = await callCommissionBackend(session, { action: "initialize" });
       if (!result.authorization_url) throw new Error("Paystack did not return a commission checkout link.");
       window.location.assign(result.authorization_url);
     } catch (caught) {
