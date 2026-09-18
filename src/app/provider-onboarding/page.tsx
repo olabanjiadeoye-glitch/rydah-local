@@ -670,45 +670,6 @@ export default function ProviderOnboardingPage() {
     }
   }
 
-   const percent = ((currentStep - 1) / (steps.length - 1)) * 100;
-    return (
-      <div className="rounded-3xl border border-white/10 bg-[#121212] p-5">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">PROVIDER SETUP</p>
-            <p className="mt-1 text-sm font-bold text-zinc-300">Step {currentStep} of {steps.length}</p>
-          </div>
-          <span className="rounded-full bg-[#D4AF37]/10 px-3 py-2 text-xs font-black text-[#D4AF37]">
-            {steps[currentStep - 1].title}
-          </span>
-        </div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-800">
-          <div
-            className="h-full rounded-full bg-[#D4AF37] transition-all"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-        <div className="mt-4 grid grid-cols-5 gap-1">
-          {steps.map((step) => (
-            <div key={step.number} className="text-center">
-              <div
-                className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${
-                  step.number < currentStep
-                    ? "bg-emerald-500/20 text-emerald-300"
-                    : step.number === currentStep
-                      ? "bg-[#D4AF37] text-black"
-                      : "bg-zinc-800 text-zinc-500"
-                }`}
-              >
-                {step.number < currentStep ? "✓" : step.number}
-              </div>
-              <p className="mt-1 hidden text-[10px] font-bold text-zinc-500 sm:block">{step.short}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
