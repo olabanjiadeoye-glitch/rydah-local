@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - "release/android/**"
+      - "release/google-play/**"
       - "public/rydah-icon.svg"
       - ".github/workflows/android-twa.yml"
 
@@ -15,80 +16,47 @@ permissions:
 jobs:
   build-android:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Node
-        id: setup_node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Set up Java
-        id: setup_java
-        uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version: "17"
-
-      - name: Install Android API 36
-        id: android_sdk
+      - name: Prepare Android project workspace
+        id: prepare
         run: |
-          mkdir -p ci-status
-          set +e
-          {
-            echo "ANDROID_HOME=$ANDROID_HOME"
-            echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-            SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-            if [ ! -x "$SDKMANAGER" ]; then
-              SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -path "*/bin/sdkmanager" 2>/dev/null | sort | tail -n 1)"
-            fi
-            if [ -z "$SDKMANAGER" ] || [ ! -x "$SDKMANAGER" ]; then
-              echo "Unable to locate sdkmanager under $ANDROID_HOME/cmdline-tools"
-              find "$ANDROID_HOME" -maxdepth 4 -type f -name sdkmanager -print || true
-              exit 127
-            fi
-            echo "sdkmanager path: $SDKMANAGER"
-            echo "sdkmanager version:"
-            "$SDKMANAGER" --version
-            echo "Installing API 36:"
-            yes | "$SDKMANAGER" --licenses >/dev/null || true
-            "$SDKMANAGER" --install "platforms;android-36"
-          } 2>&1 | tee ci-status/android-sdk.log
-          EXIT_CODE=${PIPESTATUS[0]}
-          exit $EXIT_CODE
+          mkdir -p build/android-twa
+          cp release/android/twa-manifest.json build/android-twa/twa-manifest.json
 
-      - name: Install Bubblewrap
-        id: bubblewrap_install
-        run: |
-          npm install --global @bubblewrap/cli
-          mkdir -p "$HOME/.bubblewrap"
-          cat > "$HOME/.bubblewrap/config.json" <<EOF
-          {
-            "jdkPath": "$JAVA_HOME",
-            "androidSdkPath": "$ANDROID_HOME"
-          }
-          EOF
-          echo "Bubblewrap config:"
-          cat "$HOME/.bubblewrap/config.json"
-          bubblewrap doctor
+      - name: Pull official Bubblewrap container
+        id: bubblewrap_container
+        run: docker pull ghcr.io/googlechromelabs/bubblewrap:latest
 
       - name: Generate Android project
         id: generate
         run: |
-          mkdir -p build/android-twa
-          cp release/android/twa-manifest.json build/android-twa/twa-manifest.json
-          cd build/android-twa
-          bubblewrap update --skipVersionUpgrade --manifest="./twa-manifest.json"
+          docker run --rm \
+            -v "$PWD/build/android-twa:/app" \
+            -w /app \
+            ghcr.io/googlechromelabs/bubblewrap:latest \
+            update --skipVersionUpgrade
 
       - name: Build unsigned Android App Bundle
         id: bundle
         run: |
-          cd build/android-twa
-          bubblewrap build --skipPwaValidation --skipSigning --manifest="./twa-manifest.json"
+          docker run --rm \
+            -v "$PWD/build/android-twa:/app" \
+            -w /app \
+            ghcr.io/googlechromelabs/bubblewrap:latest \
+            build --skipPwaValidation --skipSigning
+
+      - name: Confirm target SDK 36
+        id: verify_target
+        run: |
+          grep -R "targetSdk.*36\|targetSdkVersion.*36" build/android-twa/app/build.gradle* build/android-twa/build.gradle* || {
+            echo "Generated project does not visibly target Android API 36."
+            exit 1
+          }
 
       - name: Generate Google Play image assets
         id: play_assets
@@ -99,6 +67,18 @@ jobs:
           rsvg-convert -w 512 -h 512 public/rydah-icon.svg -o build/play-assets/rydah-icon-512.png
           rsvg-convert -w 1024 -h 500 release/google-play/feature-graphic.svg -o build/play-assets/rydah-feature-1024x500.png
 
+      - name: Locate AAB
+        id: locate_aab
+        run: |
+          AAB="$(find build/android-twa -type f -name '*.aab' | head -n 1)"
+          if [ -z "$AAB" ]; then
+            echo "No Android App Bundle was produced."
+            find build/android-twa -maxdepth 5 -type f | sort | tail -n 200
+            exit 1
+          fi
+          cp "$AAB" build/android-twa/rydah-local-unsigned.aab
+          echo "aab=build/android-twa/rydah-local-unsigned.aab" >> "$GITHUB_OUTPUT"
+
       - name: Upload Android build artifacts
         id: upload_artifacts
         uses: actions/upload-artifact@v4
@@ -106,9 +86,7 @@ jobs:
           name: rydah-local-android-unsigned
           if-no-files-found: error
           path: |
-            build/android-twa/app-release-bundle.aab
-            build/android-twa/app-release-unsigned.apk
-            build/android-twa/app-release-signed.apk
+            build/android-twa/rydah-local-unsigned.aab
             build/android-twa/twa-manifest.json
             build/play-assets/rydah-icon-512.png
             build/play-assets/rydah-feature-1024x500.png
@@ -120,12 +98,12 @@ jobs:
         run: |
           TAG="android-ci-${{ github.run_number }}"
           gh release create "$TAG" \
-            build/android-twa/app-release-bundle.aab \
+            build/android-twa/rydah-local-unsigned.aab \
             build/play-assets/rydah-icon-512.png \
             build/play-assets/rydah-feature-1024x500.png \
             --repo "${{ github.repository }}" \
             --title "Rydah Android CI build ${{ github.run_number }}" \
-            --notes "Unsigned Android App Bundle for package online.rydahlocal.app. CI validation only; not ready for Play upload until permanent signing is configured." \
+            --notes "Unsigned Android App Bundle for package online.rydahlocal.app. CI validation only; permanent Play signing still needs to be configured." \
             --prerelease
 
       - name: Record Android CI status
@@ -146,13 +124,13 @@ jobs:
             "versionCode": 1,
             "versionName": "0.1.0",
             "steps": {
-              "setupNode": "${{ steps.setup_node.outcome }}",
-              "setupJava": "${{ steps.setup_java.outcome }}",
-              "androidSdk": "${{ steps.android_sdk.outcome }}",
-              "bubblewrapInstall": "${{ steps.bubblewrap_install.outcome }}",
+              "prepare": "${{ steps.prepare.outcome }}",
+              "bubblewrapContainer": "${{ steps.bubblewrap_container.outcome }}",
               "generateProject": "${{ steps.generate.outcome }}",
               "bundle": "${{ steps.bundle.outcome }}",
+              "verifyTarget": "${{ steps.verify_target.outcome }}",
               "playAssets": "${{ steps.play_assets.outcome }}",
+              "locateAab": "${{ steps.locate_aab.outcome }}",
               "uploadArtifacts": "${{ steps.upload_artifacts.outcome }}",
               "prerelease": "${{ steps.prerelease.outcome }}"
             }
@@ -161,6 +139,5 @@ jobs:
           git config user.name "rydah-ci"
           git config user.email "actions@users.noreply.github.com"
           git add ci-status/android-twa.json
-          if [ -f ci-status/android-sdk.log ]; then git add ci-status/android-sdk.log; fi
           git commit -m "Record Android CI status [skip ci]" || true
           git push
