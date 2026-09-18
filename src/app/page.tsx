@@ -30,9 +30,16 @@ export default function Home() {
         </div>
       </header>
 
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 rounded-full bg-[#D4AF37]/10 blur-3xl" />
-        <div className="relative mx-auto max-w-6xl px-5 py-14 sm:py-20">
+      <section className="relative isolate overflow-hidden border-b border-white/10">
+        <div
+          className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-55 sm:bg-[center_48%]"
+          style={{ backgroundImage: "url('/rydah-city-hero.webp')" }}
+          aria-hidden="true"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/45 via-black/55 to-[#080808] sm:from-black/35 sm:via-black/50" aria-hidden="true" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/70 via-black/20 to-black/45" aria-hidden="true" />
+        <div className="relative mx-auto flex min-h-[560px] max-w-6xl items-center px-5 py-14 sm:min-h-[640px] sm:py-20">
+          <div className="w-full">
           <div
             className="inline-flex items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-4 py-2"
             aria-label="Nigeria"
@@ -52,14 +59,15 @@ export default function Home() {
 
           <div className="mt-9 grid max-w-3xl gap-3 sm:grid-cols-3">
             <a href="/providers" className="rounded-2xl bg-[#D4AF37] px-5 py-4 text-center text-base font-black text-black transition hover:bg-[#E4C04A]">Find a Provider</a>
-            <a href="/post-job" className="rounded-2xl border border-white/15 bg-[#121212] px-5 py-4 text-center text-base font-black text-white transition hover:border-[#D4AF37]/50">Post a Job</a>
-            <a href="/sign-in" className="rounded-2xl border border-white/15 px-5 py-4 text-center text-base font-black text-zinc-300 transition hover:border-[#D4AF37]/50">Join Rydah</a>
+            <a href="/post-job" className="rounded-2xl border border-white/20 bg-black/55 px-5 py-4 text-center text-base font-black text-white backdrop-blur-sm transition hover:border-[#D4AF37]/50">Post a Job</a>
+            <a href="/sign-in" className="rounded-2xl border border-white/20 bg-black/35 px-5 py-4 text-center text-base font-black text-white backdrop-blur-sm transition hover:border-[#D4AF37]/50">Join Rydah</a>
           </div>
 
           <div className="mt-10 grid max-w-4xl gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"><p className="text-xs font-black text-[#D4AF37]">IDENTITY</p><p className="mt-1 font-bold">Rydah Verified providers</p></div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"><p className="text-xs font-black text-[#D4AF37]">PAYMENTS</p><p className="mt-1 font-bold">Secure Paystack checkout</p></div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"><p className="text-xs font-black text-[#D4AF37]">ARRIVAL</p><p className="mt-1 font-bold">PIN + camera safety checks</p></div>
+            <div className="rounded-2xl border border-white/15 bg-black/45 p-4 backdrop-blur-sm"><p className="text-xs font-black text-[#D4AF37]">IDENTITY</p><p className="mt-1 font-bold">Rydah Verified providers</p></div>
+            <div className="rounded-2xl border border-white/15 bg-black/45 p-4 backdrop-blur-sm"><p className="text-xs font-black text-[#D4AF37]">PAYMENTS</p><p className="mt-1 font-bold">Secure Paystack checkout</p></div>
+            <div className="rounded-2xl border border-white/15 bg-black/45 p-4 backdrop-blur-sm"><p className="text-xs font-black text-[#D4AF37]">ARRIVAL</p><p className="mt-1 font-bold">PIN + camera safety checks</p></div>
+          </div>
           </div>
         </div>
       </section>
