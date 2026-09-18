@@ -22,22 +22,24 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Node
+        id: setup_node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
       - name: Set up Java
+        id: setup_java
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "17"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Android API 36
         id: android_sdk
         run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          which sdkmanager
+          sdkmanager --version
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager --install "platforms;android-36"
 
@@ -115,6 +117,8 @@ jobs:
             "versionCode": 1,
             "versionName": "0.1.0",
             "steps": {
+              "setupNode": "${{ steps.setup_node.outcome }}",
+              "setupJava": "${{ steps.setup_java.outcome }}",
               "androidSdk": "${{ steps.android_sdk.outcome }}",
               "bubblewrapInstall": "${{ steps.bubblewrap_install.outcome }}",
               "generateProject": "${{ steps.generate.outcome }}",
