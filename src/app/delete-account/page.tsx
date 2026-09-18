@@ -76,11 +76,11 @@ export default function DeleteAccountPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#080808] px-5 py-10 text-white">
+    <main className="min-h-screen bg-[#080808] px-5 py-7 sm:py-6 text-white">
       <section className="mx-auto max-w-2xl">
         <a href="/" aria-label="Rydah Local home"><BrandLogo /></a>
 
-        <h1 className="mt-8 text-4xl font-black">Delete your Rydah account</h1>
+        <h1 className="mt-6 text-4xl font-black">Delete your Rydah account</h1>
         <p className="mt-4 leading-7 text-zinc-400">
           You can request deletion of your Rydah Local account and associated personal data.
           Some records may be retained only where required for completed transactions, fraud prevention,
@@ -164,7 +164,7 @@ export default function DeleteAccountPage() {
           </form>
         )}
 
-        <div className="mt-8 flex flex-wrap gap-3 text-sm">
+        <div className="mt-6 flex flex-wrap gap-3 text-sm">
           <a href="/privacy" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Privacy Notice</a>
           <a href="/support" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Support</a>
           <a href="/" className="rounded-xl bg-[#D4AF37] px-4 py-2 font-bold text-black">Home</a>
