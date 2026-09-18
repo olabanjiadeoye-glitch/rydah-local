@@ -6,8 +6,7 @@ import {
   restGet,
   restInsert,
   restPatch,
-  type AuthSession,
-} from "@/lib/supabase";
+  type AuthSession,, invokeFunction } from "@/lib/supabase";
 
 type ProviderRow = {
   id: string;
@@ -85,19 +84,7 @@ async function fileToDataUrl(file: File) {
 }
 
 async function callIdentityBackend(session: AuthSession, payload: Record<string, unknown>) {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "";
-  if (!supabaseUrl || !publishableKey) throw new Error("Identity verification service is not configured.");
-
-  const response = await fetch(`${supabaseUrl}/functions/v1/identity-verification`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-      apikey: publishableKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  const response = await invokeFunction("identity-verification", payload, session.access_token);
   const result = (await response.json().catch(() => ({}))) as IdentityResponse;
   if (!response.ok) throw new Error(result.error || "Unable to complete face verification.");
   return result;
