@@ -125,6 +125,10 @@ export default function SessionToolbar() {
         </>
       )}
 
+      {access.role !== "admin" && (
+        <a href="/delete-account" className={`${baseLink} border-red-500/30 text-red-300`}>Delete Account</a>
+      )}
+
       <button type="button" onClick={signOut} className={neutralLink}>Sign Out</button>
     </div>
   );
