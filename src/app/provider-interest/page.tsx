@@ -76,7 +76,9 @@ export default function ProviderInterestPage() {
         coordinates.longitude,
         RYDAH_SERVICE_AREAS,
       );
-      if (!nearest) throw new Error("Rydah could not match your GPS position to a supported service area.");
+      if (!nearest || nearest.distanceKm > 60) {
+        throw new Error("Your GPS position appears outside Rydah's current Lagos, Abuja and Ibadan coverage. Choose your Nigerian service area manually.");
+      }
 
       setLocation(nearest.area);
       setGpsMessage(`GPS matched you to ${nearest.area} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);

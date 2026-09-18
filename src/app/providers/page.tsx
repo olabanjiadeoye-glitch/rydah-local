@@ -145,15 +145,21 @@ export default function ProvidersPage() {
 
     try {
       const coordinates = await getCurrentDeviceLocation();
+      const nearest = nearestServiceArea(coordinates.latitude, coordinates.longitude);
+
+      if (!nearest || nearest.distanceKm > 60) {
+        setUserCoordinates(null);
+        setLocation("All Areas");
+        setSort("Recommended");
+        setGpsMessage("GPS detected outside Rydah's current Lagos, Abuja and Ibadan coverage. Use the area filter to browse providers in a target city.");
+        return;
+      }
+
       setUserCoordinates(coordinates);
       setLocation("All Areas");
       setSort("Nearest to Me");
-
-      const nearest = nearestServiceArea(coordinates.latitude, coordinates.longitude);
       setGpsMessage(
-        nearest
-          ? `GPS ready • nearest Rydah target area: ${nearest.area} • accuracy about ${Math.round(coordinates.accuracy)} m. Providers are sorted using their service-area centres, not their private live location.`
-          : `GPS ready • accuracy about ${Math.round(coordinates.accuracy)} m. Providers are sorted by supported service area.`,
+        `GPS ready • nearest Rydah target area: ${nearest.area} • accuracy about ${Math.round(coordinates.accuracy)} m. Providers are sorted using their service-area centres, not their private live location.`,
       );
     } catch (caught) {
       setUserCoordinates(null);

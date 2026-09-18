@@ -132,8 +132,9 @@ export default function PostJobPage() {
         RYDAH_SERVICE_AREAS,
       );
 
-      if (!nearest) {
-        setGpsMessage(`GPS captured with about ${Math.round(coordinates.accuracy)} m accuracy. Choose your service area manually.`);
+      if (!nearest || nearest.distanceKm > 60) {
+        setGpsCoordinates(null);
+        setGpsMessage("GPS detected outside Rydah's current Lagos, Abuja and Ibadan coverage. Choose the Nigerian service area manually; Rydah will not store this out-of-coverage GPS position.");
         return;
       }
 

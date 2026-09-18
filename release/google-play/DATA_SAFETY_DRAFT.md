@@ -35,6 +35,23 @@ Purposes:
 - Customer support
 - Notifications and transactional communication
 
+### Location
+Optional collection:
+- Precise device latitude/longitude when a customer explicitly taps **Use My Current Location** while creating a job
+- Device-reported location accuracy
+- Service-area text selected or suggested from GPS
+
+Purposes:
+- Core app functionality
+- Matching the job to a supported service area
+- Allowing the assigned provider to navigate to an accepted job
+
+Important implementation notes:
+- GPS is optional; manual area selection remains available.
+- Out-of-coverage GPS positions are not stored with the job.
+- Exact customer job coordinates are released only to the assigned provider after quote acceptance.
+- Exact provider live GPS coordinates are not published or stored in the public provider marketplace record; provider GPS is used on-device to suggest a service area.
+
 ### Financial information
 Rydah stores or processes:
 - Payment references
@@ -117,7 +134,7 @@ The implemented admin deletion workflow removes the Supabase Auth account, delet
 2. Production Paystack data flows and webhook payloads.
 3. Whether any analytics SDK is added before release.
 4. Whether crash reporting is added before release.
-5. Whether precise location/GPS is collected or only user-entered service area/location text.
+5. Confirm Google Play's final disclosure wording for optional precise job-location GPS. The production implementation collects GPS only after explicit user action and retains it with the job for accepted-job navigation.
 6. Confirm production Web Push delivery behaviour on Android/PWA and whether Play categorises the stored push endpoint as a device or other identifier for the final questionnaire.
 7. Exact retention period for completed jobs, payments, disputes, safety incidents and verification audit records.
 8. Actual operational SLA used by Rydah support to complete account deletion requests.

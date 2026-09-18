@@ -28,6 +28,11 @@ export default function PrivacyPage() {
           </section>
 
           <section>
+            <h2 className="text-xl font-black text-white">Optional GPS location</h2>
+            <p className="mt-2">When a customer explicitly taps the GPS option while creating a job, Rydah may store the device latitude, longitude, reported accuracy and timestamp with that job so the assigned provider can navigate to the service location after the customer accepts the quote. GPS is optional and manual service-area selection remains available. Exact provider live coordinates are not published in the marketplace; provider GPS is used on-device to suggest a service area.</p>
+          </section>
+
+          <section>
             <h2 className="text-xl font-black text-white">Safety reports and disputes</h2>
             <p className="mt-2">If you use the Safety Center or Resolution Centre, Rydah stores the related job reference, report or dispute category, the description you provide, review status, support responses, and limited audit information. Safety and dispute records may be retained where reasonably necessary for user protection, fraud prevention, transaction handling, legal obligations, or resolving complaints.</p>
           </section>
@@ -49,7 +54,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-xl font-black text-white">How we use information</h2>
-            <p className="mt-2">We use information to create and secure accounts, match customers with providers, process jobs and payments, verify providers, conduct arrival safety checks, deliver opted-in device notifications, investigate safety reports and disputes, prevent off-platform abuse and fraud, support marketplace operations, provide customer care, maintain records, improve the service, and comply with legal or regulatory obligations.</p>
+            <p className="mt-2">We use information to create and secure accounts, match customers with providers, process jobs and payments, support optional job-location navigation, verify providers, conduct arrival safety checks, deliver opted-in device notifications, investigate safety reports and disputes, prevent off-platform abuse and fraud, support marketplace operations, provide customer care, maintain records, improve the service, and comply with legal or regulatory obligations.</p>
           </section>
 
           <section>
