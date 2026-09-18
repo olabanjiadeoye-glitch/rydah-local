@@ -20,9 +20,22 @@ export const metadata: Metadata = {
     default: "Rydah Local | Trusted Local Professionals in Lagos",
     template: "%s | Rydah Local",
   },
-  description: "Find verified local professionals for trusted home and local services across Lagos.",
+  description: "Book trusted local professionals, review quotes, verify provider arrival and manage secure Rydah jobs across Lagos.",
   applicationName: "Rydah Local",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [{ url: "/rydah-icon.svg", type: "image/svg+xml" }],
+    shortcut: ["/rydah-icon.svg"],
+    apple: [{ url: "/rydah-icon.svg", type: "image/svg+xml" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Rydah Local",
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: {
+    telephone: false,
+  },
   alternates: {
     canonical: "/",
   },
@@ -30,13 +43,15 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://rydahlocal.online",
     siteName: "Rydah Local",
-    title: "Rydah Local | Trusted Local Professionals in Lagos",
-    description: "Find verified local professionals for trusted home and local services across Lagos.",
+    title: "Rydah Local | Move Smart. Move Rydah.",
+    description: "Trusted local professionals, real work and safer service bookings across Lagos.",
+    images: [{ url: "/rydah-icon.svg", alt: "Rydah Local" }],
   },
   twitter: {
     card: "summary",
     title: "Rydah Local",
-    description: "Find verified local professionals across Lagos.",
+    description: "Move Smart. Move Rydah. Trusted local professionals across Lagos.",
+    images: ["/rydah-icon.svg"],
   },
   robots: {
     index: true,
