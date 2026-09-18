@@ -15,6 +15,7 @@ export default function ResetPasswordPage() {
   const [accessToken, setAccessToken] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPasswords, setShowPasswords] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -82,16 +83,56 @@ export default function ResetPasswordPage() {
           <p className="mt-3 text-zinc-400">Use at least 8 characters with uppercase, lowercase and a number.</p>
 
           <form onSubmit={submit} className="mt-6">
-            <label className="block text-sm font-bold">New password</label>
-            <input required minLength={8} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="8+ chars, upper/lowercase & number" autoComplete="new-password" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+            <label className="block text-sm font-bold" htmlFor="new-password">New password</label>
+            <input
+              id="new-password"
+              required
+              minLength={8}
+              type={showPasswords ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="8+ chars, upper/lowercase & number"
+              autoComplete="new-password"
+              spellCheck={false}
+              autoCapitalize="none"
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600"
+            />
 
-            <label className="mt-5 block text-sm font-bold">Confirm new password</label>
-            <input required minLength={8} type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Repeat new password" autoComplete="new-password" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
+            <label className="mt-5 block text-sm font-bold" htmlFor="confirm-new-password">Confirm new password</label>
+            <input
+              id="confirm-new-password"
+              required
+              minLength={8}
+              type={showPasswords ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Repeat new password"
+              autoComplete="new-password"
+              spellCheck={false}
+              autoCapitalize="none"
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600"
+            />
+
+            <label className="mt-3 flex cursor-pointer items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-zinc-300">
+              <input
+                type="checkbox"
+                checked={showPasswords}
+                onChange={(e) => setShowPasswords(e.target.checked)}
+                className="h-4 w-4 accent-[#D4AF37]"
+              />
+              <span>Show passwords before updating</span>
+            </label>
+
+            {confirmPassword && (
+              <p className={`mt-2 text-xs ${password === confirmPassword ? "text-emerald-400" : "text-amber-300"}`}>
+                {password === confirmPassword ? "Passwords match." : "Passwords do not match yet."}
+              </p>
+            )}
 
             {message && <div className="mt-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">{message}</div>}
             {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
-            <button disabled={loading || !accessToken} type="submit" className="mt-6 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black disabled:opacity-60">
+            <button disabled={loading || !accessToken || !password || !confirmPassword || password !== confirmPassword} type="submit" className="mt-6 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black disabled:cursor-not-allowed disabled:opacity-40">
               {loading ? "Updating..." : "Update Password"}
             </button>
           </form>
