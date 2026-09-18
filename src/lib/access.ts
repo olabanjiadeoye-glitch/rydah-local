@@ -48,7 +48,7 @@ export async function resolveUserAccess(session: AuthSession): Promise<UserAcces
 
 export function destinationForAccess(access: UserAccess) {
   if (access.role === "admin") return "/admin-dashboard";
-  if (access.role === "provider") return "/provider-dashboard";
+  if (access.role === "provider") return "/provider-work";
   return "/providers";
 }
 
@@ -60,6 +60,7 @@ export function canAccessPath(role: RydahRole, pathname: string) {
 
   const providerOnly =
     pathname === "/provider-dashboard" ||
+    pathname === "/provider-work" ||
     pathname === "/provider-onboarding" ||
     pathname === "/provider-interest" ||
     pathname === "/earnings" ||
@@ -73,6 +74,6 @@ export function canAccessPath(role: RydahRole, pathname: string) {
 
 export function fallbackPathForRole(role: RydahRole) {
   if (role === "admin") return "/admin-dashboard";
-  if (role === "provider") return "/provider-dashboard";
+  if (role === "provider") return "/provider-work";
   return "/providers";
 }
