@@ -284,7 +284,7 @@ export default function NotificationsPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-4xl px-5 py-10">
+      <section className="mx-auto max-w-4xl px-5 py-7 sm:py-6">
         <div className="rounded-3xl border border-[#D4AF37]/20 bg-[#121212] p-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -335,11 +335,11 @@ export default function NotificationsPage() {
         {error && <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
         {loading ? (
-          <div className="mt-8 text-zinc-400">Loading notifications...</div>
+          <div className="mt-6 text-zinc-400">Loading notifications...</div>
         ) : items.length === 0 ? (
-          <div className="mt-8 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">No notifications yet. New activity will appear here.</div>
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">No notifications yet. New activity will appear here.</div>
         ) : (
-          <div className="mt-8 grid gap-3">
+          <div className="mt-6 grid gap-3">
             {items.map((item) => (
               <button
                 key={item.id}

@@ -207,7 +207,7 @@ export default function MyJobsPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-5xl px-5 py-10">
+      <section className="mx-auto max-w-5xl px-5 py-7 sm:py-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">CUSTOMER DASHBOARD</p>
@@ -221,15 +221,15 @@ export default function MyJobsPage() {
         {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
         {loading ? (
-          <div className="mt-8 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">Loading your jobs...</div>
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">Loading your jobs...</div>
         ) : jobs.length === 0 ? (
-          <div className="mt-8 rounded-3xl border border-white/10 bg-[#121212] p-8 text-center">
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-center">
             <h3 className="text-2xl font-black">No jobs yet</h3>
             <p className="mt-2 text-zinc-400">Post your first request and track it here.</p>
             <a href="/post-job" className="mt-5 inline-block rounded-2xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Post a Job</a>
           </div>
         ) : (
-          <div className="mt-8 grid gap-5">
+          <div className="mt-6 grid gap-5">
             {jobs.map((job) => {
               const review = reviewByJob.get(job.id);
               const providerName = job.providers?.business_name || (job.provider_id ? "Assigned provider" : "Matching in progress");

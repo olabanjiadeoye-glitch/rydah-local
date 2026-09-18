@@ -51,14 +51,14 @@ export default function Home() {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/85 via-black/40 to-black/15" aria-hidden="true" />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#080808] to-transparent" aria-hidden="true" />
 
-        <div className="relative mx-auto flex min-h-[620px] max-w-6xl items-center px-5 py-16 sm:min-h-[700px] sm:py-24">
+        <div className="relative mx-auto flex min-h-[500px] max-w-6xl items-center px-5 py-16 sm:min-h-[560px] sm:py-24">
           <div className="w-full max-w-5xl">
             <div className="inline-flex items-center gap-3 rounded-full border border-[#D4AF37]/35 bg-black/50 px-4 py-2.5 shadow-[0_10px_40px_rgba(0,0,0,0.25)] backdrop-blur-md">
               <span className="text-3xl leading-none" role="img" aria-label="Nigeria flag">🇳🇬</span>
               <span className="text-xs font-black uppercase tracking-[0.2em] text-[#F4D66E]">Built for everyday Nigeria</span>
             </div>
 
-            <h1 className="mt-8 max-w-5xl text-5xl font-black leading-[0.96] tracking-tight drop-shadow-[0_4px_22px_rgba(0,0,0,0.5)] sm:text-7xl lg:text-8xl">
+            <h1 className="mt-6 max-w-5xl text-5xl font-black leading-[0.96] tracking-tight drop-shadow-[0_4px_22px_rgba(0,0,0,0.5)] sm:text-7xl lg:text-8xl">
               Trusted local help.
               <span className="block bg-gradient-to-r from-[#FFF2A8] via-[#D4AF37] to-[#F59E0B] bg-clip-text text-transparent">Booked the Rydah way.</span>
             </h1>
@@ -73,7 +73,7 @@ export default function Home() {
               <a href="/sign-in" className="rounded-2xl border border-white/25 bg-white/10 px-5 py-4 text-center text-base font-black text-white backdrop-blur-md transition hover:border-[#D4AF37]/60 hover:bg-white/15">Join Rydah</a>
             </div>
 
-            <div className="mt-10 grid max-w-4xl gap-3 sm:grid-cols-3">
+            <div className="mt-7 grid max-w-4xl gap-3 sm:grid-cols-3">
               <div className="rounded-2xl border border-violet-300/20 bg-violet-950/35 p-4 backdrop-blur-md"><p className="text-xs font-black text-violet-200">IDENTITY</p><p className="mt-1 font-bold">Rydah Verified providers</p></div>
               <div className="rounded-2xl border border-emerald-300/20 bg-emerald-950/35 p-4 backdrop-blur-md"><p className="text-xs font-black text-emerald-200">PAYMENTS</p><p className="mt-1 font-bold">Secure Paystack checkout</p></div>
               <div className="rounded-2xl border border-sky-300/20 bg-sky-950/35 p-4 backdrop-blur-md"><p className="text-xs font-black text-sky-200">ARRIVAL</p><p className="mt-1 font-bold">PIN + camera safety checks</p></div>
@@ -82,7 +82,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="relative mx-auto max-w-6xl px-5 py-10 sm:py-14">
+      <section className="relative mx-auto max-w-6xl px-5 py-7 sm:py-6 sm:py-7 sm:py-6">
         <div className="absolute -left-32 top-6 h-72 w-72 rounded-full bg-violet-600/10 blur-3xl" aria-hidden="true" />
         <div className="absolute -right-32 bottom-0 h-72 w-72 rounded-full bg-amber-500/10 blur-3xl" aria-hidden="true" />
 
@@ -112,7 +112,7 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="relative mt-6 overflow-hidden rounded-3xl border border-[#D4AF37]/20 bg-gradient-to-r from-[#D4AF37]/12 via-fuchsia-500/5 to-cyan-500/10 p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
+        <div className="relative mt-6 overflow-hidden rounded-3xl border border-[#D4AF37]/20 bg-gradient-to-r from-[#D4AF37]/12 via-fuchsia-500/5 to-cyan-500/10 p-6 sm:flex sm:items-center sm:justify-between sm:gap-4">
           <div>
             <p className="text-xs font-black tracking-widest text-[#E8C447]">PROFESSION NOT LISTED?</p>
             <h3 className="mt-2 text-2xl font-black">Rydah is built to grow beyond six trades.</h3>
@@ -122,7 +122,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-8">
+      <section className="mx-auto max-w-6xl px-5 py-6">
         <div className="mb-6">
           <p className="text-xs font-black tracking-widest text-[#D4AF37]">GROWING COVERAGE</p>
           <h2 className="mt-2 text-3xl font-black sm:text-4xl">One Rydah experience across more Nigerian cities.</h2>
@@ -142,9 +142,9 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-12">
+      <section className="mx-auto max-w-6xl px-5 py-6">
         <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#101010]">
-          <div className="relative min-h-[320px] overflow-hidden sm:min-h-[380px]">
+          <div className="relative min-h-[250px] overflow-hidden sm:min-h-[300px]">
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url('${thirdMainlandImage}')` }}
@@ -152,7 +152,7 @@ export default function Home() {
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/20" aria-hidden="true" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#101010] via-transparent to-transparent" aria-hidden="true" />
-            <div className="relative flex min-h-[320px] items-end p-7 sm:min-h-[380px] sm:p-10">
+            <div className="relative flex min-h-[250px] items-end p-5 sm:p-6 sm:min-h-[300px] sm:p-6 sm:p-5 sm:p-6">
               <div className="max-w-3xl">
                 <p className="text-xs font-black tracking-[0.2em] text-[#F3D56B]">LAGOS ENERGY • NIGERIAN REACH</p>
                 <h2 className="mt-3 text-3xl font-black sm:text-5xl">Built to feel local, wherever Rydah grows next.</h2>
@@ -161,10 +161,10 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="p-7 sm:p-10">
+          <div className="p-5 sm:p-6 sm:p-6 sm:p-5 sm:p-6">
             <p className="text-xs font-black tracking-widest text-[#D4AF37]">HOW RYDAH PROTECTS THE JOB</p>
             <h2 className="mt-3 max-w-3xl text-3xl font-black sm:text-4xl">Designed to keep trust, identity and payment inside the platform.</h2>
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
               {trustSteps.map((step, index) => (
                 <div key={step.title} className={`rounded-3xl border border-white/10 bg-gradient-to-br ${step.accent} p-6`}>
                   <div className={`flex h-10 w-10 items-center justify-center rounded-full ${step.badge} text-sm font-black text-black shadow-lg`}>{index + 1}</div>
@@ -177,9 +177,9 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-10">
+      <section className="mx-auto max-w-6xl px-5 py-7 sm:py-6">
         <div className="grid gap-5 lg:grid-cols-2">
-          <div className="relative overflow-hidden rounded-3xl border border-orange-300/20 bg-gradient-to-br from-orange-500/20 via-rose-500/10 to-[#0d0d0d] p-8 shadow-[0_18px_50px_rgba(249,115,22,0.08)]">
+          <div className="relative overflow-hidden rounded-3xl border border-orange-300/20 bg-gradient-to-br from-orange-500/20 via-rose-500/10 to-[#0d0d0d] p-5 sm:p-6 shadow-[0_18px_50px_rgba(249,115,22,0.08)]">
             <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#D4AF37]/15 blur-3xl" aria-hidden="true" />
             <p className="relative text-xs font-black tracking-widest text-amber-300">URGENT HELP</p>
             <h2 className="relative mt-3 text-3xl font-black">Need someone quickly?</h2>
@@ -187,7 +187,7 @@ export default function Home() {
             <a href="/post-job?urgent=1" className="relative mt-6 inline-block rounded-2xl bg-gradient-to-r from-[#D4AF37] to-amber-300 px-6 py-4 font-black text-black transition hover:-translate-y-0.5">Request Urgent Help</a>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-cyan-500/15 via-blue-500/10 to-[#0d0d0d] p-8">
+          <div className="relative overflow-hidden rounded-3xl border border-cyan-300/20 bg-gradient-to-br from-cyan-500/15 via-blue-500/10 to-[#0d0d0d] p-5 sm:p-6">
             <div className="absolute -bottom-20 -right-14 h-44 w-44 rounded-full bg-cyan-400/10 blur-3xl" aria-hidden="true" />
             <div className="relative text-4xl">🛡️</div>
             <p className="relative mt-5 text-xs font-black tracking-widest text-cyan-200">STAY ON RYDAH</p>
@@ -197,11 +197,11 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-10">
-        <div className="relative overflow-hidden rounded-[2rem] border border-violet-300/20 bg-gradient-to-br from-violet-500/15 via-[#17130a] to-emerald-500/10 p-8 sm:p-10">
+      <section className="mx-auto max-w-6xl px-5 py-7 sm:py-6">
+        <div className="relative overflow-hidden rounded-[2rem] border border-violet-300/20 bg-gradient-to-br from-violet-500/15 via-[#17130a] to-emerald-500/10 p-5 sm:p-6 sm:p-6 sm:p-5 sm:p-6">
           <div className="absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-violet-400/10 blur-3xl" aria-hidden="true" />
           <div className="absolute -right-16 top-0 h-48 w-48 rounded-full bg-emerald-400/10 blur-3xl" aria-hidden="true" />
-          <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs font-black tracking-widest text-[#E2C55C]">RYDAH CARE</p>
               <h2 className="mt-2 text-3xl font-black">Need help choosing the next step?</h2>
@@ -212,7 +212,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="mt-12 border-t border-white/10 bg-gradient-to-b from-[#090909] to-black px-5 py-12 text-center">
+      <footer className="mt-6 border-t border-white/10 bg-gradient-to-b from-[#090909] to-black px-5 py-6 text-center">
         <div className="flex justify-center"><BrandLogo /></div>
         <p className="mt-3 text-sm text-zinc-500">Trusted local help. Booked the Rydah way.</p>
         <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm">

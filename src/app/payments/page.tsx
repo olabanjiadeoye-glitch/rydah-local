@@ -204,7 +204,7 @@ export default function PaymentsPage() {
   }
 
   if (loading) {
-    return <main className="min-h-screen bg-[#080808] p-8 text-zinc-400">Loading payment…</main>;
+    return <main className="min-h-screen bg-[#080808] p-5 sm:p-6 text-zinc-400">Loading payment…</main>;
   }
 
   const amount = job?.quoted_amount ?? job?.providers?.starting_price ?? 0;
@@ -227,7 +227,7 @@ export default function PaymentsPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-3xl px-5 py-10">
+      <section className="mx-auto max-w-3xl px-5 py-7 sm:py-6">
         <div className="mb-5 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-4 text-sm text-[#E7C85A]">
           Secure checkout is handled by Paystack. Rydah never asks you to enter card details directly on this page.
         </div>

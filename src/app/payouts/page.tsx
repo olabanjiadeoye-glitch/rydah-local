@@ -215,7 +215,7 @@ export default function PayoutsPage() {
     }
   }
 
-  if (loading) return <main className="min-h-screen bg-[#080808] p-8 text-zinc-400">Loading provider settlements…</main>;
+  if (loading) return <main className="min-h-screen bg-[#080808] p-5 sm:p-6 text-zinc-400">Loading provider settlements…</main>;
 
   return (
     <main className="min-h-screen bg-[#080808] text-white">
@@ -232,9 +232,9 @@ export default function PayoutsPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-5xl px-5 py-10">
+      <section className="mx-auto max-w-5xl px-5 py-7 sm:py-6">
         {!provider ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7">No provider profile found.</div>
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">No provider profile found.</div>
         ) : (
           <>
             <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-4 text-sm text-emerald-300">
@@ -318,7 +318,7 @@ export default function PayoutsPage() {
               </form>
             )}
 
-            <div className="mt-8">
+            <div className="mt-6">
               <div className="flex items-end justify-between gap-3">
                 <div>
                   <p className="text-sm font-black tracking-[0.16em] text-[#D4AF37]">PAYOUT HISTORY</p>
@@ -328,7 +328,7 @@ export default function PayoutsPage() {
               </div>
               <div className="mt-5 grid gap-4">
                 {payouts.length === 0 ? (
-                  <div className="rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">No payout requests yet.</div>
+                  <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">No payout requests yet.</div>
                 ) : payouts.map((payout) => (
                   <article key={payout.id} className="rounded-3xl border border-white/10 bg-[#121212] p-6">
                     <div className="flex flex-wrap items-start justify-between gap-4">
