@@ -247,7 +247,7 @@ export default function ProviderOnboardingPage() {
 
     try {
       const selfieData = selfie ? await fileToDataUrl(selfie) : "";
-      const result = await callIdentityBackend(activeSession, {
+      const result = await callIdentityBackend(session, {
         action: "verify_face_id",
         id_number: fullIdNumber,
         selfie: selfieData,
@@ -258,11 +258,11 @@ export default function ProviderOnboardingPage() {
       setFullIdNumber("");
       setSelfie(null);
       setFaceConsent(false);
-      await load(activeSession);
+      await load(session);
     } catch (caught) {
       setMessage("");
       setError(caught instanceof Error ? caught.message : "Unable to complete face and ID verification.");
-      await load(activeSession);
+      await load(session);
     } finally {
       setFaceSaving(false);
     }
@@ -346,7 +346,7 @@ export default function ProviderOnboardingPage() {
     setMessage("Preparing secure live camera verification…");
 
     try {
-      const credentials = await callIdentityBackend(activeSession, { action: "liveness_session" });
+      const credentials = await callIdentityBackend(session, { action: "liveness_session" });
       if (!credentials.session_id || !credentials.session_token) {
         throw new Error("Live verification session could not be created.");
       }
