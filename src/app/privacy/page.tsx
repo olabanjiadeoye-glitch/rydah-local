@@ -55,6 +55,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-black text-white">Your choices and rights</h2>
             <p className="mt-2">Depending on applicable law, you may have rights to request access, correction, deletion, restriction, objection, or information about the handling of your personal data. Some records may need to be retained where required for transactions, fraud prevention, disputes, safety, or legal obligations.</p>
+            <p className="mt-3">To request deletion of your Rydah account and associated personal data, use our <a className="font-bold text-[#D4AF37]" href="/delete-account">account deletion page</a>.</p>
           </section>
 
           <section>
