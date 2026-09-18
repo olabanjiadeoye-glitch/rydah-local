@@ -1,0 +1,67 @@
+name: Android TWA Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "release/android/**"
+      - "public/rydah-icon.svg"
+      - ".github/workflows/android-twa.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android API 36
+        run: |
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Install Bubblewrap
+        run: npm install --global @bubblewrap/cli
+
+      - name: Generate Android project
+        run: |
+          mkdir -p build/android-twa
+          cp release/android/twa-manifest.json build/android-twa/twa-manifest.json
+          cd build/android-twa
+          bubblewrap update --skipVersionUpgrade --manifest=. --androidSdkPath="$ANDROID_HOME"
+
+      - name: Build unsigned Android App Bundle
+        run: |
+          cd build/android-twa
+          bubblewrap build --skipPwaValidation --skipSigning --manifest=.
+
+      - name: Upload Android build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rydah-local-android-unsigned
+          if-no-files-found: error
+          path: |
+            build/android-twa/app-release-bundle.aab
+            build/android-twa/app-release-unsigned.apk
+            build/android-twa/app-release-signed.apk
+            build/android-twa/twa-manifest.json
