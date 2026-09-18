@@ -12,5 +12,10 @@
   "category": "BUSINESS",
   "supportUrl": "https://rydahlocal.online/support",
   "privacyPolicyUrl": "https://rydahlocal.online/privacy",
-  "status": "approved-for-native-packaging"
+  "status": "approved-for-native-packaging",
+  "targetCities": [
+    "Lagos",
+    "Abuja",
+    "Ibadan"
+  ]
 }
