@@ -1,12 +1,12 @@
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-[#080808] px-5 py-10 text-white">
+    <main className="min-h-screen bg-[#080808] px-5 py-7 sm:py-6 text-white">
       <article className="mx-auto max-w-3xl">
         <a href="/" className="text-sm font-black tracking-[0.2em] text-[#D4AF37]">RYDAH LOCAL</a>
         <h1 className="mt-4 text-4xl font-black">Privacy Notice</h1>
         <p className="mt-3 text-sm text-zinc-500">Effective: 18 September 2026</p>
 
-        <div className="mt-8 space-y-8 text-sm leading-7 text-zinc-300">
+        <div className="mt-6 space-y-8 text-sm leading-7 text-zinc-300">
           <section>
             <h2 className="text-xl font-black text-white">What we collect</h2>
             <p className="mt-2">Rydah Local may collect account details, contact information, job and service information, transaction records, provider profile and verification information, device/session information, profession-interest submissions, and support communications needed to operate the marketplace.</p>
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
           </section>
         </div>
 
-        <div className="mt-10 flex flex-wrap gap-3">
+        <div className="mt-7 flex flex-wrap gap-3">
           <a href="/terms" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Terms</a>
           <a href="/support" className="rounded-xl border border-[#D4AF37]/40 px-4 py-2 font-bold text-[#D4AF37]">Support</a>
           <a href="/" className="rounded-xl bg-[#D4AF37] px-4 py-2 font-bold text-black">Home</a>

@@ -472,7 +472,7 @@ export default function ProviderDashboardPage() {
   }
 
   if (loading) {
-    return <main className="min-h-screen bg-[#080808] p-8 text-zinc-400">Loading provider dashboard...</main>;
+    return <main className="min-h-screen bg-[#080808] p-5 sm:p-6 text-zinc-400">Loading provider dashboard...</main>;
   }
 
   const role = session?.user.user_metadata?.role;
@@ -492,7 +492,7 @@ export default function ProviderDashboardPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-5xl px-5 py-10">
+      <section className="mx-auto max-w-5xl px-5 py-7 sm:py-6">
         {message && <div className="mb-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">{message}</div>}
         {error && <div className="mb-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
@@ -574,13 +574,13 @@ export default function ProviderDashboardPage() {
         )}
 
         {role !== "provider" && !provider ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7">
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">
             <h2 className="text-2xl font-black">This is a customer account</h2>
             <p className="mt-3 text-zinc-400">Use a provider account to access this dashboard.</p>
             <a href="/providers" className="mt-6 inline-block rounded-2xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Browse Providers</a>
           </div>
         ) : !provider ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7">
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">
             <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">WELCOME TO RYDAH</p>
             <h2 className="mt-2 text-3xl font-black">Set up your provider profile</h2>
             <form onSubmit={createProviderProfile} className="mt-7 grid gap-5 md:grid-cols-2">
@@ -677,12 +677,12 @@ export default function ProviderDashboardPage() {
               <strong className="text-[#D4AF37]">Keep Rydah jobs on-platform.</strong> Customer phone, email and private job GPS coordinates are released only after the customer accepts your quote. Direct provider access to hidden contact or GPS fields is blocked by the Rydah backend, not just hidden on screen.
             </div>
 
-            <div className="mt-8">
+            <div className="mt-6">
               <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">CUSTOMER REQUESTS</p>
               <h2 className="mt-1 text-3xl font-black">Jobs assigned to you</h2>
 
               {jobs.length === 0 ? (
-                <div className="mt-5 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">No assigned jobs yet.</div>
+                <div className="mt-5 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">No assigned jobs yet.</div>
               ) : (
                 <div className="mt-5 grid gap-4">
                   {jobs.map((job) => {

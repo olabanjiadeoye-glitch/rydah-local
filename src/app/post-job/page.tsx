@@ -225,7 +225,7 @@ export default function PostJobPage() {
   };
 
   if (!ready) {
-    return <main className="min-h-screen bg-[#080808] p-8 text-zinc-400">Preparing your job request...</main>;
+    return <main className="min-h-screen bg-[#080808] p-5 sm:p-6 text-zinc-400">Preparing your job request...</main>;
   }
 
   return (
@@ -240,9 +240,9 @@ export default function PostJobPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-3xl px-5 py-10">
+      <section className="mx-auto max-w-3xl px-5 py-7 sm:py-6">
         {submitted ? (
-          <div className="rounded-3xl border border-[#D4AF37]/30 bg-[#121212] p-8 text-center">
+          <div className="rounded-3xl border border-[#D4AF37]/30 bg-[#121212] p-5 sm:p-6 text-center">
             <div className="text-5xl">✓</div>
             <h2 className="mt-4 text-3xl font-black">Request sent</h2>
             <p className="mt-3 text-zinc-400">Your {urgent ? "urgent " : ""}request has been assigned to an available biometric-verified provider.</p>

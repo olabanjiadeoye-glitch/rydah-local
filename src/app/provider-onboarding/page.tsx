@@ -675,9 +675,9 @@ export default function ProviderOnboardingPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#080808] px-5 py-10 text-white">
+      <main className="min-h-screen bg-[#080808] px-5 py-7 sm:py-6 text-white">
         <div className="mx-auto max-w-xl">
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">
             Loading your setup…
           </div>
         </div>
@@ -1069,7 +1069,7 @@ export default function ProviderOnboardingPage() {
                 )}
               </div>
             ) : !provider.is_verified ? (
-              <div className="rounded-3xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-7 text-center">
+              <div className="rounded-3xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-5 sm:p-6 text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-2xl text-emerald-300">✓</div>
                 <h1 className="mt-4 text-3xl font-black">Face check complete</h1>
                 <p className="mt-3 text-sm leading-6 text-zinc-300">
@@ -1089,7 +1089,7 @@ export default function ProviderOnboardingPage() {
         )}
 
         {currentStep === 5 && provider && billing && (
-          <div className="mt-6 rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/30 to-[#101010] p-7 text-center">
+          <div className="mt-6 rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/30 to-[#101010] p-5 sm:p-6 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-3xl text-emerald-300">✓</div>
             <p className="mt-5 text-xs font-black tracking-[0.18em] text-emerald-300">SETUP COMPLETE</p>
             <h1 className="mt-2 text-4xl font-black">You’re ready for Rydah jobs</h1>

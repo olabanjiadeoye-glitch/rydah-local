@@ -110,14 +110,14 @@ export default function ChangeProviderIdPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-3xl px-5 py-10">
+      <section className="mx-auto max-w-3xl px-5 py-7 sm:py-6">
         {loading ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">Loading verification details…</div>
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">Loading verification details…</div>
         ) : !provider || !verification ? (
-          <div className="rounded-3xl border border-red-500/20 bg-red-950/20 p-7 text-red-200">Provider verification record not found.</div>
+          <div className="rounded-3xl border border-red-500/20 bg-red-950/20 p-5 sm:p-6 text-red-200">Provider verification record not found.</div>
         ) : (
           <>
-            <div className="rounded-3xl border border-white/10 bg-[#121212] p-7">
+            <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">
               <p className="text-sm text-zinc-500">Provider</p>
               <h2 className="mt-1 text-2xl font-black">{provider.business_name}</h2>
               <p className="mt-3 text-sm text-zinc-400">Current ID type: <span className="font-bold text-white">{verification.id_type}</span></p>
@@ -126,7 +126,7 @@ export default function ChangeProviderIdPage() {
             {message && <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">{message}</div>}
             {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
-            <form onSubmit={save} className="mt-6 grid gap-5 rounded-3xl border border-[#D4AF37]/25 bg-[#121212] p-7">
+            <form onSubmit={save} className="mt-6 grid gap-5 rounded-3xl border border-[#D4AF37]/25 bg-[#121212] p-5 sm:p-6">
               <div>
                 <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">FACE & ID MATCH</p>
                 <h3 className="mt-2 text-3xl font-black">Choose a supported ID</h3>

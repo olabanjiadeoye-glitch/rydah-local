@@ -145,8 +145,8 @@ export default function ProviderInterestPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-4xl px-5 py-10">
-        <div className="rounded-3xl border border-[#D4AF37]/25 bg-gradient-to-br from-[#17130a] to-[#101010] p-7">
+      <section className="mx-auto max-w-4xl px-5 py-7 sm:py-6">
+        <div className="rounded-3xl border border-[#D4AF37]/25 bg-gradient-to-br from-[#17130a] to-[#101010] p-5 sm:p-6">
           <p className="text-xs font-black tracking-[0.2em] text-[#D4AF37]">DON&apos;T SEE YOUR TRADE?</p>
           <h2 className="mt-3 text-3xl font-black">Tell Rydah what you do.</h2>
           <p className="mt-3 max-w-2xl leading-7 text-zinc-400">
@@ -157,7 +157,7 @@ export default function ProviderInterestPage() {
         {message && <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">{message}</div>}
         {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
-        <form onSubmit={submit} className="mt-6 grid gap-5 rounded-3xl border border-white/10 bg-[#121212] p-7 md:grid-cols-2">
+        <form onSubmit={submit} className="mt-6 grid gap-5 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 md:grid-cols-2">
           <label className="block md:col-span-2">
             <span className="text-sm font-bold">Profession / service</span>
             <input required minLength={2} maxLength={80} value={profession} onChange={(event) => setProfession(event.target.value)} placeholder="e.g. Carpenter, Painter, Appliance Repair" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
@@ -202,7 +202,7 @@ export default function ProviderInterestPage() {
           </button>
         </form>
 
-        <div className="mt-8">
+        <div className="mt-6">
           <div className="flex items-end justify-between gap-3">
             <div>
               <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">YOUR SUBMISSIONS</p>
