@@ -247,7 +247,7 @@ export default function ProviderOnboardingPage() {
 
     try {
       const selfieData = selfie ? await fileToDataUrl(selfie) : "";
-      const result = await callIdentityBackend(session, {
+      const result = await callIdentityBackend(activeSession, {
         action: "verify_face_id",
         id_number: fullIdNumber,
         selfie: selfieData,
@@ -258,25 +258,42 @@ export default function ProviderOnboardingPage() {
       setFullIdNumber("");
       setSelfie(null);
       setFaceConsent(false);
-      await load(session);
+      await load(activeSession);
     } catch (caught) {
       setMessage("");
       setError(caught instanceof Error ? caught.message : "Unable to complete face and ID verification.");
-      await load(session);
+      await load(activeSession);
     } finally {
       setFaceSaving(false);
     }
   }
 
   async function completeLiveFaceVerification(livenessSessionId: string) {
-    if (!session) return;
+    const activeSession = session ?? getStoredSession();
+    if (!activeSession) {
+      setError("Please sign in again before checking verification.");
+      return;
+    }
+    if (!livenessSessionId) {
+      setError("No saved live verification session was found.");
+      return;
+    }
+    if (!fullIdNumber.trim()) {
+      setError("Enter the full ID number before checking the latest result.");
+      return;
+    }
+    if (!faceConsent) {
+      setError("Confirm consent before checking the latest result.");
+      return;
+    }
+    setLiveFaceSaving(true);
 
     setMessage("Live presence confirmed. Finalizing the liveness result and matching the live face with the identity record…");
     setError("");
 
     for (let attempt = 1; attempt <= 6; attempt += 1) {
       try {
-        const result = await callIdentityBackend(session, {
+        const result = await callIdentityBackend(activeSession, {
           action: "complete_live_verification",
           id_number: fullIdNumber,
           session_id: livenessSessionId,
@@ -286,7 +303,7 @@ export default function ProviderOnboardingPage() {
         setFullIdNumber("");
         setSelfie(null);
         setFaceConsent(false);
-        await load(session);
+        await load(activeSession);
         setLiveFaceSaving(false);
         return;
       } catch (caught) {
@@ -299,7 +316,7 @@ export default function ProviderOnboardingPage() {
 
         setMessage("");
         setError(detail);
-        await load(session);
+        await load(activeSession);
         setLiveFaceSaving(false);
         return;
       }
@@ -329,7 +346,7 @@ export default function ProviderOnboardingPage() {
     setMessage("Preparing secure live camera verification…");
 
     try {
-      const credentials = await callIdentityBackend(session, { action: "liveness_session" });
+      const credentials = await callIdentityBackend(activeSession, { action: "liveness_session" });
       if (!credentials.session_id || !credentials.session_token) {
         throw new Error("Live verification session could not be created.");
       }
@@ -557,7 +574,7 @@ export default function ProviderOnboardingPage() {
                               onClick={() => void completeLiveFaceVerification(verification.biometric_liveness_session_id || "")}
                               className="md:col-span-2 rounded-2xl border border-[#D4AF37]/40 px-5 py-4 font-black text-[#D4AF37] disabled:opacity-40"
                             >
-                              Check Latest Verification Result
+                              {liveFaceSaving ? "Checking Latest Result…" : "Check Latest Verification Result"}
                             </button>
                           )}
                           <div className="md:col-span-2 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-zinc-400">
