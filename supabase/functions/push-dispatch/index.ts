@@ -36,7 +36,9 @@ async function rpc<T>(name: string, payload: Record<string, unknown>): Promise<T
     method: "POST",
     body: JSON.stringify(payload),
   });
-  return await response.json() as T;
+  const text = await response.text();
+  if (!text.trim()) return undefined as T;
+  return JSON.parse(text) as T;
 }
 
 async function getSecret(name: string) {
