@@ -195,6 +195,22 @@ Deno.serve(async (req) => {
       }
 
       const { sessionId, sessionToken } = await generateLivenessSession(config, provider.id, user.id);
+      const startedAt = new Date().toISOString();
+      await supabaseRequest(`provider_verifications?id=eq.${encodeURIComponent(verification.id)}`, {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({
+          biometric_status: "pending",
+          biometric_provider: "youverify",
+          biometric_liveness_session_id: sessionId,
+          biometric_liveness_verified_at: null,
+          biometric_liveness_result: "pending",
+          biometric_result_code: "liveness_pending",
+          biometric_result_text: "Live camera verification started.",
+          biometric_updated_at: startedAt,
+          updated_at: startedAt,
+        }),
+      });
       return json({
         ok: true,
         environment: config.environment,
@@ -207,7 +223,7 @@ Deno.serve(async (req) => {
       if (body.consent !== true) return json({ error: "Consent is required before live face verification" }, 400);
       if (!config.token) return json({ error: "Rydah face verification provider is not connected yet." }, 503);
 
-      const livenessSessionId = String(body.session_id || "").trim();
+      const livenessSessionId = String(body.session_id || verification.biometric_liveness_session_id || "").trim();
       if (!livenessSessionId) return json({ error: "Liveness session is missing. Start the live camera check again." }, 400);
 
       const history = await youverifyGet(
@@ -221,22 +237,33 @@ Deno.serve(async (req) => {
       );
 
       if (!liveResult) {
-        const failedAt = new Date().toISOString();
+        const sessionResults = docs.filter((item: any) => String(item?.sessionId || "") === livenessSessionId);
+        const explicitFailure = sessionResults.some((item: any) => item?.passed === false);
+        const checkedAt = new Date().toISOString();
+
         await supabaseRequest(`provider_verifications?id=eq.${encodeURIComponent(verification.id)}`, {
           method: "PATCH",
           headers: { Prefer: "return=minimal" },
           body: JSON.stringify({
-            biometric_status: "failed",
-            biometric_result_code: "liveness_failed",
-            biometric_result_text: "Live face check did not pass. Please retry using the camera.",
+            biometric_status: explicitFailure ? "failed" : "pending",
+            biometric_result_code: explicitFailure ? "liveness_failed" : "liveness_processing",
+            biometric_result_text: explicitFailure
+              ? "Live face check did not pass. Please retry using the camera."
+              : "Live face result is still being finalized. Please check again in a moment.",
             biometric_liveness_session_id: livenessSessionId,
             biometric_liveness_verified_at: null,
-            biometric_liveness_result: "failed",
-            biometric_updated_at: failedAt,
-            updated_at: failedAt,
+            biometric_liveness_result: explicitFailure ? "failed" : "processing",
+            biometric_updated_at: checkedAt,
+            updated_at: checkedAt,
           }),
         });
-        return json({ error: "Live face check did not pass. Please retry using the camera." }, 422);
+
+        return json(
+          { error: explicitFailure
+              ? "Live face check did not pass. Please retry using the camera."
+              : "Live face result is still being finalized. Please check again in a moment." },
+          explicitFailure ? 422 : 409,
+        );
       }
 
       const liveFaceImage = String(liveResult?.faceImage || "").trim();
@@ -270,7 +297,7 @@ Deno.serve(async (req) => {
 
       if (idNumber.length < 5) return json({ error: "Enter the full ID number for this verification only" }, 400);
 
-      const isSandboxTestNin = config.environment === "sandbox" && idNumber === "11111111111";
+      const isSandboxTestNin = config.environment === "sandbox" && idNumber === "11111111111" && body.liveness_verified !== true;
       if (useSandboxSample || isSandboxTestNin) {
         if (config.environment !== "sandbox") {
           return json({ error: "The built-in test image is available only while Youverify is in sandbox mode" }, 400);
