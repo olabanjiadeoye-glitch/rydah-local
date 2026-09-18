@@ -1,7 +1,7 @@
 import Link from "next/link";
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-[#080808] px-5 py-7 sm:py-6 text-white">
+    <main className="min-h-screen bg-[#080808] px-5 py-6 sm:py-8 text-white">
       <article className="mx-auto max-w-3xl">
         <Link href="/" className="text-sm font-black tracking-[0.2em] text-[#D4AF37]">RYDAH LOCAL</Link>
         <h1 className="mt-4 text-4xl font-black">Terms of Use</h1>

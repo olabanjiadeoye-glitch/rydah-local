@@ -37,7 +37,7 @@ export default function VerificationStatusPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#080808] px-5 py-7 sm:py-6 text-white">
+    <main className="min-h-screen bg-[#080808] px-5 py-6 sm:py-8 text-white">
       <section className="mx-auto max-w-2xl">
         <p className="text-sm font-black tracking-[0.2em] text-[#D4AF37]">RYDAH LOCAL</p>
         <h1 className="mt-2 text-3xl font-black">Face & ID connection status</h1>
