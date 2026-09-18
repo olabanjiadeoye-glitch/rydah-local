@@ -246,7 +246,7 @@ export default function ArrivalCheckPage() {
         </div>
       </header>
 
-      <section className="mx-auto max-w-4xl px-5 py-10">
+      <section className="mx-auto max-w-4xl px-5 py-7 sm:py-6">
         <div className="rounded-3xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 p-6">
           <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">BEFORE WORK STARTS</p>
           <h2 className="mt-2 text-3xl font-black">Confirm the right provider arrived</h2>
@@ -259,9 +259,9 @@ export default function ArrivalCheckPage() {
         {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
         {loading ? (
-          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">Loading arrival checks…</div>
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">Loading arrival checks…</div>
         ) : jobs.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-7">
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">
             <h3 className="text-xl font-black">No arrival check is needed right now</h3>
             <p className="mt-2 text-zinc-400">A job will appear here after the provider has accepted it and you have accepted the quote.</p>
           </div>
