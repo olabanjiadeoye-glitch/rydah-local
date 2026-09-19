@@ -104,6 +104,8 @@ Deno.serve(async (req) => {
       title?: string;
       body?: string;
       link?: string;
+      kind?: string;
+      notification_id?: string;
     };
 
     const vapid = await ensureVapidConfig();
@@ -133,6 +135,8 @@ Deno.serve(async (req) => {
       title: String(body.title || "Rydah Local"),
       body: String(body.body || "You have a new Rydah update."),
       url: String(body.link || "/notifications"),
+      kind: String(body.kind || "general"),
+      notification_id: String(body.notification_id || ""),
       icon: "/rydah-icon.svg",
       badge: "/rydah-icon.svg",
     });
