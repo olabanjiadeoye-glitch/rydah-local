@@ -1,51 +1,83 @@
 export const RYDAH_TARGET_CITIES = ["Lagos", "Abuja", "Ibadan", "Warri", "Port Harcourt"] as const;
 
-export const RYDAH_SERVICE_AREAS = [
-  "Lekki, Lagos",
-  "Victoria Island, Lagos",
-  "Ikeja, Lagos",
-  "Ajah, Lagos",
-  "Surulere, Lagos",
-  "Yaba, Lagos",
-  "Mainland, Lagos",
-  "Other Lagos area",
-  "Wuse, Abuja",
-  "Garki, Abuja",
-  "Maitama, Abuja",
-  "Gwarinpa, Abuja",
-  "Jabi, Abuja",
-  "Kubwa, Abuja",
-  "Lugbe, Abuja",
-  "Other Abuja area",
-  "Bodija, Ibadan",
-  "Dugbe, Ibadan",
-  "Ring Road, Ibadan",
-  "Challenge, Ibadan",
-  "Akobo, Ibadan",
-  "Mokola, Ibadan",
-  "Apata, Ibadan",
-  "Oluyole, Ibadan",
-  "Akala, Ibadan",
-  "Jericho, Ibadan",
-  "Iyaganku, Ibadan",
-  "Other Ibadan area",
-  "Warri Central, Warri",
-  "Effurun, Warri",
-  "Enerhen, Warri",
-  "Udu, Warri",
-  "Ekpan, Warri",
-  "Airport Road, Warri",
-  "Other Warri area",
-  "GRA, Port Harcourt",
-  "D-Line, Port Harcourt",
-  "Rumuola, Port Harcourt",
-  "Rumuokoro, Port Harcourt",
-  "Woji, Port Harcourt",
-  "Trans Amadi, Port Harcourt",
-  "Other Port Harcourt area",
-] as const;
+export type RydahTargetCity = (typeof RYDAH_TARGET_CITIES)[number];
+
+export const RYDAH_SERVICE_AREAS_BY_CITY: Record<RydahTargetCity, readonly string[]> = {
+  Lagos: [
+    "Lekki, Lagos",
+    "Victoria Island, Lagos",
+    "Ikeja, Lagos",
+    "Ajah, Lagos",
+    "Surulere, Lagos",
+    "Yaba, Lagos",
+    "Mainland, Lagos",
+    "Other Lagos area",
+  ],
+  Abuja: [
+    "Wuse, Abuja",
+    "Garki, Abuja",
+    "Maitama, Abuja",
+    "Gwarinpa, Abuja",
+    "Jabi, Abuja",
+    "Kubwa, Abuja",
+    "Lugbe, Abuja",
+    "Other Abuja area",
+  ],
+  Ibadan: [
+    "Bodija, Ibadan",
+    "Dugbe, Ibadan",
+    "Ring Road, Ibadan",
+    "Challenge, Ibadan",
+    "Akobo, Ibadan",
+    "Mokola, Ibadan",
+    "Apata, Ibadan",
+    "Oluyole, Ibadan",
+    "Akala, Ibadan",
+    "Jericho, Ibadan",
+    "Iyaganku, Ibadan",
+    "Other Ibadan area",
+  ],
+  Warri: [
+    "Warri Central, Warri",
+    "Effurun, Warri",
+    "Enerhen, Warri",
+    "Udu, Warri",
+    "Ekpan, Warri",
+    "Airport Road, Warri",
+    "Other Warri area",
+  ],
+  "Port Harcourt": [
+    "GRA, Port Harcourt",
+    "D-Line, Port Harcourt",
+    "Rumuola, Port Harcourt",
+    "Rumuokoro, Port Harcourt",
+    "Woji, Port Harcourt",
+    "Trans Amadi, Port Harcourt",
+    "Other Port Harcourt area",
+  ],
+};
+
+export const RYDAH_SERVICE_AREAS = RYDAH_TARGET_CITIES.flatMap(
+  (city) => RYDAH_SERVICE_AREAS_BY_CITY[city],
+);
 
 export const RYDAH_DEFAULT_SERVICE_AREA = "Lekki, Lagos";
+
+export function serviceAreasForCity(city: RydahTargetCity) {
+  return RYDAH_SERVICE_AREAS_BY_CITY[city];
+}
+
+export function displayServiceArea(area: string) {
+  for (const city of RYDAH_TARGET_CITIES) {
+    if (area === `Other ${city} area`) return "Other area";
+    const suffix = `, ${city}`;
+    if (area.endsWith(suffix)) {
+      const name = area.slice(0, -suffix.length);
+      return city === "Warri" && name === "Warri Central" ? "Central" : name;
+    }
+  }
+  return area;
+}
 
 type AreaCenter = {
   latitude: number;
@@ -96,11 +128,11 @@ export const RYDAH_SERVICE_AREA_CENTERS: Record<string, AreaCenter> = {
   "Trans Amadi, Port Harcourt": { latitude: 4.8060, longitude: 7.0400 },
 };
 
-export function cityFromServiceArea(area: string) {
-  const city = RYDAH_TARGET_CITIES.find((candidate) =>
-    area.toLowerCase().includes(candidate.toLowerCase()),
-  );
-  return city ?? "Other";
+export function cityFromServiceArea(area: string): RydahTargetCity | "Other" {
+  for (const city of RYDAH_TARGET_CITIES) {
+    if (area === city || RYDAH_SERVICE_AREAS_BY_CITY[city].includes(area)) return city;
+  }
+  return "Other";
 }
 
 function toRadians(value: number) {
