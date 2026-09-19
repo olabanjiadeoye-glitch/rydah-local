@@ -1,4 +1,4 @@
-const CACHE_NAME = "rydah-shell-v2";
+const CACHE_NAME = "rydah-shell-v3";
 const SHELL = ["/", "/rydah-icon.svg", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -46,6 +46,8 @@ self.addEventListener("push", (event) => {
     url: "/notifications",
     icon: "/rydah-icon.svg",
     badge: "/rydah-icon.svg",
+    kind: "general",
+    notification_id: "",
   };
 
   if (event.data) {
@@ -57,6 +59,12 @@ self.addEventListener("push", (event) => {
     }
   }
 
+  const isIncomingJob = payload.kind === "job_assigned";
+  const notificationId = String(payload.notification_id || "");
+  const tag = notificationId
+    ? `rydah-${payload.kind || "notification"}-${notificationId}`
+    : `rydah-${payload.kind || "notification"}`;
+
   event.waitUntil(
     self.registration.showNotification(payload.title || "Rydah Local", {
       body: payload.body || "You have a new Rydah update.",
@@ -64,9 +72,14 @@ self.addEventListener("push", (event) => {
       badge: payload.badge || "/rydah-icon.svg",
       data: {
         url: payload.url || "/notifications",
+        kind: payload.kind || "general",
+        notificationId,
       },
-      tag: "rydah-notification",
+      tag,
       renotify: true,
+      requireInteraction: isIncomingJob,
+      silent: false,
+      ...(isIncomingJob ? { vibrate: [250, 120, 250, 120, 450] } : {}),
     })
   );
 });
