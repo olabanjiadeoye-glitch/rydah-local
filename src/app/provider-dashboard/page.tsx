@@ -14,7 +14,7 @@ import {
 } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
 import { getCurrentDeviceLocation } from "@/lib/device-location";
-import { RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
+import { displayServiceArea, RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
 
 type ProviderRow = {
   id: string;
@@ -606,7 +606,7 @@ export default function ProviderDashboardPage() {
                   }}
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
                 >
-                  {locations.map((item) => <option key={item}>{item}</option>)}
+                  {locations.map((item) => <option key={item} value={item}>{displayServiceArea(item)}</option>)}
                 </select>
                 <button
                   type="button"
@@ -645,7 +645,7 @@ export default function ProviderDashboardPage() {
                       <h2 className="text-2xl font-black">{provider.business_name}</h2>
                       <span className={`rounded-full px-3 py-1 text-xs font-black ${biometricStatus === "verified" ? "bg-emerald-500/15 text-emerald-400" : provider.is_verified ? "bg-amber-500/15 text-amber-300" : "bg-zinc-800 text-zinc-400"}`}>{biometricStatus === "verified" ? "✓ BIOMETRIC VERIFIED" : provider.is_verified ? "ID REVIEWED • BIOMETRIC REQUIRED" : "VERIFICATION PENDING"}</span>
                     </div>
-                    <p className="mt-2 text-zinc-400">{provider.service_category} • {provider.location}</p>
+                    <p className="mt-2 text-zinc-400">{provider.service_category} • {displayServiceArea(provider.location)}</p>
                     {provider.description && <p className="mt-4 text-sm leading-6 text-zinc-400">{provider.description}</p>}
                     <div className="mt-4 flex flex-wrap items-center gap-3">
                       <button
@@ -707,7 +707,7 @@ export default function ProviderDashboardPage() {
                               {job.is_urgent && <span className="rounded-full bg-red-500/15 px-3 py-1 text-xs font-black text-red-300">URGENT</span>}
                               <span className="rounded-full bg-[#D4AF37]/10 px-3 py-1 text-xs font-black text-[#D4AF37]">{label(job.status)}</span>
                             </div>
-                            <p className="mt-2 text-sm text-zinc-500">{job.location} • {new Date(job.created_at).toLocaleString()}</p>
+                            <p className="mt-2 text-sm text-zinc-500">{displayServiceArea(job.location)} • {new Date(job.created_at).toLocaleString()}</p>
                           </div>
                         </div>
 
