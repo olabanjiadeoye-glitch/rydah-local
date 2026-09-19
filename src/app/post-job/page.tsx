@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
 import { getCurrentDeviceLocation, type DeviceCoordinates } from "@/lib/device-location";
-import { RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
+import { displayServiceArea, RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
 
 type ProviderLookup = {
   id: string;
@@ -150,7 +150,7 @@ export default function PostJobPage() {
         return;
       }
 
-      setGpsMessage(`GPS captured for this job • accuracy about ${Math.round(coordinates.accuracy)} m. The selected provider's service area remains ${selectedProvider?.location ?? location}.`);
+      setGpsMessage(`GPS captured for this job • accuracy about ${Math.round(coordinates.accuracy)} m. The selected provider's service area remains ${displayServiceArea(selectedProvider?.location ?? location)}.`);
     } catch (caught) {
       setGpsCoordinates(null);
       setError(caught instanceof Error ? caught.message : "Unable to use your current location.");
@@ -261,7 +261,7 @@ export default function PostJobPage() {
 
             {selectedProvider && (
               <div className="mb-5 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">
-                Provider selected: <strong>{selectedProvider.business_name}</strong> • {selectedProvider.service_category} • {selectedProvider.location}
+                Provider selected: <strong>{selectedProvider.business_name}</strong> • {selectedProvider.service_category} • {displayServiceArea(selectedProvider.location)}
               </div>
             )}
             {!provider && (
@@ -296,10 +296,10 @@ export default function PostJobPage() {
 
             <label className="mt-5 block text-sm font-bold">Location</label>
             {selectedProvider ? (
-              <div className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-zinc-200">{selectedProvider.location}</div>
+              <div className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-zinc-200">{displayServiceArea(selectedProvider.location)}</div>
             ) : (
               <select required value={location} onChange={(event) => changeLocation(event.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
-                {liveLocations.map((item) => <option key={item}>{item}</option>)}
+                {liveLocations.map((item) => <option key={item} value={item}>{displayServiceArea(item)}</option>)}
               </select>
             )}
             <div className="mt-3 flex flex-wrap items-center gap-3">
