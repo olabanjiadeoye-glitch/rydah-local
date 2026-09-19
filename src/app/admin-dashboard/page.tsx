@@ -1,5 +1,6 @@
 "use client";
 
+import { displayServiceArea } from "@/lib/locations";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, type AuthSession } from "@/lib/supabase";
@@ -257,7 +258,7 @@ export default function AdminDashboardPage() {
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="font-black">{job.service_category}{job.is_urgent ? " • URGENT" : ""}</p>
-                          <p className="mt-1 text-sm text-zinc-400">{job.location}</p>
+                          <p className="mt-1 text-sm text-zinc-400">{displayServiceArea(job.location)}</p>
                         </div>
                         <span className="rounded-full bg-[#D4AF37]/15 px-3 py-1 text-xs font-black text-[#D4AF37]">{label(job.status)}</span>
                       </div>
