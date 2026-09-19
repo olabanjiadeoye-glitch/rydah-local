@@ -16,7 +16,9 @@ import {
   displayServiceArea,
   RYDAH_DEFAULT_SERVICE_AREA,
   RYDAH_SERVICE_AREAS,
+  RYDAH_TARGET_CITIES,
   nearestServiceArea,
+  serviceAreasForCity,
 } from "@/lib/locations";
 
 type ProviderRow = {
@@ -354,7 +356,7 @@ export default function ProviderOnboardingPage() {
         throw new Error("We could not match your phone location to a current Rydah service area. Choose your area from the list.");
       }
       setLocation(nearest.area);
-      setGpsMessage(`Area detected: ${nearest.area}`);
+      setGpsMessage(`Area detected: ${displayServiceArea(nearest.area)}`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to detect your service area.");
     } finally {
@@ -788,7 +790,13 @@ export default function ProviderOnboardingPage() {
                 }}
                 className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
               >
-                {RYDAH_SERVICE_AREAS.map((area) => <option key={area} value={area}>{displayServiceArea(area)}</option>)}
+                {RYDAH_TARGET_CITIES.map((city) => (
+                  <optgroup key={city} label={city}>
+                    {serviceAreasForCity(city).map((area) => (
+                      <option key={area} value={area}>{displayServiceArea(area)}</option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
               <button
                 type="button"
