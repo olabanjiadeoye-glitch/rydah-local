@@ -1,5 +1,6 @@
 "use client";
 
+import { displayServiceArea } from "@/lib/locations";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
@@ -289,7 +290,7 @@ export default function ArrivalCheckPage() {
                           <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-black text-amber-300">ID REVIEWED • BIOMETRIC REQUIRED</span>
                         ) : null}
                       </div>
-                      <p className="mt-2 text-zinc-400">{job.service_category} • {job.location}</p>
+                      <p className="mt-2 text-zinc-400">{job.service_category} • {displayServiceArea(job.location)}</p>
                     </div>
                     <span className="rounded-full bg-[#D4AF37]/10 px-3 py-2 text-xs font-black text-[#D4AF37]">ARRIVAL CHECK</span>
                   </div>
