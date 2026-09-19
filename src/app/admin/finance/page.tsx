@@ -1,5 +1,6 @@
 "use client";
 
+import { displayServiceArea } from "@/lib/locations";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, restPatch, type AuthSession } from "@/lib/supabase";
@@ -29,6 +30,7 @@ export default function AdminFinancePage() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [rate, setRate] = useState("15");
+  const [liveGatewayEnabled, setLiveGatewayEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -56,7 +58,7 @@ export default function AdminFinancePage() {
 
       const [settings, paymentRows] = await Promise.all([
         restGet<SettingRow[]>(
-          "platform_settings?key=eq.commission_rate_percent&select=key,value_numeric,description&limit=1",
+          "platform_settings?key=in.(commission_rate_percent,payment_gateway_live_enabled)&select=key,value_numeric,description",
           currentSession.access_token,
         ),
         restGet<PaymentRow[]>(
@@ -65,7 +67,10 @@ export default function AdminFinancePage() {
         ),
       ]);
 
-      if (settings[0]) setRate(String(Number(settings[0].value_numeric)));
+      const commissionSetting = settings.find((row) => row.key === "commission_rate_percent");
+      const liveSetting = settings.find((row) => row.key === "payment_gateway_live_enabled");
+      if (commissionSetting) setRate(String(Number(commissionSetting.value_numeric)));
+      setLiveGatewayEnabled(Number(liveSetting?.value_numeric || 0) === 1);
       setPayments(paymentRows);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to load Rydah finance.");
@@ -102,7 +107,11 @@ export default function AdminFinancePage() {
   }
 
   const countedPayments = useMemo(
-    () => payments.filter((payment) => ["paid", "cash_due"].includes(payment.status)),
+    () => payments.filter((payment) => !payment.is_test && ["paid", "cash_due"].includes(payment.status)),
+    [payments],
+  );
+  const sandboxCountedPayments = useMemo(
+    () => payments.filter((payment) => payment.is_test && ["paid", "cash_due"].includes(payment.status)),
     [payments],
   );
   const gross = useMemo(() => countedPayments.reduce((sum, p) => sum + Number(p.amount_naira || 0), 0), [countedPayments]);
@@ -135,8 +144,16 @@ export default function AdminFinancePage() {
 
             {!error && (
               <>
+                <div className={`mb-6 rounded-2xl border p-4 text-sm ${liveGatewayEnabled ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-200" : "border-amber-500/25 bg-amber-500/10 text-amber-200"}`}>
+                  <p className="font-black">{liveGatewayEnabled ? "LIVE PAYMENTS ENABLED" : "PAYMENTS SANDBOX MODE"}</p>
+                  <p className="mt-1 leading-6">
+                    {liveGatewayEnabled
+                      ? "Production payment collection is enabled. Monitor webhook verification, settlement and disputes closely."
+                      : "Live Paystack collection remains intentionally disabled. Test transactions are shown in the ledger but excluded from real GMV and revenue totals."}
+                  </p>
+                </div>
                 <div className="grid gap-4 md:grid-cols-4">
-                  <div className="rounded-3xl border border-white/10 bg-[#121212] p-6"><p className="text-sm text-zinc-500">Gross job value</p><p className="mt-2 text-3xl font-black">{naira(gross)}</p></div>
+                  <div className="rounded-3xl border border-white/10 bg-[#121212] p-6"><p className="text-sm text-zinc-500">Live gross job value</p><p className="mt-2 text-3xl font-black">{naira(gross)}</p><p className="mt-2 text-xs text-zinc-500">{sandboxCountedPayments.length} sandbox processed payment(s) excluded</p></div>
                   <div className="rounded-3xl border border-[#D4AF37]/25 bg-[#121212] p-6"><p className="text-sm text-zinc-500">Rydah revenue</p><p className="mt-2 text-3xl font-black text-[#D4AF37]">{naira(commission)}</p><p className="mt-2 text-xs text-zinc-500">Commission on processed jobs.</p></div>
                   <div className="rounded-3xl border border-emerald-500/20 bg-[#121212] p-6"><p className="text-sm text-zinc-500">Provider net</p><p className="mt-2 text-3xl font-black text-emerald-400">{naira(providerNet)}</p></div>
                   <div className="rounded-3xl border border-white/10 bg-[#121212] p-6"><p className="text-sm text-zinc-500">Cash commission due</p><p className="mt-2 text-3xl font-black">{naira(cashOwed)}</p></div>
@@ -166,7 +183,7 @@ export default function AdminFinancePage() {
                         <div className="flex flex-wrap items-start justify-between gap-4">
                           <div>
                             <div className="flex flex-wrap items-center gap-2"><h3 className="text-xl font-black">{payment.jobs?.service_category || "Rydah Job"}</h3>{payment.is_test && <span className="rounded-full bg-[#D4AF37]/15 px-3 py-1 text-xs font-black text-[#D4AF37]">TEST</span>}</div>
-                            <p className="mt-2 text-zinc-400">{payment.providers?.business_name || "Provider"} • {payment.jobs?.location || "Location"}</p>
+                            <p className="mt-2 text-zinc-400">{payment.providers?.business_name || "Provider"} • {payment.jobs?.location ? displayServiceArea(payment.jobs.location) : "Location"}</p>
                             <p className="mt-2 text-sm text-zinc-500">{new Date(payment.created_at).toLocaleString()}</p>
                           </div>
                           <div className="text-right"><p className="text-sm text-zinc-500">Gross</p><p className="text-2xl font-black">{naira(payment.amount_naira)}</p></div>
