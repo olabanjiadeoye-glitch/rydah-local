@@ -1,6 +1,6 @@
 "use client";
 
-import { displayServiceArea } from "@/lib/locations";
+import { cityFromServiceArea, displayServiceArea, RYDAH_TARGET_CITIES } from "@/lib/locations";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, type AuthSession } from "@/lib/supabase";
@@ -11,6 +11,7 @@ type ProviderRow = {
   service_category: string;
   location: string;
   is_verified: boolean;
+  is_available: boolean;
   created_at: string;
 };
 
@@ -90,7 +91,7 @@ export default function AdminDashboardPage() {
 
       const [providerRows, verificationRows, jobRows, paymentRows, payoutRows] = await Promise.all([
         restGet<ProviderRow[]>(
-          "providers?select=id,business_name,service_category,location,is_verified,created_at&order=created_at.desc",
+          "providers?select=id,business_name,service_category,location,is_verified,is_available,created_at&order=created_at.desc",
           currentSession.access_token,
         ),
         restGet<VerificationRow[]>(
@@ -123,32 +124,61 @@ export default function AdminDashboardPage() {
     }
   }
 
-  const processedPayments = useMemo(
-    () => payments.filter((payment) => ["paid", "cash_due"].includes(payment.status)),
+  const liveProcessedPayments = useMemo(
+    () => payments.filter((payment) => !payment.is_test && ["paid", "cash_due"].includes(payment.status)),
+    [payments],
+  );
+  const sandboxProcessedPayments = useMemo(
+    () => payments.filter((payment) => payment.is_test && ["paid", "cash_due"].includes(payment.status)),
     [payments],
   );
 
   const grossJobValue = useMemo(
-    () => processedPayments.reduce((sum, row) => sum + Number(row.amount_naira || 0), 0),
-    [processedPayments],
+    () => liveProcessedPayments.reduce((sum, row) => sum + Number(row.amount_naira || 0), 0),
+    [liveProcessedPayments],
   );
 
   const rydahRevenue = useMemo(
-    () => processedPayments.reduce((sum, row) => sum + Number(row.commission_amount_naira || 0), 0),
-    [processedPayments],
+    () => liveProcessedPayments.reduce((sum, row) => sum + Number(row.commission_amount_naira || 0), 0),
+    [liveProcessedPayments],
   );
 
   const providerNet = useMemo(
-    () => processedPayments.reduce((sum, row) => sum + Number(row.provider_net_naira || 0), 0),
-    [processedPayments],
+    () => liveProcessedPayments.reduce((sum, row) => sum + Number(row.provider_net_naira || 0), 0),
+    [liveProcessedPayments],
   );
+
+  const monthStart = useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  }, []);
+  const monthlyLivePayments = useMemo(
+    () => liveProcessedPayments.filter((payment) => new Date(payment.created_at).getTime() >= monthStart),
+    [liveProcessedPayments, monthStart],
+  );
+  const monthlyGmv = useMemo(
+    () => monthlyLivePayments.reduce((sum, row) => sum + Number(row.amount_naira || 0), 0),
+    [monthlyLivePayments],
+  );
+  const monthlyRydahRevenue = useMemo(
+    () => monthlyLivePayments.reduce((sum, row) => sum + Number(row.commission_amount_naira || 0), 0),
+    [monthlyLivePayments],
+  );
+  const averageLiveJobValue = monthlyLivePayments.length > 0 ? Math.round(monthlyGmv / monthlyLivePayments.length) : 0;
+  const monthlyGmvTarget = 5_000_000;
+  const gmvProgress = Math.min(100, Math.round((monthlyGmv / monthlyGmvTarget) * 100));
 
   const pendingVerifications = verifications.filter((row) => row.status === "pending");
   const verifiedProviders = providers.filter((row) => row.is_verified);
+  const availableVerifiedProviders = providers.filter((row) => row.is_verified && row.is_available);
+  const citySupply = RYDAH_TARGET_CITIES.map((city) => ({
+    city,
+    count: availableVerifiedProviders.filter((provider) => cityFromServiceArea(provider.location) === city).length,
+  }));
   const activeJobs = jobs.filter((row) => !["completed", "cancelled"].includes(row.status));
   const completedJobs = jobs.filter((row) => row.status === "completed");
-  const pendingPayouts = payouts.filter((row) => row.status === "pending");
-  const paidPayouts = payouts.filter((row) => row.status === "paid");
+  const pendingPayouts = payouts.filter((row) => !row.is_test && row.status === "pending");
+  const paidPayouts = payouts.filter((row) => !row.is_test && row.status === "paid");
   const pendingPayoutAmount = pendingPayouts.reduce((sum, row) => sum + Number(row.amount_naira || 0), 0);
   const paidPayoutAmount = paidPayouts.reduce((sum, row) => sum + Number(row.amount_naira || 0), 0);
 
@@ -206,16 +236,47 @@ export default function AdminDashboardPage() {
                 <p className="mt-2 text-xs text-emerald-400">{verifiedProviders.length} verified</p>
               </div>
               <div className="rounded-3xl border border-[#D4AF37]/25 bg-[#121212] p-6">
-                <p className="text-sm text-zinc-500">Rydah revenue</p>
+                <p className="text-sm text-zinc-500">Live Rydah revenue</p>
                 <p className="mt-2 text-4xl font-black text-[#D4AF37]">{naira(rydahRevenue)}</p>
-                <p className="mt-2 text-xs text-zinc-500">15% commission currently configured</p>
+                <p className="mt-2 text-xs text-zinc-500">Real processed payments only • sandbox excluded</p>
               </div>
               <div className="rounded-3xl border border-white/10 bg-[#121212] p-6">
-                <p className="text-sm text-zinc-500">Processed payments</p>
-                <p className="mt-2 text-4xl font-black">{processedPayments.length}</p>
-                <p className="mt-2 text-xs text-zinc-500">Gross {naira(grossJobValue)}</p>
+                <p className="text-sm text-zinc-500">Live processed payments</p>
+                <p className="mt-2 text-4xl font-black">{liveProcessedPayments.length}</p>
+                <p className="mt-2 text-xs text-zinc-500">Live GMV {naira(grossJobValue)} • {sandboxProcessedPayments.length} sandbox excluded</p>
               </div>
             </div>
+
+            <section className="mt-6 rounded-3xl border border-[#D4AF37]/25 bg-gradient-to-br from-[#17130a] to-[#101010] p-6">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-black tracking-[0.16em] text-[#D4AF37]">₦5M MONTHLY TURNOVER TARGET</p>
+                  <h3 className="mt-1 text-2xl font-black">Live marketplace progress</h3>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">Only non-test processed jobs count here, so sandbox activity can never make launch performance look better than it really is.</p>
+                </div>
+                <span className="rounded-full bg-[#D4AF37]/15 px-4 py-2 text-sm font-black text-[#D4AF37]">{gmvProgress}% of target</span>
+              </div>
+              <div className="mt-5 h-3 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full rounded-full bg-[#D4AF37]" style={{ width: `${gmvProgress}%` }} />
+              </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-2xl bg-black/25 p-4"><p className="text-xs text-zinc-500">This month live GMV</p><p className="mt-1 text-2xl font-black">{naira(monthlyGmv)}</p></div>
+                <div className="rounded-2xl bg-black/25 p-4"><p className="text-xs text-zinc-500">This month Rydah revenue</p><p className="mt-1 text-2xl font-black text-[#D4AF37]">{naira(monthlyRydahRevenue)}</p></div>
+                <div className="rounded-2xl bg-black/25 p-4"><p className="text-xs text-zinc-500">Live paid/cash-due jobs</p><p className="mt-1 text-2xl font-black">{monthlyLivePayments.length}</p></div>
+                <div className="rounded-2xl bg-black/25 p-4"><p className="text-xs text-zinc-500">Average live job value</p><p className="mt-1 text-2xl font-black">{naira(averageLiveJobValue)}</p></div>
+              </div>
+              <div className="mt-5">
+                <p className="text-xs font-black tracking-[0.14em] text-zinc-500">AVAILABLE VERIFIED PROVIDERS BY CITY</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+                  {citySupply.map((item) => (
+                    <div key={item.city} className="rounded-xl border border-white/10 bg-black/20 px-3 py-3">
+                      <p className="text-sm font-bold">{item.city}</p>
+                      <p className="mt-1 text-xl font-black text-emerald-400">{item.count}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <Link href="/admin/providers" className="rounded-3xl border border-[#D4AF37]/25 bg-[#121212] p-6 transition hover:border-[#D4AF37]/50">
