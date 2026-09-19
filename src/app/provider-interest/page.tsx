@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
 import { getCurrentDeviceLocation } from "@/lib/device-location";
-import { displayServiceArea, RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
+import { displayServiceArea, RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, RYDAH_TARGET_CITIES, nearestServiceArea, serviceAreasForCity } from "@/lib/locations";
 
 type InterestRow = {
   id: string;
@@ -82,7 +82,7 @@ export default function ProviderInterestPage() {
       }
 
       setLocation(nearest.area);
-      setGpsMessage(`GPS matched you to ${nearest.area} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
+      setGpsMessage(`GPS matched you to ${displayServiceArea(nearest.area)} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to use your current location.");
     } finally {
@@ -174,7 +174,13 @@ export default function ProviderInterestPage() {
               }}
               className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
             >
-              {RYDAH_SERVICE_AREAS.map((area) => <option key={area} value={area}>{displayServiceArea(area)}</option>)}
+              {RYDAH_TARGET_CITIES.map((city) => (
+                <optgroup key={city} label={city}>
+                  {serviceAreasForCity(city).map((area) => (
+                    <option key={area} value={area}>{displayServiceArea(area)}</option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
             <button
               type="button"
