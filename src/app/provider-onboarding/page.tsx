@@ -13,6 +13,7 @@ import {
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
 import { getCurrentDeviceLocation } from "@/lib/device-location";
 import {
+  displayServiceArea,
   RYDAH_DEFAULT_SERVICE_AREA,
   RYDAH_SERVICE_AREAS,
   nearestServiceArea,
@@ -787,7 +788,7 @@ export default function ProviderOnboardingPage() {
                 }}
                 className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
               >
-                {RYDAH_SERVICE_AREAS.map((area) => <option key={area}>{area}</option>)}
+                {RYDAH_SERVICE_AREAS.map((area) => <option key={area} value={area}>{displayServiceArea(area)}</option>)}
               </select>
               <button
                 type="button"
