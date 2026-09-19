@@ -1,7 +1,7 @@
 {
   "applicationId": "online.rydahlocal.app",
   "title": "Rydah Local",
-  "shortDescription": "Book trusted local professionals and manage safer jobs across Lagos, Abuja and Ibadan.",
+  "shortDescription": "Book trusted local professionals and manage safer service jobs across Nigeria.",
   "category": "Business",
   "defaultLanguage": "en-GB",
   "website": "https://rydahlocal.online",
@@ -16,6 +16,8 @@
   "launchMarkets": [
     "Lagos, Nigeria",
     "Abuja, Nigeria",
-    "Ibadan, Nigeria"
+    "Ibadan, Nigeria",
+    "Warri, Nigeria",
+    "Port Harcourt, Nigeria"
   ]
 }
