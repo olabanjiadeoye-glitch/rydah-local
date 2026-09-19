@@ -1,5 +1,6 @@
 "use client";
 
+import { displayServiceArea } from "@/lib/locations";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getStoredSession, restGet, restPatch, type AuthSession } from "@/lib/supabase";
@@ -117,7 +118,7 @@ export default function AdminServiceInterestsPage() {
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <h3 className="text-2xl font-black">{row.profession}</h3>
-                      <p className="mt-1 text-zinc-400">{row.location} • {row.experience_years} years</p>
+                      <p className="mt-1 text-zinc-400">{displayServiceArea(row.location)} • {row.experience_years} years</p>
                       <p className="mt-2 text-sm text-zinc-500">Provider: {row.providers?.business_name || "Profile not created yet"} • Submitted {new Date(row.created_at).toLocaleString()}</p>
                     </div>
                     <span className="rounded-full bg-[#D4AF37]/10 px-3 py-2 text-xs font-black text-[#D4AF37]">{row.status.toUpperCase()}</span>
