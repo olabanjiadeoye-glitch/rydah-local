@@ -1,5 +1,6 @@
 "use client";
 
+import { displayServiceArea } from "@/lib/locations";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession, invokeFunction } from "@/lib/supabase";
@@ -242,7 +243,7 @@ export default function PaymentsPage() {
               <div>
                 <p className="text-sm font-black tracking-[0.16em] text-[#D4AF37]">JOB PAYMENT</p>
                 <h2 className="mt-2 text-3xl font-black">{job.service_category}</h2>
-                <p className="mt-2 text-zinc-400">{job.providers?.business_name ?? "Provider"} • {job.location}</p>
+                <p className="mt-2 text-zinc-400">{job.providers?.business_name ?? "Provider"} • {displayServiceArea(job.location)}</p>
               </div>
               <div className="text-right">
                 <p className="text-sm text-zinc-500">Customer total</p>
