@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   clearSession,
   getStoredSession,
@@ -114,6 +114,10 @@ export default function ProviderDashboardPage() {
   const [startingPrice, setStartingPrice] = useState("");
   const [gpsBusy, setGpsBusy] = useState(false);
   const [gpsMessage, setGpsMessage] = useState("");
+  const [jobAlertSoundEnabled, setJobAlertSoundEnabled] = useState(true);
+  const [jobAlertAudioReady, setJobAlertAudioReady] = useState(false);
+  const knownJobIdsRef = useRef<Set<string> | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
 
   const openJobs = useMemo(
     () => jobs.filter((job) => !["completed", "cancelled"].includes(job.status)).length,
@@ -142,6 +146,158 @@ export default function ProviderDashboardPage() {
   // Intentional one-time browser auth/data bootstrap.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const enabled = window.localStorage.getItem("rydah-provider-job-alert-sound") !== "off";
+    setJobAlertSoundEnabled(enabled);
+    if (!enabled) return;
+
+    const unlockAudio = () => {
+      void ensureJobAlertAudio();
+    };
+    window.addEventListener("pointerdown", unlockAudio, { once: true });
+    return () => window.removeEventListener("pointerdown", unlockAudio);
+  // Browser audio must be unlocked by a user gesture; this effect only runs client-side.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!session || !provider?.id || !provider.is_available || !billing?.billing_ready) return;
+
+    let stopped = false;
+    let inFlight = false;
+
+    const pollForJobs = async () => {
+      if (stopped || inFlight || document.visibilityState === "hidden") return;
+      inFlight = true;
+      try {
+        await refreshJobFeedForAlerts(session);
+      } catch {
+        // The normal dashboard refresh and push notification path remain available.
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    const timer = window.setInterval(() => void pollForJobs(), 12000);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") void pollForJobs();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      stopped = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  // Polling is intentionally tied to the authenticated provider's online/billing state.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, provider?.id, provider?.is_available, billing?.billing_ready, jobAlertSoundEnabled]);
+
+  async function ensureJobAlertAudio() {
+    if (typeof window === "undefined" || typeof window.AudioContext !== "function") {
+      setJobAlertAudioReady(false);
+      return null;
+    }
+
+    let context = audioContextRef.current;
+    if (!context) {
+      context = new window.AudioContext();
+      audioContextRef.current = context;
+    }
+
+    try {
+      if (context.state === "suspended") await context.resume();
+    } catch {
+      setJobAlertAudioReady(false);
+      return null;
+    }
+
+    const ready = context.state === "running";
+    setJobAlertAudioReady(ready);
+    return ready ? context : null;
+  }
+
+  async function playJobAlertTone(force = false) {
+    if (!force && !jobAlertSoundEnabled) return;
+    const context = await ensureJobAlertAudio();
+    if (!context) return;
+
+    const start = context.currentTime + 0.02;
+    const notes = [
+      { frequency: 659.25, offset: 0, duration: 0.15 },
+      { frequency: 880, offset: 0.18, duration: 0.16 },
+      { frequency: 1046.5, offset: 0.38, duration: 0.2 },
+      { frequency: 880, offset: 0.66, duration: 0.22 },
+    ];
+
+    for (const note of notes) {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      const noteStart = start + note.offset;
+      const noteEnd = noteStart + note.duration;
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(note.frequency, noteStart);
+      gain.gain.setValueAtTime(0.0001, noteStart);
+      gain.gain.exponentialRampToValueAtTime(0.16, noteStart + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, noteEnd);
+
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.start(noteStart);
+      oscillator.stop(noteEnd + 0.03);
+    }
+  }
+
+  function setJobAlertPreference(enabled: boolean) {
+    setJobAlertSoundEnabled(enabled);
+    window.localStorage.setItem("rydah-provider-job-alert-sound", enabled ? "on" : "off");
+
+    if (enabled) {
+      void playJobAlertTone(true);
+      return;
+    }
+
+    setJobAlertAudioReady(false);
+    if (audioContextRef.current) {
+      void audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+  }
+
+  async function refreshJobFeedForAlerts(currentSession: AuthSession) {
+    const jobRows = await restRpc<JobRow[]>(
+      "provider_job_feed",
+      {},
+      currentSession.access_token,
+    );
+
+    const knownJobIds = knownJobIdsRef.current;
+    const newlyAssigned = knownJobIds
+      ? jobRows.filter((job) => !knownJobIds.has(job.id) && !["completed", "cancelled"].includes(job.status))
+      : [];
+
+    knownJobIdsRef.current = new Set(jobRows.map((job) => job.id));
+    setJobs(jobRows);
+    setQuoteDrafts((current) => {
+      const next = { ...current };
+      for (const job of jobRows) {
+        if (!(job.id in next)) next[job.id] = job.quoted_amount ? String(job.quoted_amount) : "";
+      }
+      return next;
+    });
+
+    if (newlyAssigned.length > 0) {
+      const first = newlyAssigned[0];
+      setMessage(
+        newlyAssigned.length === 1
+          ? `New Rydah request: ${first.service_category} in ${displayServiceArea(first.location)}.`
+          : `${newlyAssigned.length} new Rydah service requests just arrived.`,
+      );
+      await playJobAlertTone();
+    }
+  }
 
   async function callProviderBilling(currentSession: AuthSession, action: string) {
     const response = await invokeFunction("provider-billing", { action }, currentSession.access_token);
@@ -280,6 +436,7 @@ export default function ProviderDashboardPage() {
       );
 
       setJobs(jobRows);
+      knownJobIdsRef.current = new Set(jobRows.map((job) => job.id));
       const biometricRequired = Number(biometricSettingRows[0]?.value_numeric || 0) === 1;
       setBiometricStatus(verification?.biometric_status || "not_started");
       setBiometricWorkRequired(biometricRequired);
@@ -322,7 +479,7 @@ export default function ProviderDashboardPage() {
           session.access_token,
         );
         if (updated[0]) setProvider(updated[0]);
-        setMessage(`Provider service area updated to ${nearest.area} from your device GPS.`);
+        setMessage(`Provider service area updated to ${displayServiceArea(nearest.area)} from your device GPS.`);
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to use your current location.");
@@ -496,6 +653,47 @@ export default function ProviderDashboardPage() {
       <section className="mx-auto max-w-5xl px-5 py-6 sm:py-8">
         {message && <div className="mb-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">{message}</div>}
         {error && <div className="mb-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
+
+        {role === "provider" && (
+          <div className="mb-6 rounded-3xl border border-[#D4AF37]/25 bg-[#111] p-5 sm:p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">INCOMING JOB ALERTS</p>
+                <h2 className="mt-2 text-xl font-black">Rydah request alert tone</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
+                  While you are online and the provider app is open, Rydah checks for newly assigned requests and plays a short Rydah alert. Device notifications cover background or closed-app updates using your phone&apos;s notification sound.
+                </p>
+              </div>
+              <span className={`rounded-full px-3 py-2 text-xs font-black ${jobAlertSoundEnabled ? "bg-emerald-500/15 text-emerald-300" : "bg-zinc-500/15 text-zinc-300"}`}>
+                {jobAlertSoundEnabled ? (jobAlertAudioReady ? "SOUND READY" : "SOUND ON") : "SOUND OFF"}
+              </span>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => jobAlertSoundEnabled ? void playJobAlertTone(true) : setJobAlertPreference(true)}
+                className="rounded-xl bg-[#D4AF37] px-4 py-3 text-sm font-black text-black"
+              >
+                {jobAlertSoundEnabled ? "Test alert sound" : "Enable alert sound"}
+              </button>
+              {jobAlertSoundEnabled && (
+                <button
+                  type="button"
+                  onClick={() => setJobAlertPreference(false)}
+                  className="rounded-xl border border-white/10 px-4 py-3 text-sm font-bold text-zinc-300"
+                >
+                  Turn sound off
+                </button>
+              )}
+              <Link href="/notifications" className="rounded-xl border border-white/10 px-4 py-3 text-sm font-bold text-zinc-300">
+                Device notifications
+              </Link>
+            </div>
+            {jobAlertSoundEnabled && !jobAlertAudioReady && (
+              <p className="mt-3 text-xs leading-5 text-zinc-500">Tap anywhere in the provider app once after opening it, or use “Test alert sound”, so your browser can unlock audio.</p>
+            )}
+          </div>
+        )}
 
         {role === "provider" && billing && (
           <div className="mb-6 rounded-3xl border border-[#D4AF37]/30 bg-gradient-to-br from-[#17130a] to-[#0d0d0d] p-6">
