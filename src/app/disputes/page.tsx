@@ -1,5 +1,6 @@
 "use client";
 
+import { displayServiceArea } from "@/lib/locations";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { resolveUserAccess, type RydahRole } from "@/lib/access";
@@ -244,7 +245,7 @@ export default function DisputesPage() {
                   {jobs.length === 0 && <option value="">No Rydah jobs available</option>}
                   {jobs.map((job) => (
                     <option key={job.id} value={job.id}>
-                      {job.service_category} — {job.location} — {label(job.status)} — {job.id.slice(0, 8)}
+                      {job.service_category} — {displayServiceArea(job.location)} — {label(job.status)} — {job.id.slice(0, 8)}
                     </option>
                   ))}
                 </select>
