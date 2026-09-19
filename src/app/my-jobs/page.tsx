@@ -1,5 +1,6 @@
 "use client";
 
+import { displayServiceArea } from "@/lib/locations";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, restInsert, restPatch, restRpc, type AuthSession } from "@/lib/supabase";
@@ -252,7 +253,7 @@ export default function MyJobsPage() {
                           <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-black text-amber-300">ID REVIEWED • BIOMETRIC REQUIRED</span>
                         ) : null}
                       </div>
-                      <p className="mt-2 text-zinc-400">{job.location}</p>
+                      <p className="mt-2 text-zinc-400">{displayServiceArea(job.location)}</p>
                       <p className="mt-4 text-zinc-300">{job.description}</p>
                     </div>
                     <span className={`rounded-full px-3 py-2 text-xs font-black ${statusStyle(job.status)}`}>{label(job.status)}</span>
