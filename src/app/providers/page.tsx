@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getCurrentDeviceLocation, type DeviceCoordinates } from "@/lib/device-location";
-import { distanceKm, nearestServiceArea, RYDAH_SERVICE_AREA_CENTERS, RYDAH_SERVICE_AREAS, RYDAH_TARGET_CITIES } from "@/lib/locations";
+import { cityFromServiceArea, displayServiceArea, distanceKm, nearestServiceArea, RYDAH_SERVICE_AREA_CENTERS, RYDAH_TARGET_CITIES, serviceAreasForCity } from "@/lib/locations";
 import { getStoredSession, restDelete, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 
 type Provider = {
@@ -111,7 +111,7 @@ export default function ProvidersPage() {
   const cityAreaGroups = useMemo(
     () => RYDAH_TARGET_CITIES.map((city) => ({
       city,
-      areas: RYDAH_SERVICE_AREAS.filter((area) => area.endsWith(`, ${city}`) || area === `Other ${city} area`),
+      areas: serviceAreasForCity(city),
     })),
     [],
   );
@@ -120,16 +120,11 @@ export default function ProvidersPage() {
     let result = providers.filter((provider) => {
       const search = activeSearch.trim().toLowerCase();
       const matchesSearch = !search || provider.name.toLowerCase().includes(search) || provider.category.toLowerCase().includes(search) || provider.area.toLowerCase().includes(search) || provider.bio.toLowerCase().includes(search);
-      const selectedCity = location.startsWith("All ") && location !== "All Areas"
-        ? location.slice(4)
-        : null;
+      const selectedCity = location.startsWith("city:") ? location.slice(5) : null;
       const matchesLocation =
         location === "All Areas"
         || provider.area === location
-        || Boolean(selectedCity && (
-          provider.area.endsWith(`, ${selectedCity}`)
-          || provider.area === `Other ${selectedCity} area`
-        ));
+        || Boolean(selectedCity && cityFromServiceArea(provider.area) === selectedCity);
       const matchesCategory = category === "All" || provider.category === category;
       return matchesSearch && matchesLocation && matchesCategory;
     });
@@ -173,7 +168,7 @@ export default function ProvidersPage() {
       setLocation("All Areas");
       setSort("Nearest to Me");
       setGpsMessage(
-        `GPS ready • nearest Rydah target area: ${nearest.area} • accuracy about ${Math.round(coordinates.accuracy)} m. Providers are sorted using their service-area centres, not their private live location.`,
+        `GPS ready • nearest Rydah target area: ${displayServiceArea(nearest.area)} • accuracy about ${Math.round(coordinates.accuracy)} m. Providers are sorted using their service-area centres, not their private live location.`,
       );
     } catch (caught) {
       setUserCoordinates(null);
@@ -185,7 +180,11 @@ export default function ProvidersPage() {
 
   function runProviderSearch() {
     setActiveSearch(query);
-    const selectedArea = location === "All Areas" ? "Lagos, Abuja, Ibadan, Warri & Port Harcourt" : location;
+    const selectedArea = location === "All Areas"
+      ? "all 5 cities"
+      : location.startsWith("city:")
+        ? location.slice(5)
+        : displayServiceArea(location);
     setSearchMessage(
       query.trim()
         ? `Search applied for "${query.trim()}" in ${selectedArea}.`
@@ -249,12 +248,12 @@ export default function ProvidersPage() {
               <option value="All Areas">All Areas — 5 Cities</option>
               <optgroup label="Target cities">
                 {RYDAH_TARGET_CITIES.map((city) => (
-                  <option key={city} value={`All ${city}`}>{`All ${city}`}</option>
+                  <option key={city} value={`city:${city}`}>{city}</option>
                 ))}
               </optgroup>
               {cityAreaGroups.map((group) => (
                 <optgroup key={group.city} label={group.city}>
-                  {group.areas.map((area) => <option key={area} value={area}>{area}</option>)}
+                  {group.areas.map((area) => <option key={area} value={area}>{displayServiceArea(area)}</option>)}
                 </optgroup>
               ))}
             </select>
@@ -329,7 +328,7 @@ export default function ProvidersPage() {
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#D4AF37]/10 text-2xl">🛠️</div>
                     <div>
                       <div className="flex flex-wrap items-center gap-2"><h3 className="font-bold">{provider.name}</h3><span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-400">✓ VERIFIED</span></div>
-                      <p className="mt-1 text-sm text-zinc-400">{provider.category} • {provider.area}</p>
+                      <p className="mt-1 text-sm text-zinc-400">{provider.category} • {displayServiceArea(provider.area)}</p>
                       {userCoordinates && RYDAH_SERVICE_AREA_CENTERS[provider.area] && (
                         <p className="mt-1 text-xs text-emerald-300">
                           ~{distanceKm(
