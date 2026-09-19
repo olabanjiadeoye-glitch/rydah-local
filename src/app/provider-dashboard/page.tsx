@@ -14,7 +14,7 @@ import {
 } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
 import { getCurrentDeviceLocation } from "@/lib/device-location";
-import { displayServiceArea, RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
+import { displayServiceArea, RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, RYDAH_TARGET_CITIES, nearestServiceArea, serviceAreasForCity } from "@/lib/locations";
 
 type ProviderRow = {
   id: string;
@@ -82,8 +82,6 @@ type JobRow = {
 };
 
 const categories = ["Electrician", "Plumber", "AC Technician", "Generator", "Cleaning", "Mechanic"];
-const locations = RYDAH_SERVICE_AREAS;
-
 function naira(value: number | null) {
   return value == null ? "Not set" : `₦${Number(value).toLocaleString()}`;
 }
@@ -314,7 +312,7 @@ export default function ProviderDashboardPage() {
       }
 
       setLocation(nearest.area);
-      setGpsMessage(`GPS matched your service area to ${nearest.area} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
+      setGpsMessage(`GPS matched your service area to ${displayServiceArea(nearest.area)} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
 
       if (provider) {
         const updated = await restPatch<ProviderRow[]>(
@@ -606,7 +604,13 @@ export default function ProviderDashboardPage() {
                   }}
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
                 >
-                  {locations.map((item) => <option key={item} value={item}>{displayServiceArea(item)}</option>)}
+                  {RYDAH_TARGET_CITIES.map((city) => (
+                    <optgroup key={city} label={city}>
+                      {serviceAreasForCity(city).map((area) => (
+                        <option key={area} value={area}>{displayServiceArea(area)}</option>
+                      ))}
+                    </optgroup>
+                  ))}
                 </select>
                 <button
                   type="button"
