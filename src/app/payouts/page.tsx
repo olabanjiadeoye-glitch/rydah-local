@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, type AuthSession, invokeFunction } from "@/lib/supabase";
 
@@ -215,7 +216,7 @@ export default function PayoutsPage() {
     }
   }
 
-  if (loading) return <main className="min-h-screen bg-[#080808] p-8 text-zinc-400">Loading provider settlements…</main>;
+  if (loading) return <main className="min-h-screen bg-[#080808] p-5 sm:p-6 text-zinc-400">Loading provider settlements…</main>;
 
   return (
     <main className="min-h-screen bg-[#080808] text-white">
@@ -226,15 +227,15 @@ export default function PayoutsPage() {
             <h1 className="mt-1 text-2xl font-black">Provider Settlements</h1>
           </div>
           <div className="flex gap-2">
-            <a href="/earnings" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Earnings</a>
-            <a href="/provider-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Dashboard</a>
+            <Link href="/earnings" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Earnings</Link>
+            <Link href="/provider-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Dashboard</Link>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto max-w-5xl px-5 py-10">
+      <section className="mx-auto max-w-5xl px-5 py-6 sm:py-8">
         {!provider ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7">No provider profile found.</div>
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">No provider profile found.</div>
         ) : (
           <>
             <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-4 text-sm text-emerald-300">
@@ -264,7 +265,7 @@ export default function PayoutsPage() {
             ) : (
               <form onSubmit={savePayoutAccount} className="mt-5 rounded-3xl border border-white/10 bg-[#121212] p-6">
                 <p className="text-sm font-black tracking-[0.16em] text-[#D4AF37]">CONNECT BANK ACCOUNT</p>
-                <p className="mt-2 text-sm text-zinc-400">Connect the provider's Nigerian bank account. The full account number is never stored in the Rydah database.</p>
+                <p className="mt-2 text-sm text-zinc-400">Connect the provider’s Nigerian bank account. The full account number is never stored in the Rydah database.</p>
                 {banks.length === 0 ? (
                   <button type="button" disabled={saving} onClick={() => void loadBanks()} className="mt-5 rounded-2xl border border-[#D4AF37]/40 px-5 py-3 font-bold text-[#D4AF37] disabled:opacity-50">{saving ? "Loading…" : "Load Nigerian Banks"}</button>
                 ) : (
@@ -318,7 +319,7 @@ export default function PayoutsPage() {
               </form>
             )}
 
-            <div className="mt-8">
+            <div className="mt-6">
               <div className="flex items-end justify-between gap-3">
                 <div>
                   <p className="text-sm font-black tracking-[0.16em] text-[#D4AF37]">PAYOUT HISTORY</p>
@@ -328,7 +329,7 @@ export default function PayoutsPage() {
               </div>
               <div className="mt-5 grid gap-4">
                 {payouts.length === 0 ? (
-                  <div className="rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">No payout requests yet.</div>
+                  <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">No payout requests yet.</div>
                 ) : payouts.map((payout) => (
                   <article key={payout.id} className="rounded-3xl border border-white/10 bg-[#121212] p-6">
                     <div className="flex flex-wrap items-start justify-between gap-4">

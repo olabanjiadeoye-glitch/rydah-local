@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getCurrentDeviceLocation, type DeviceCoordinates } from "@/lib/device-location";
-import { distanceKm, nearestServiceArea, RYDAH_SERVICE_AREA_CENTERS, RYDAH_SERVICE_AREAS, RYDAH_TARGET_CITIES } from "@/lib/locations";
+import { cityFromServiceArea, displayServiceArea, distanceKm, nearestServiceArea, RYDAH_SERVICE_AREA_CENTERS, RYDAH_TARGET_CITIES, serviceAreasForCity } from "@/lib/locations";
 import { getStoredSession, restDelete, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 
 type Provider = {
@@ -110,7 +111,7 @@ export default function ProvidersPage() {
   const cityAreaGroups = useMemo(
     () => RYDAH_TARGET_CITIES.map((city) => ({
       city,
-      areas: RYDAH_SERVICE_AREAS.filter((area) => area.endsWith(`, ${city}`) || area === `Other ${city} area`),
+      areas: serviceAreasForCity(city),
     })),
     [],
   );
@@ -119,16 +120,11 @@ export default function ProvidersPage() {
     let result = providers.filter((provider) => {
       const search = activeSearch.trim().toLowerCase();
       const matchesSearch = !search || provider.name.toLowerCase().includes(search) || provider.category.toLowerCase().includes(search) || provider.area.toLowerCase().includes(search) || provider.bio.toLowerCase().includes(search);
-      const selectedCity = location.startsWith("All ") && location !== "All Areas"
-        ? location.slice(4)
-        : null;
+      const selectedCity = location.startsWith("city:") ? location.slice(5) : null;
       const matchesLocation =
         location === "All Areas"
         || provider.area === location
-        || Boolean(selectedCity && (
-          provider.area.endsWith(`, ${selectedCity}`)
-          || provider.area === `Other ${selectedCity} area`
-        ));
+        || Boolean(selectedCity && cityFromServiceArea(provider.area) === selectedCity);
       const matchesCategory = category === "All" || provider.category === category;
       return matchesSearch && matchesLocation && matchesCategory;
     });
@@ -151,7 +147,7 @@ export default function ProvidersPage() {
     return result;
   }, [providers, activeSearch, location, sort, category, userCoordinates]);
 
-  async function useCurrentLocation() {
+  async function detectCurrentLocation() {
     setGpsBusy(true);
     setLoadError("");
     setGpsMessage("");
@@ -172,7 +168,7 @@ export default function ProvidersPage() {
       setLocation("All Areas");
       setSort("Nearest to Me");
       setGpsMessage(
-        `GPS ready • nearest Rydah target area: ${nearest.area} • accuracy about ${Math.round(coordinates.accuracy)} m. Providers are sorted using their service-area centres, not their private live location.`,
+        `GPS ready • nearest Rydah target area: ${displayServiceArea(nearest.area)} • accuracy about ${Math.round(coordinates.accuracy)} m. Providers are sorted using their service-area centres, not their private live location.`,
       );
     } catch (caught) {
       setUserCoordinates(null);
@@ -184,7 +180,11 @@ export default function ProvidersPage() {
 
   function runProviderSearch() {
     setActiveSearch(query);
-    const selectedArea = location === "All Areas" ? "Lagos, Abuja, Ibadan, Warri & Port Harcourt" : location;
+    const selectedArea = location === "All Areas"
+      ? "all 5 cities"
+      : location.startsWith("city:")
+        ? location.slice(5)
+        : displayServiceArea(location);
     setSearchMessage(
       query.trim()
         ? `Search applied for "${query.trim()}" in ${selectedArea}.`
@@ -226,13 +226,13 @@ export default function ProvidersPage() {
             <h1 className="mt-1 text-2xl font-black">Find a Provider</h1>
           </div>
           <div className="flex gap-2">
-            {session && <a href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</a>}
-            <a href="/" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Home</a>
+            {session && <Link href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</Link>}
+            <Link href="/" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Home</Link>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-5 py-8">
+      <section className="mx-auto max-w-6xl px-5 py-6">
         <div className="rounded-3xl border border-white/10 bg-[#121212] p-5">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs font-bold tracking-widest text-zinc-500">SEARCH VERIFIED PROFESSIONALS</p>
@@ -248,12 +248,12 @@ export default function ProvidersPage() {
               <option value="All Areas">All Areas — 5 Cities</option>
               <optgroup label="Target cities">
                 {RYDAH_TARGET_CITIES.map((city) => (
-                  <option key={city} value={`All ${city}`}>{`All ${city}`}</option>
+                  <option key={city} value={`city:${city}`}>{city}</option>
                 ))}
               </optgroup>
               {cityAreaGroups.map((group) => (
                 <optgroup key={group.city} label={group.city}>
-                  {group.areas.map((area) => <option key={area} value={area}>{area}</option>)}
+                  {group.areas.map((area) => <option key={area} value={area}>{displayServiceArea(area)}</option>)}
                 </optgroup>
               ))}
             </select>
@@ -272,7 +272,7 @@ export default function ProvidersPage() {
             <button
               type="button"
               disabled={gpsBusy}
-              onClick={() => void useCurrentLocation()}
+              onClick={() => void detectCurrentLocation()}
               className="rounded-xl border border-[#D4AF37]/35 px-4 py-2.5 text-sm font-black text-[#E5C65A] disabled:opacity-40"
             >
               {gpsBusy ? "Finding GPS…" : "📍 Find Providers Near Me"}
@@ -302,7 +302,7 @@ export default function ProvidersPage() {
         </div>
       </section>
 
-      <section id="provider-results" className="mx-auto max-w-6xl scroll-mt-6 px-5 py-8">
+      <section id="provider-results" className="mx-auto max-w-6xl scroll-mt-6 px-5 py-6">
         {searchMessage && <div className="mb-4 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-4 py-3 text-sm text-[#E5C65A]">{searchMessage} {visibleProviders.length} verified provider{visibleProviders.length === 1 ? "" : "s"} currently available.</div>}
         <div className="mb-5 flex items-end justify-between">
           <div><p className="text-xs font-bold tracking-widest text-[#D4AF37]">VERIFIED & AVAILABLE</p><h2 className="mt-1 text-2xl font-bold">Ready to take a job</h2></div>
@@ -312,12 +312,12 @@ export default function ProvidersPage() {
         {loadError && <div className="mb-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{loadError}</div>}
 
         {visibleProviders.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-8 text-center">
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-center">
             <p className="text-xl font-bold">No available verified providers found</p>
             <p className="mt-2 text-zinc-500">
               No biometric-verified provider is currently available for this selection. Lagos, Abuja, Ibadan, Warri and Port Harcourt remain Rydah target cities, and supply will appear here as verified providers come online.
             </p>
-            <a href="/post-job" className="mt-5 inline-block rounded-xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Post a Job</a>
+            <Link href="/post-job" className="mt-5 inline-block rounded-xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Post a Job</Link>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -328,7 +328,7 @@ export default function ProvidersPage() {
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#D4AF37]/10 text-2xl">🛠️</div>
                     <div>
                       <div className="flex flex-wrap items-center gap-2"><h3 className="font-bold">{provider.name}</h3><span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-400">✓ VERIFIED</span></div>
-                      <p className="mt-1 text-sm text-zinc-400">{provider.category} • {provider.area}</p>
+                      <p className="mt-1 text-sm text-zinc-400">{provider.category} • {displayServiceArea(provider.area)}</p>
                       {userCoordinates && RYDAH_SERVICE_AREA_CENTERS[provider.area] && (
                         <p className="mt-1 text-xs text-emerald-300">
                           ~{distanceKm(
@@ -359,13 +359,13 @@ export default function ProvidersPage() {
       </section>
 
       <section className="mx-auto max-w-6xl px-5 pb-6">
-        <div className="rounded-3xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-6 sm:flex sm:items-center sm:justify-between sm:gap-6">
+        <div className="rounded-3xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-6 sm:flex sm:items-center sm:justify-between sm:gap-4">
           <div>
             <p className="text-xs font-black tracking-widest text-[#D4AF37]">PROVIDERS</p>
             <h3 className="mt-2 text-xl font-black">Your profession isn&apos;t listed?</h3>
             <p className="mt-2 text-sm text-zinc-400">Service providers can register a genuine profession for Rydah marketplace review instead of choosing the wrong category.</p>
           </div>
-          <a href="/provider-interest" className="mt-4 inline-block shrink-0 rounded-xl bg-white px-5 py-3 font-black text-black sm:mt-0">Add Your Profession</a>
+          <Link href="/provider-interest" className="mt-4 inline-block shrink-0 rounded-xl bg-white px-5 py-3 font-black text-black sm:mt-0">Add Your Profession</Link>
         </div>
       </section>
 
@@ -373,7 +373,7 @@ export default function ProvidersPage() {
         <div className="rounded-3xl border border-red-500/20 bg-red-950/20 p-6">
           <p className="text-xs font-bold tracking-widest text-red-400">NEED URGENT HELP?</p>
           <h3 className="mt-2 text-xl font-bold">Post your job and Rydah will auto-match an available biometric-verified provider.</h3>
-          <a href="/post-job?urgent=1" className="mt-5 inline-block rounded-xl bg-white px-5 py-3 font-bold text-black">Post a Job</a>
+          <Link href="/post-job?urgent=1" className="mt-5 inline-block rounded-xl bg-white px-5 py-3 font-bold text-black">Post a Job</Link>
         </div>
       </section>
 

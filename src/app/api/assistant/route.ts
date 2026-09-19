@@ -53,12 +53,16 @@ function localAnswer(message: string) {
   return "I can help with finding a provider, posting a job, payments, safety checks, cancellations, provider registration or support. Tell me what you need done and your area in Lagos, Abuja, Ibadan, Warri or Port Harcourt, and I’ll point you to the right Rydah step.";
 }
 
-function extractResponseText(payload: any) {
-  if (typeof payload?.output_text === "string" && payload.output_text.trim()) return payload.output_text.trim();
+function extractResponseText(payload: unknown) {
+  const data = payload as {
+    output_text?: unknown;
+    output?: Array<{ content?: Array<{ type?: string; text?: unknown }> }>;
+  };
+  if (typeof data.output_text === "string" && data.output_text.trim()) return data.output_text.trim();
   const parts: string[] = [];
-  for (const item of payload?.output ?? []) {
-    for (const content of item?.content ?? []) {
-      if (content?.type === "output_text" && typeof content?.text === "string") parts.push(content.text);
+  for (const item of data.output ?? []) {
+    for (const content of item.content ?? []) {
+      if (content.type === "output_text" && typeof content.text === "string") parts.push(content.text);
     }
   }
   return parts.join("\n").trim();

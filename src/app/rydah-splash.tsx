@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 export default function RydahSplash() {
@@ -20,7 +21,7 @@ export default function RydahSplash() {
 
       <div className="stage">
         <div className="emblem-wrap">
-          <img className="emblem" src="/rydah-icon.svg" alt="" aria-hidden="true" />
+          <Image className="emblem" src="/rydah-icon.svg" alt="" aria-hidden="true" width={300} height={300} unoptimized priority />
           <div className="light-sweep" />
         </div>
 
@@ -53,7 +54,7 @@ export default function RydahSplash() {
         }
         .emblem-wrap {
           position: relative;
-          width: min(66vw, 300px);
+          width: min(52vw, 220px);
           aspect-ratio: 1;
           transform-style: preserve-3d;
           animation: logoRise 1.2s cubic-bezier(.18,.89,.32,1.18) both;
@@ -113,7 +114,7 @@ export default function RydahSplash() {
         .loading-line {
           width: min(66vw,280px);
           height: 2px;
-          margin-top: 28px;
+          margin-top: 20px;
           overflow: hidden;
           background: rgba(212,175,55,.12);
           border-radius: 999px;

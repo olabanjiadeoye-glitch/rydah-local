@@ -1,5 +1,8 @@
 "use client";
 
+import { displayServiceArea } from "@/lib/locations";
+import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { getStoredSession, invokeFunction, restGet, restRpc, type AuthSession } from "@/lib/supabase";
 
@@ -242,11 +245,11 @@ export default function ArrivalCheckPage() {
             <p className="text-sm font-black tracking-[0.22em] text-[#D4AF37]">RYDAH LOCAL</p>
             <h1 className="mt-1 text-2xl font-black">Provider Arrival Safety Check</h1>
           </div>
-          <a href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</a>
+          <Link href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</Link>
         </div>
       </header>
 
-      <section className="mx-auto max-w-4xl px-5 py-10">
+      <section className="mx-auto max-w-4xl px-5 py-6 sm:py-8">
         <div className="rounded-3xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 p-6">
           <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">BEFORE WORK STARTS</p>
           <h2 className="mt-2 text-3xl font-black">Confirm the right provider arrived</h2>
@@ -259,9 +262,9 @@ export default function ArrivalCheckPage() {
         {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
         {loading ? (
-          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">Loading arrival checks…</div>
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">Loading arrival checks…</div>
         ) : jobs.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-7">
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">
             <h3 className="text-xl font-black">No arrival check is needed right now</h3>
             <p className="mt-2 text-zinc-400">A job will appear here after the provider has accepted it and you have accepted the quote.</p>
           </div>
@@ -287,7 +290,7 @@ export default function ArrivalCheckPage() {
                           <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-black text-amber-300">ID REVIEWED • BIOMETRIC REQUIRED</span>
                         ) : null}
                       </div>
-                      <p className="mt-2 text-zinc-400">{job.service_category} • {job.location}</p>
+                      <p className="mt-2 text-zinc-400">{job.service_category} • {displayServiceArea(job.location)}</p>
                     </div>
                     <span className="rounded-full bg-[#D4AF37]/10 px-3 py-2 text-xs font-black text-[#D4AF37]">ARRIVAL CHECK</span>
                   </div>
@@ -383,7 +386,7 @@ export default function ArrivalCheckPage() {
                           <div className="mt-4">
                             <p className="text-sm font-bold">Fresh camera capture</p>
                             <div className="mt-2 overflow-hidden rounded-2xl border border-white/10 bg-black">
-                              <img src={image} alt="Fresh provider camera capture" className="max-h-[420px] w-full object-contain" />
+                              <Image src={image} alt="Fresh provider camera capture" width={1200} height={900} unoptimized className="max-h-[360px] w-full object-contain" />
                             </div>
                             <button
                               type="button"

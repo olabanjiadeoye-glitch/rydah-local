@@ -218,7 +218,7 @@ Deno.serve(async (req) => {
         `payments?reference=eq.${encodeURIComponent(body.reference)}&customer_id=eq.${encodeURIComponent(user.id)}&select=*&limit=1`,
       );
       const payments = await paymentResponse.json() as Array<Record<string, unknown>>;
-      const payment = payments[0] as any;
+      const payment = payments[0];
       if (!payment) return json({ error: "Payment not found" }, 404);
       if (payment.status === "paid") return json({ ok: true, status: "paid", payment });
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { updatePasswordWithRecoveryToken } from "@/lib/supabase";
 import BrandLogo from "../brand-logo";
@@ -73,13 +74,13 @@ export default function ResetPasswordPage() {
     <main className="min-h-screen bg-[#080808] text-white">
       <header className="border-b border-white/10">
         <div className="mx-auto flex max-w-xl items-center justify-between px-5 py-5">
-          <a href="/" aria-label="Rydah Local home"><BrandLogo compact /></a>
-          <a href="/sign-in" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Sign in</a>
+          <Link href="/" aria-label="Rydah Local home"><BrandLogo compact /></Link>
+          <Link href="/sign-in" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Sign in</Link>
         </div>
       </header>
 
-      <section className="mx-auto max-w-xl px-5 py-12">
-        <div className="rounded-3xl border border-white/10 bg-[#121212] p-7">
+      <section className="mx-auto max-w-xl px-5 py-6">
+        <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">
           <h1 className="text-3xl font-black">Choose a new password</h1>
           <p className="mt-3 text-zinc-400">Use at least 8 characters with uppercase, lowercase and a number.</p>
 

@@ -7,6 +7,35 @@ const corsHeaders = {
 const YOUVERIFY_SANDBOX_SAMPLE_IMAGE =
   "https://cdn.youverify.co/1655466566309-lLSfNTlhElMTtbXW-QE-q.jpg";
 
+type LivenessSessionPayload = {
+  data?: { sessionId?: string; authToken?: string };
+  sessionId?: string;
+  authToken?: string;
+};
+
+type LivenessHistoryItem = {
+  sessionId?: string;
+  passed?: boolean;
+  faceImage?: string;
+};
+
+type IdentityVerificationPayload = {
+  data?: {
+    status?: string;
+    id?: string | number;
+    reason?: string;
+    validations?: {
+      validationMessages?: string;
+      selfie?: {
+        selfieVerification?: {
+          match?: boolean;
+          confidenceLevel?: number | string;
+        };
+      };
+    };
+  };
+};
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -121,7 +150,7 @@ async function youverifyGet(path: string, token: string, baseUrl: string) {
 }
 
 async function generateLivenessSession(config: ReturnType<typeof youverifyConfig>, providerId: string, userId: string) {
-  let sessionPayload: any;
+  let sessionPayload: LivenessSessionPayload;
   try {
     sessionPayload = await youverify(
       "/v2/api/identity/sdk/session/generate",
@@ -132,7 +161,7 @@ async function generateLivenessSession(config: ReturnType<typeof youverifyConfig
         ttlSeconds: 300,
         metadata: { source: "rydah-local", providerId, userId },
       },
-    );
+    ) as LivenessSessionPayload;
   } catch {
     sessionPayload = await youverify(
       "/v2/api/identity/sdk/liveness/session/generate",
@@ -142,7 +171,7 @@ async function generateLivenessSession(config: ReturnType<typeof youverifyConfig
         ttlSeconds: 300,
         metadata: { source: "rydah-local", providerId, userId },
       },
-    );
+    ) as LivenessSessionPayload;
   }
 
   const sessionId = String(sessionPayload?.data?.sessionId || sessionPayload?.sessionId || "");
@@ -157,7 +186,7 @@ async function generateLivenessSession(config: ReturnType<typeof youverifyConfig
       publicMerchantID: config.publicMerchantID,
       deviceCorrelationId,
     },
-  );
+  ) as LivenessSessionPayload;
   const sessionToken = String(tokenPayload?.data?.authToken || tokenPayload?.authToken || "");
   if (!sessionToken) throw new Error("Identity provider did not return a liveness session token");
 
@@ -235,14 +264,15 @@ Deno.serve(async (req) => {
         config.token,
         config.baseUrl,
       );
-      const docs = Array.isArray(history?.data?.docs) ? history.data.docs : [];
-      const liveResult = docs.find((item: any) =>
-        String(item?.sessionId || "") === livenessSessionId && item?.passed === true
+      const historyPayload = history as { data?: { docs?: LivenessHistoryItem[] } };
+      const docs = Array.isArray(historyPayload.data?.docs) ? historyPayload.data.docs : [];
+      const liveResult = docs.find((item) =>
+        String(item.sessionId || "") === livenessSessionId && item.passed === true
       );
 
       if (!liveResult) {
-        const sessionResults = docs.filter((item: any) => String(item?.sessionId || "") === livenessSessionId);
-        const explicitFailure = sessionResults.some((item: any) => item?.passed === false);
+        const sessionResults = docs.filter((item) => String(item.sessionId || "") === livenessSessionId);
+        const explicitFailure = sessionResults.some((item) => item.passed === false);
         const checkedAt = new Date().toISOString();
 
         await supabaseRequest(`provider_verifications?id=eq.${encodeURIComponent(verification.id)}`, {
@@ -367,9 +397,9 @@ Deno.serve(async (req) => {
         }),
       });
 
-      let payload: any;
+      let payload: IdentityVerificationPayload;
       try {
-        payload = await youverify(endpoint, config.token, config.baseUrl, requestBody);
+        payload = await youverify(endpoint, config.token, config.baseUrl, requestBody) as IdentityVerificationPayload;
       } catch (error) {
         const failedAt = new Date().toISOString();
         await supabaseRequest(`provider_verifications?id=eq.${encodeURIComponent(verification.id)}`, {

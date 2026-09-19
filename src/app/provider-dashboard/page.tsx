@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   clearSession,
@@ -13,7 +14,7 @@ import {
 } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
 import { getCurrentDeviceLocation } from "@/lib/device-location";
-import { RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
+import { displayServiceArea, RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, RYDAH_TARGET_CITIES, nearestServiceArea, serviceAreasForCity } from "@/lib/locations";
 
 type ProviderRow = {
   id: string;
@@ -81,8 +82,6 @@ type JobRow = {
 };
 
 const categories = ["Electrician", "Plumber", "AC Technician", "Generator", "Cleaning", "Mechanic"];
-const locations = RYDAH_SERVICE_AREAS;
-
 function naira(value: number | null) {
   return value == null ? "Not set" : `₦${Number(value).toLocaleString()}`;
 }
@@ -140,6 +139,8 @@ export default function ProviderDashboardPage() {
         window.history.replaceState({}, "", "/provider-dashboard");
       }
     })();
+  // Intentional one-time browser auth/data bootstrap.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function callProviderBilling(currentSession: AuthSession, action: string) {
@@ -291,7 +292,7 @@ export default function ProviderDashboardPage() {
     }
   }
 
-  async function useProviderGps() {
+  async function updateProviderGps() {
     if (!session) return;
 
     setGpsBusy(true);
@@ -311,7 +312,7 @@ export default function ProviderDashboardPage() {
       }
 
       setLocation(nearest.area);
-      setGpsMessage(`GPS matched your service area to ${nearest.area} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
+      setGpsMessage(`GPS matched your service area to ${displayServiceArea(nearest.area)} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
 
       if (provider) {
         const updated = await restPatch<ProviderRow[]>(
@@ -472,7 +473,7 @@ export default function ProviderDashboardPage() {
   }
 
   if (loading) {
-    return <main className="min-h-screen bg-[#080808] p-8 text-zinc-400">Loading provider dashboard...</main>;
+    return <main className="min-h-screen bg-[#080808] p-5 sm:p-6 text-zinc-400">Loading provider dashboard...</main>;
   }
 
   const role = session?.user.user_metadata?.role;
@@ -486,13 +487,13 @@ export default function ProviderDashboardPage() {
             <h1 className="mt-1 text-2xl font-black">Provider Dashboard</h1>
           </div>
           <div className="flex gap-2">
-            <a href="/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Marketplace</a>
+            <Link href="/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Marketplace</Link>
             <button onClick={signOut} className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Sign Out</button>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto max-w-5xl px-5 py-10">
+      <section className="mx-auto max-w-5xl px-5 py-6 sm:py-8">
         {message && <div className="mb-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">{message}</div>}
         {error && <div className="mb-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
@@ -574,13 +575,13 @@ export default function ProviderDashboardPage() {
         )}
 
         {role !== "provider" && !provider ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7">
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">
             <h2 className="text-2xl font-black">This is a customer account</h2>
             <p className="mt-3 text-zinc-400">Use a provider account to access this dashboard.</p>
-            <a href="/providers" className="mt-6 inline-block rounded-2xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Browse Providers</a>
+            <Link href="/providers" className="mt-6 inline-block rounded-2xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Browse Providers</Link>
           </div>
         ) : !provider ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7">
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">
             <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">WELCOME TO RYDAH</p>
             <h2 className="mt-2 text-3xl font-black">Set up your provider profile</h2>
             <form onSubmit={createProviderProfile} className="mt-7 grid gap-5 md:grid-cols-2">
@@ -591,7 +592,7 @@ export default function ProviderDashboardPage() {
               <label className="block">
                 <span className="text-sm font-bold">Service category</span>
                 <select value={category} onChange={(e) => setCategory(e.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">{categories.map((item) => <option key={item}>{item}</option>)}</select>
-                <a href="/provider-interest" className="mt-2 inline-block text-xs font-bold text-[#D4AF37]">Profession not listed? Register it for review →</a>
+                <Link href="/provider-interest" className="mt-2 inline-block text-xs font-bold text-[#D4AF37]">Profession not listed? Register it for review →</Link>
               </label>
               <label className="block">
                 <span className="text-sm font-bold">Location</span>
@@ -603,12 +604,18 @@ export default function ProviderDashboardPage() {
                   }}
                   className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
                 >
-                  {locations.map((item) => <option key={item}>{item}</option>)}
+                  {RYDAH_TARGET_CITIES.map((city) => (
+                    <optgroup key={city} label={city}>
+                      {serviceAreasForCity(city).map((area) => (
+                        <option key={area} value={area}>{displayServiceArea(area)}</option>
+                      ))}
+                    </optgroup>
+                  ))}
                 </select>
                 <button
                   type="button"
                   disabled={gpsBusy}
-                  onClick={() => void useProviderGps()}
+                  onClick={() => void updateProviderGps()}
                   className="mt-2 rounded-xl border border-[#D4AF37]/35 px-3 py-2 text-xs font-black text-[#E5C65A] disabled:opacity-40"
                 >
                   {gpsBusy ? "Finding GPS…" : "📍 Detect Service Area"}
@@ -642,18 +649,18 @@ export default function ProviderDashboardPage() {
                       <h2 className="text-2xl font-black">{provider.business_name}</h2>
                       <span className={`rounded-full px-3 py-1 text-xs font-black ${biometricStatus === "verified" ? "bg-emerald-500/15 text-emerald-400" : provider.is_verified ? "bg-amber-500/15 text-amber-300" : "bg-zinc-800 text-zinc-400"}`}>{biometricStatus === "verified" ? "✓ BIOMETRIC VERIFIED" : provider.is_verified ? "ID REVIEWED • BIOMETRIC REQUIRED" : "VERIFICATION PENDING"}</span>
                     </div>
-                    <p className="mt-2 text-zinc-400">{provider.service_category} • {provider.location}</p>
+                    <p className="mt-2 text-zinc-400">{provider.service_category} • {displayServiceArea(provider.location)}</p>
                     {provider.description && <p className="mt-4 text-sm leading-6 text-zinc-400">{provider.description}</p>}
                     <div className="mt-4 flex flex-wrap items-center gap-3">
                       <button
                         type="button"
                         disabled={gpsBusy}
-                        onClick={() => void useProviderGps()}
+                        onClick={() => void updateProviderGps()}
                         className="rounded-xl border border-[#D4AF37]/35 px-3 py-2 text-xs font-black text-[#E5C65A] disabled:opacity-40"
                       >
                         {gpsBusy ? "Finding GPS…" : "📍 Update Area from GPS"}
                       </button>
-                      <a href="/provider-interest" className="text-sm font-bold text-[#D4AF37]">Offer another profession →</a>
+                      <Link href="/provider-interest" className="text-sm font-bold text-[#D4AF37]">Offer another profession →</Link>
                     </div>
                     {gpsMessage && <p className="mt-2 text-xs leading-5 text-emerald-300">{gpsMessage}</p>}
                   </div>
@@ -677,12 +684,12 @@ export default function ProviderDashboardPage() {
               <strong className="text-[#D4AF37]">Keep Rydah jobs on-platform.</strong> Customer phone, email and private job GPS coordinates are released only after the customer accepts your quote. Direct provider access to hidden contact or GPS fields is blocked by the Rydah backend, not just hidden on screen.
             </div>
 
-            <div className="mt-8">
+            <div className="mt-6">
               <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">CUSTOMER REQUESTS</p>
               <h2 className="mt-1 text-3xl font-black">Jobs assigned to you</h2>
 
               {jobs.length === 0 ? (
-                <div className="mt-5 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">No assigned jobs yet.</div>
+                <div className="mt-5 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">No assigned jobs yet.</div>
               ) : (
                 <div className="mt-5 grid gap-4">
                   {jobs.map((job) => {
@@ -704,7 +711,7 @@ export default function ProviderDashboardPage() {
                               {job.is_urgent && <span className="rounded-full bg-red-500/15 px-3 py-1 text-xs font-black text-red-300">URGENT</span>}
                               <span className="rounded-full bg-[#D4AF37]/10 px-3 py-1 text-xs font-black text-[#D4AF37]">{label(job.status)}</span>
                             </div>
-                            <p className="mt-2 text-sm text-zinc-500">{job.location} • {new Date(job.created_at).toLocaleString()}</p>
+                            <p className="mt-2 text-sm text-zinc-500">{displayServiceArea(job.location)} • {new Date(job.created_at).toLocaleString()}</p>
                           </div>
                         </div>
 
@@ -766,7 +773,7 @@ export default function ProviderDashboardPage() {
                           <div className="mt-5 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-5">
                             <p className="text-sm font-black text-amber-300">BIOMETRIC VERIFICATION REQUIRED</p>
                             <p className="mt-2 text-sm leading-6 text-zinc-300">Rydah now requires successful face and liveness verification before providers can accept or work on jobs. Complete verification before this job can start.</p>
-                            <a href="/provider-onboarding" className="mt-4 inline-block rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">Complete Biometric Verification</a>
+                            <Link href="/provider-onboarding" className="mt-4 inline-block rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">Complete Biometric Verification</Link>
                           </div>
                         )}
 

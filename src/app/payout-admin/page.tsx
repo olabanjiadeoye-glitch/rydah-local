@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 import { getStoredSession, restGet, type AuthSession, invokeFunction } from "@/lib/supabase";
 
 type AdminRow = { user_id: string };
@@ -101,8 +102,8 @@ export default function PayoutAdminPage() {
   }
 
   const livePayouts = payouts.filter((p) => !p.is_test);
-  const pendingTotal = useMemo(() => livePayouts.filter((p) => p.status === "pending").reduce((s, p) => s + Number(p.amount_naira || 0), 0), [payouts]);
-  const paidTotal = useMemo(() => livePayouts.filter((p) => p.status === "paid").reduce((s, p) => s + Number(p.amount_naira || 0), 0), [payouts]);
+  const pendingTotal = livePayouts.filter((p) => p.status === "pending").reduce((s, p) => s + Number(p.amount_naira || 0), 0);
+  const paidTotal = livePayouts.filter((p) => p.status === "paid").reduce((s, p) => s + Number(p.amount_naira || 0), 0);
   const pendingCount = livePayouts.filter((p) => p.status === "pending").length;
 
   return (
@@ -114,13 +115,13 @@ export default function PayoutAdminPage() {
             <h1 className="mt-1 text-2xl font-black">Provider Payouts</h1>
           </div>
           <div className="flex flex-wrap gap-2">
-            <a href="/admin/finance" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Finance</a>
-            <a href="/admin/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Providers</a>
+            <Link href="/admin/finance" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Finance</Link>
+            <Link href="/admin/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Providers</Link>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-5 py-10">
+      <section className="mx-auto max-w-6xl px-5 py-6 sm:py-8">
         <div className="mb-6 rounded-2xl border border-emerald-500/20 bg-emerald-950/20 p-4 text-sm text-emerald-300">
           LIVE PAYOUT LEDGER — only mark a live payout paid after the provider has actually received an external bank transfer. A payment reference is required.
         </div>
@@ -133,15 +134,15 @@ export default function PayoutAdminPage() {
           <div className="rounded-3xl border border-emerald-500/20 bg-[#121212] p-6"><p className="text-sm text-zinc-500">Live marked paid</p><p className="mt-2 text-3xl font-black text-emerald-400">{naira(paidTotal)}</p></div>
         </div>
 
-        <div className="mt-8 flex flex-wrap items-end justify-between gap-3">
+        <div className="mt-6 flex flex-wrap items-end justify-between gap-3">
           <div><p className="text-sm font-black tracking-[0.16em] text-[#D4AF37]">PAYOUT QUEUE</p><h2 className="mt-1 text-3xl font-black">Requests</h2></div>
           {session && <button onClick={() => void load(session)} className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-bold text-zinc-300">Refresh</button>}
         </div>
 
         {loading ? (
-          <div className="mt-5 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">Loading payout requests...</div>
+          <div className="mt-5 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">Loading payout requests...</div>
         ) : payouts.length === 0 ? (
-          <div className="mt-5 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">No payout requests yet.</div>
+          <div className="mt-5 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">No payout requests yet.</div>
         ) : (
           <div className="mt-5 grid gap-4">
             {payouts.map((payout) => (

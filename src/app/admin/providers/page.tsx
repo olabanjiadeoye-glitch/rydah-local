@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, restPatch, type AuthSession } from "@/lib/supabase";
 
@@ -133,7 +134,7 @@ export default function ProviderAdminPage() {
   }
 
   if (loading) {
-    return <main className="min-h-screen bg-[#080808] p-8 text-zinc-400">Loading admin verification queue...</main>;
+    return <main className="min-h-screen bg-[#080808] p-5 sm:p-6 text-zinc-400">Loading admin verification queue...</main>;
   }
 
   return (
@@ -144,16 +145,16 @@ export default function ProviderAdminPage() {
             <p className="text-sm font-black tracking-[0.22em] text-[#D4AF37]">RYDAH LOCAL ADMIN</p>
             <h1 className="mt-1 text-2xl font-black">Provider Verification</h1>
           </div>
-          <a href="/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Marketplace</a>
+          <Link href="/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Marketplace</Link>
         </div>
       </header>
 
-      <section className="mx-auto max-w-5xl px-5 py-10">
+      <section className="mx-auto max-w-5xl px-5 py-6 sm:py-8">
         {message && <div className="mb-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">{message}</div>}
         {error && <div className="mb-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
         {!isAdmin ? (
-          <div className="rounded-3xl border border-red-500/20 bg-red-950/20 p-7">
+          <div className="rounded-3xl border border-red-500/20 bg-red-950/20 p-5 sm:p-6">
             <h2 className="text-2xl font-black">Admin access required</h2>
             <p className="mt-3 text-red-200">This account is not authorised to review providers.</p>
           </div>
@@ -167,7 +168,7 @@ export default function ProviderAdminPage() {
             </div>
 
             {verifications.length === 0 ? (
-              <div className="rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">No verification submissions yet.</div>
+              <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">No verification submissions yet.</div>
             ) : (
               <div className="grid gap-5">
                 {verifications.map((row) => {

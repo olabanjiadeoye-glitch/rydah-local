@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { resolveUserAccess } from "@/lib/access";
 import {
@@ -69,6 +70,8 @@ export default function AdminDisputesPage() {
     }
     setSession(current);
     void initialise(current);
+  // Intentional one-time browser auth/data bootstrap.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function initialise(current: AuthSession) {
@@ -157,14 +160,14 @@ export default function AdminDisputesPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#080808] px-5 py-8 text-white">
+    <main className="min-h-screen bg-[#080808] px-5 py-6 text-white">
       <section className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <a href="/admin-dashboard"><BrandLogo /></a>
-          <a href="/admin-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Admin Dashboard</a>
+          <Link href="/admin-dashboard"><BrandLogo /></Link>
+          <Link href="/admin-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Admin Dashboard</Link>
         </div>
 
-        <div className="mt-8 flex flex-wrap items-end justify-between gap-4">
+        <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">ADMIN RESOLUTION CENTRE</p>
             <h1 className="mt-2 text-4xl font-black">Disputes & refunds</h1>
@@ -180,9 +183,9 @@ export default function AdminDisputesPage() {
         {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
         {loading ? (
-          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">Loading disputes…</div>
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">Loading disputes…</div>
         ) : visibleRows.length === 0 ? (
-          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">No disputes in this view.</div>
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">No disputes in this view.</div>
         ) : (
           <div className="mt-6 grid gap-5">
             {visibleRows.map((row) => {

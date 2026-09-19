@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
 import { getCurrentDeviceLocation, type DeviceCoordinates } from "@/lib/device-location";
-import { RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
+import { displayServiceArea, RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
 
 type ProviderLookup = {
   id: string;
@@ -117,7 +118,7 @@ export default function PostJobPage() {
     }
   };
 
-  const useCurrentLocation = async () => {
+  const detectCurrentLocation = async () => {
     setGpsBusy(true);
     setError("");
     setGpsMessage("");
@@ -140,16 +141,16 @@ export default function PostJobPage() {
 
       if (!selectedProvider && liveLocations.includes(nearest.area)) {
         changeLocation(nearest.area, true);
-        setGpsMessage(`GPS found you near ${nearest.area} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
+        setGpsMessage(`GPS found you near ${displayServiceArea(nearest.area)} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
         return;
       }
 
       if (!selectedProvider && !liveLocations.includes(nearest.area)) {
-        setGpsMessage(`GPS found you near ${nearest.area}, but no biometric-verified provider is currently live in that area. Your coordinates will stay with this request if you choose an available area manually.`);
+        setGpsMessage(`GPS found you near ${displayServiceArea(nearest.area)}, but no biometric-verified provider is currently live in that area. Your coordinates will stay with this request if you choose an available area manually.`);
         return;
       }
 
-      setGpsMessage(`GPS captured for this job • accuracy about ${Math.round(coordinates.accuracy)} m. The selected provider's service area remains ${selectedProvider?.location ?? location}.`);
+      setGpsMessage(`GPS captured for this job • accuracy about ${Math.round(coordinates.accuracy)} m. The selected provider's service area remains ${displayServiceArea(selectedProvider?.location ?? location)}.`);
     } catch (caught) {
       setGpsCoordinates(null);
       setError(caught instanceof Error ? caught.message : "Unable to use your current location.");
@@ -225,7 +226,7 @@ export default function PostJobPage() {
   };
 
   if (!ready) {
-    return <main className="min-h-screen bg-[#080808] p-8 text-zinc-400">Preparing your job request...</main>;
+    return <main className="min-h-screen bg-[#080808] p-5 sm:p-6 text-zinc-400">Preparing your job request...</main>;
   }
 
   return (
@@ -236,20 +237,20 @@ export default function PostJobPage() {
             <p className="text-xs font-bold tracking-[0.2em] text-[#D4AF37]">RYDAH LOCAL</p>
             <h1 className="mt-1 text-2xl font-black">Post a Job</h1>
           </div>
-          <a href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</a>
+          <Link href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</Link>
         </div>
       </header>
 
-      <section className="mx-auto max-w-3xl px-5 py-10">
+      <section className="mx-auto max-w-3xl px-5 py-6 sm:py-8">
         {submitted ? (
-          <div className="rounded-3xl border border-[#D4AF37]/30 bg-[#121212] p-8 text-center">
+          <div className="rounded-3xl border border-[#D4AF37]/30 bg-[#121212] p-5 sm:p-6 text-center">
             <div className="text-5xl">✓</div>
             <h2 className="mt-4 text-3xl font-black">Request sent</h2>
             <p className="mt-3 text-zinc-400">Your {urgent ? "urgent " : ""}request has been assigned to an available biometric-verified provider.</p>
             {jobId && <p className="mt-3 text-xs text-zinc-600">Request ID: {jobId.slice(0, 8)}</p>}
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <a href="/my-jobs" className="rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black">Track My Job</a>
-              <a href="/providers" className="rounded-2xl border border-white/10 px-5 py-4 font-bold">Browse Providers</a>
+              <Link href="/my-jobs" className="rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black">Track My Job</Link>
+              <Link href="/providers" className="rounded-2xl border border-white/10 px-5 py-4 font-bold">Browse Providers</Link>
             </div>
           </div>
         ) : (
@@ -260,7 +261,7 @@ export default function PostJobPage() {
 
             {selectedProvider && (
               <div className="mb-5 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">
-                Provider selected: <strong>{selectedProvider.business_name}</strong> • {selectedProvider.service_category} • {selectedProvider.location}
+                Provider selected: <strong>{selectedProvider.business_name}</strong> • {selectedProvider.service_category} • {displayServiceArea(selectedProvider.location)}
               </div>
             )}
             {!provider && (
@@ -295,17 +296,17 @@ export default function PostJobPage() {
 
             <label className="mt-5 block text-sm font-bold">Location</label>
             {selectedProvider ? (
-              <div className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-zinc-200">{selectedProvider.location}</div>
+              <div className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 text-zinc-200">{displayServiceArea(selectedProvider.location)}</div>
             ) : (
               <select required value={location} onChange={(event) => changeLocation(event.target.value)} className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none">
-                {liveLocations.map((item) => <option key={item}>{item}</option>)}
+                {liveLocations.map((item) => <option key={item} value={item}>{displayServiceArea(item)}</option>)}
               </select>
             )}
             <div className="mt-3 flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 disabled={gpsBusy}
-                onClick={() => void useCurrentLocation()}
+                onClick={() => void detectCurrentLocation()}
                 className="rounded-xl border border-[#D4AF37]/35 px-4 py-2.5 text-sm font-black text-[#E5C65A] disabled:opacity-40"
               >
                 {gpsBusy ? "Finding GPS…" : "📍 Use My Current Location"}

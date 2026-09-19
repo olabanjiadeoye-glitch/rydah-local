@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   getStoredSession,
@@ -12,9 +13,12 @@ import {
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
 import { getCurrentDeviceLocation } from "@/lib/device-location";
 import {
+  displayServiceArea,
   RYDAH_DEFAULT_SERVICE_AREA,
   RYDAH_SERVICE_AREAS,
+  RYDAH_TARGET_CITIES,
   nearestServiceArea,
+  serviceAreasForCity,
 } from "@/lib/locations";
 
 type ProviderRow = {
@@ -95,10 +99,6 @@ const steps = [
   { number: 5, title: "Ready", short: "Go online" },
 ] as const;
 
-function label(value: string) {
-  return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
 function naira(value: number | null | undefined) {
   return `₦${Number(value || 0).toLocaleString()}`;
 }
@@ -110,6 +110,47 @@ async function fileToDataUrl(file: File) {
     reader.onerror = () => reject(new Error("Unable to read the photo."));
     reader.readAsDataURL(file);
   });
+}
+
+function ProviderSetupProgress({ currentStep }: { currentStep: number }) {
+  const percent = ((currentStep - 1) / (steps.length - 1)) * 100;
+  return (
+    <div className="rounded-3xl border border-white/10 bg-[#121212] p-5">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">PROVIDER SETUP</p>
+          <p className="mt-1 text-sm font-bold text-zinc-300">Step {currentStep} of {steps.length}</p>
+        </div>
+        <span className="rounded-full bg-[#D4AF37]/10 px-3 py-2 text-xs font-black text-[#D4AF37]">
+          {steps[currentStep - 1].title}
+        </span>
+      </div>
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-800">
+        <div
+          className="h-full rounded-full bg-[#D4AF37] transition-all"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <div className="mt-4 grid grid-cols-5 gap-1">
+        {steps.map((step) => (
+          <div key={step.number} className="text-center">
+            <div
+              className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${
+                step.number < currentStep
+                  ? "bg-emerald-500/20 text-emerald-300"
+                  : step.number === currentStep
+                    ? "bg-[#D4AF37] text-black"
+                    : "bg-zinc-800 text-zinc-500"
+              }`}
+            >
+              {step.number < currentStep ? "✓" : step.number}
+            </div>
+            <p className="mt-1 hidden text-[10px] font-bold text-zinc-500 sm:block">{step.short}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function ProviderOnboardingPage() {
@@ -195,6 +236,8 @@ export default function ProviderOnboardingPage() {
 
       await loadAll(current);
     })();
+  // Intentional one-time browser auth/data bootstrap.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function billingAction(current: AuthSession, action: string) {
@@ -298,7 +341,7 @@ export default function ProviderOnboardingPage() {
     }
   }
 
-  async function useGpsArea() {
+  async function detectGpsArea() {
     setGpsBusy(true);
     setError("");
     setGpsMessage("");
@@ -313,7 +356,7 @@ export default function ProviderOnboardingPage() {
         throw new Error("We could not match your phone location to a current Rydah service area. Choose your area from the list.");
       }
       setLocation(nearest.area);
-      setGpsMessage(`Area detected: ${nearest.area}`);
+      setGpsMessage(`Area detected: ${displayServiceArea(nearest.area)}`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to detect your service area.");
     } finally {
@@ -523,8 +566,8 @@ export default function ProviderOnboardingPage() {
         throw new Error("The secure camera session could not be started.");
       }
 
-      const module = await import("youverify-liveness-web");
-      const YouverifyLiveness = module.default;
+      const livenessModule = await import("youverify-liveness-web");
+      const YouverifyLiveness = livenessModule.default;
       const [firstName, ...rest] = verification.legal_name.trim().split(/\s+/);
       const liveSessionId = credentials.session_id;
 
@@ -554,7 +597,7 @@ export default function ProviderOnboardingPage() {
           setMessage("Camera check passed. Finishing your verification…");
           window.setTimeout(() => void completeLiveFaceVerification(liveSessionId), 1200);
         },
-        onFailure: (data: any) => {
+        onFailure: (data: { error?: { message?: string; key?: string } }) => {
           setImmersiveVerification(false);
           setMessage("");
           setError(String(data?.error?.message || data?.error?.key || "Face check failed. Please try again."));
@@ -632,52 +675,12 @@ export default function ProviderOnboardingPage() {
     }
   }
 
-  function Progress() {
-    const percent = ((currentStep - 1) / (steps.length - 1)) * 100;
-    return (
-      <div className="rounded-3xl border border-white/10 bg-[#121212] p-5">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">PROVIDER SETUP</p>
-            <p className="mt-1 text-sm font-bold text-zinc-300">Step {currentStep} of {steps.length}</p>
-          </div>
-          <span className="rounded-full bg-[#D4AF37]/10 px-3 py-2 text-xs font-black text-[#D4AF37]">
-            {steps[currentStep - 1].title}
-          </span>
-        </div>
-        <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-800">
-          <div
-            className="h-full rounded-full bg-[#D4AF37] transition-all"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-        <div className="mt-4 grid grid-cols-5 gap-1">
-          {steps.map((step) => (
-            <div key={step.number} className="text-center">
-              <div
-                className={`mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${
-                  step.number < currentStep
-                    ? "bg-emerald-500/20 text-emerald-300"
-                    : step.number === currentStep
-                      ? "bg-[#D4AF37] text-black"
-                      : "bg-zinc-800 text-zinc-500"
-                }`}
-              >
-                {step.number < currentStep ? "✓" : step.number}
-              </div>
-              <p className="mt-1 hidden text-[10px] font-bold text-zinc-500 sm:block">{step.short}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#080808] px-5 py-10 text-white">
+      <main className="min-h-screen bg-[#080808] px-5 py-6 sm:py-8 text-white">
         <div className="mx-auto max-w-xl">
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">
             Loading your setup…
           </div>
         </div>
@@ -691,15 +694,15 @@ export default function ProviderOnboardingPage() {
     <main className="min-h-screen bg-[#080808] text-white">
       <header className="border-b border-white/10">
         <div className="mx-auto flex max-w-xl items-center justify-between gap-3 px-5 py-5">
-          <a href="/" className="font-black tracking-[0.18em] text-[#D4AF37]">RYDAH LOCAL</a>
-          <a href="/" className="rounded-full border border-white/10 px-4 py-2 text-xs font-bold text-zinc-400">
+          <Link href="/" className="font-black tracking-[0.18em] text-[#D4AF37]">RYDAH LOCAL</Link>
+          <Link href="/" className="rounded-full border border-white/10 px-4 py-2 text-xs font-bold text-zinc-400">
             Save & Exit
-          </a>
+          </Link>
         </div>
       </header>
 
       <section className="mx-auto max-w-xl px-5 py-7 pb-16">
-        <Progress />
+        <ProviderSetupProgress currentStep={currentStep} />
 
         {message && (
           <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm leading-6 text-emerald-200">
@@ -787,12 +790,18 @@ export default function ProviderOnboardingPage() {
                 }}
                 className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
               >
-                {RYDAH_SERVICE_AREAS.map((area) => <option key={area}>{area}</option>)}
+                {RYDAH_TARGET_CITIES.map((city) => (
+                  <optgroup key={city} label={city}>
+                    {serviceAreasForCity(city).map((area) => (
+                      <option key={area} value={area}>{displayServiceArea(area)}</option>
+                    ))}
+                  </optgroup>
+                ))}
               </select>
               <button
                 type="button"
                 disabled={gpsBusy}
-                onClick={() => void useGpsArea()}
+                onClick={() => void detectGpsArea()}
                 className="mt-3 rounded-xl border border-[#D4AF37]/35 px-4 py-3 text-sm font-black text-[#E5C65A] disabled:opacity-40"
               >
                 {gpsBusy ? "Finding your area…" : "📍 Use My Phone Location"}
@@ -1069,7 +1078,7 @@ export default function ProviderOnboardingPage() {
                 )}
               </div>
             ) : !provider.is_verified ? (
-              <div className="rounded-3xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-7 text-center">
+              <div className="rounded-3xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-5 sm:p-6 text-center">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-2xl text-emerald-300">✓</div>
                 <h1 className="mt-4 text-3xl font-black">Face check complete</h1>
                 <p className="mt-3 text-sm leading-6 text-zinc-300">
@@ -1089,7 +1098,7 @@ export default function ProviderOnboardingPage() {
         )}
 
         {currentStep === 5 && provider && billing && (
-          <div className="mt-6 rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/30 to-[#101010] p-7 text-center">
+          <div className="mt-6 rounded-3xl border border-emerald-500/25 bg-gradient-to-br from-emerald-950/30 to-[#101010] p-5 sm:p-6 text-center">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-3xl text-emerald-300">✓</div>
             <p className="mt-5 text-xs font-black tracking-[0.18em] text-emerald-300">SETUP COMPLETE</p>
             <h1 className="mt-2 text-4xl font-black">You’re ready for Rydah jobs</h1>

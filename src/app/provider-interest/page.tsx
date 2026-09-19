@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
 import { getCurrentDeviceLocation } from "@/lib/device-location";
-import { RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
+import { displayServiceArea, RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, RYDAH_TARGET_CITIES, nearestServiceArea, serviceAreasForCity } from "@/lib/locations";
 
 type InterestRow = {
   id: string;
@@ -64,7 +65,7 @@ export default function ProviderInterestPage() {
     }
   }
 
-  async function useGpsArea() {
+  async function detectGpsArea() {
     setGpsBusy(true);
     setError("");
     setGpsMessage("");
@@ -81,7 +82,7 @@ export default function ProviderInterestPage() {
       }
 
       setLocation(nearest.area);
-      setGpsMessage(`GPS matched you to ${nearest.area} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
+      setGpsMessage(`GPS matched you to ${displayServiceArea(nearest.area)} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to use your current location.");
     } finally {
@@ -141,12 +142,12 @@ export default function ProviderInterestPage() {
             <p className="text-sm font-black tracking-[0.22em] text-[#D4AF37]">RYDAH LOCAL</p>
             <h1 className="mt-1 text-2xl font-black">Add Your Profession</h1>
           </div>
-          <a href="/provider-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Dashboard</a>
+          <Link href="/provider-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Dashboard</Link>
         </div>
       </header>
 
-      <section className="mx-auto max-w-4xl px-5 py-10">
-        <div className="rounded-3xl border border-[#D4AF37]/25 bg-gradient-to-br from-[#17130a] to-[#101010] p-7">
+      <section className="mx-auto max-w-4xl px-5 py-6 sm:py-8">
+        <div className="rounded-3xl border border-[#D4AF37]/25 bg-gradient-to-br from-[#17130a] to-[#101010] p-5 sm:p-6">
           <p className="text-xs font-black tracking-[0.2em] text-[#D4AF37]">DON&apos;T SEE YOUR TRADE?</p>
           <h2 className="mt-3 text-3xl font-black">Tell Rydah what you do.</h2>
           <p className="mt-3 max-w-2xl leading-7 text-zinc-400">
@@ -157,7 +158,7 @@ export default function ProviderInterestPage() {
         {message && <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">{message}</div>}
         {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
-        <form onSubmit={submit} className="mt-6 grid gap-5 rounded-3xl border border-white/10 bg-[#121212] p-7 md:grid-cols-2">
+        <form onSubmit={submit} className="mt-6 grid gap-5 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 md:grid-cols-2">
           <label className="block md:col-span-2">
             <span className="text-sm font-bold">Profession / service</span>
             <input required minLength={2} maxLength={80} value={profession} onChange={(event) => setProfession(event.target.value)} placeholder="e.g. Carpenter, Painter, Appliance Repair" className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
@@ -173,12 +174,18 @@ export default function ProviderInterestPage() {
               }}
               className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
             >
-              {RYDAH_SERVICE_AREAS.map((area) => <option key={area}>{area}</option>)}
+              {RYDAH_TARGET_CITIES.map((city) => (
+                <optgroup key={city} label={city}>
+                  {serviceAreasForCity(city).map((area) => (
+                    <option key={area} value={area}>{displayServiceArea(area)}</option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
             <button
               type="button"
               disabled={gpsBusy}
-              onClick={() => void useGpsArea()}
+              onClick={() => void detectGpsArea()}
               className="mt-2 rounded-xl border border-[#D4AF37]/35 px-3 py-2 text-xs font-black text-[#E5C65A] disabled:opacity-40"
             >
               {gpsBusy ? "Finding GPS…" : "📍 Detect My Service Area"}
@@ -202,7 +209,7 @@ export default function ProviderInterestPage() {
           </button>
         </form>
 
-        <div className="mt-8">
+        <div className="mt-6">
           <div className="flex items-end justify-between gap-3">
             <div>
               <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">YOUR SUBMISSIONS</p>
@@ -221,7 +228,7 @@ export default function ProviderInterestPage() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <h3 className="text-xl font-black">{item.profession}</h3>
-                      <p className="mt-1 text-sm text-zinc-400">{item.location} • {item.experience_years} years experience</p>
+                      <p className="mt-1 text-sm text-zinc-400">{displayServiceArea(item.location)} • {item.experience_years} years experience</p>
                     </div>
                     <span className={`rounded-full px-3 py-2 text-xs font-black ${statusStyle(item.status)}`}>{item.status.toUpperCase()}</span>
                   </div>

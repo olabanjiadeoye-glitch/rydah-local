@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getStoredSession, type AuthSession, invokeFunction } from "@/lib/supabase";
 
@@ -132,7 +133,7 @@ export default function SandboxFaceTestPage() {
 
   return (
     <main className="min-h-screen bg-[#080808] text-white">
-      <section className="mx-auto max-w-2xl px-5 py-10">
+      <section className="mx-auto max-w-2xl px-5 py-6 sm:py-8">
         <p className="text-sm font-black tracking-[0.22em] text-[#D4AF37]">RYDAH LOCAL</p>
         <h1 className="mt-2 text-3xl font-black">Youverify Sandbox Test</h1>
         <p className="mt-3 text-sm leading-6 text-zinc-400">
@@ -171,7 +172,7 @@ export default function SandboxFaceTestPage() {
           {message && <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm leading-6 text-emerald-300">{message}</div>}
           {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm leading-6 text-red-300">{error}</div>}
 
-          <a href="/provider-onboarding" className="mt-6 inline-block text-sm font-bold text-[#D4AF37]">← Back to Provider Verification</a>
+          <Link href="/provider-onboarding" className="mt-6 inline-block text-sm font-bold text-[#D4AF37]">← Back to Provider Verification</Link>
         </div>
       </section>
     </main>

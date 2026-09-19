@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, restPatch, type AuthSession } from "@/lib/supabase";
 
@@ -118,15 +119,15 @@ export default function AdminFinancePage() {
             <h1 className="mt-1 text-2xl font-black">Finance & Commission</h1>
           </div>
           <div className="flex gap-2">
-            <a href="/admin/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Provider Admin</a>
-            <a href="/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Marketplace</a>
+            <Link href="/admin/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Provider Admin</Link>
+            <Link href="/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Marketplace</Link>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto max-w-6xl px-5 py-10">
+      <section className="mx-auto max-w-6xl px-5 py-6 sm:py-8">
         {loading ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">Loading finance dashboard...</div>
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">Loading finance dashboard...</div>
         ) : (
           <>
             {error && <div className="mb-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
@@ -154,12 +155,12 @@ export default function AdminFinancePage() {
                   </form>
                 </div>
 
-                <div className="mt-8">
+                <div className="mt-6">
                   <p className="text-sm font-black tracking-[0.16em] text-[#D4AF37]">COMMISSION LEDGER</p>
                   <h2 className="mt-1 text-3xl font-black">Transactions</h2>
                   <div className="mt-5 grid gap-4">
                     {payments.length === 0 ? (
-                      <div className="rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">No payment records yet.</div>
+                      <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">No payment records yet.</div>
                     ) : payments.map((payment) => (
                       <article key={payment.id} className="rounded-3xl border border-white/10 bg-[#121212] p-6">
                         <div className="flex flex-wrap items-start justify-between gap-4">

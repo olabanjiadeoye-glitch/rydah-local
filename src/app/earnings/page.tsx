@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, type AuthSession, invokeFunction } from "@/lib/supabase";
 
@@ -189,18 +190,18 @@ export default function EarningsPage() {
             <p className="text-sm font-black tracking-[0.22em] text-[#D4AF37]">RYDAH LOCAL</p>
             <h1 className="mt-1 text-2xl font-black">Earnings</h1>
           </div>
-          <a href="/provider-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Provider Dashboard</a>
+          <Link href="/provider-dashboard" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Provider Dashboard</Link>
         </div>
       </header>
 
-      <section className="mx-auto max-w-5xl px-5 py-10">
+      <section className="mx-auto max-w-5xl px-5 py-6 sm:py-8">
         {message && <div className="mb-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">{message}</div>}
         {error && <div className="mb-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
         {loading ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">Loading earnings...</div>
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">Loading earnings...</div>
         ) : !provider ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-7">
+          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6">
             <h2 className="text-2xl font-black">No provider profile found</h2>
             <p className="mt-2 text-zinc-400">Create your provider profile before viewing earnings.</p>
           </div>
@@ -256,7 +257,7 @@ export default function EarningsPage() {
               <div className="mt-5 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 p-4 text-sm text-[#D4AF37]">Test activity kept separate: {naira(testGross)}. These test records do not count toward live earnings or money owed.</div>
             )}
 
-            <div className="mt-8">
+            <div className="mt-6">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
                   <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">PAYMENT HISTORY</p>
@@ -268,7 +269,7 @@ export default function EarningsPage() {
               </div>
 
               {payments.length === 0 ? (
-                <div className="mt-5 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">No payments yet.</div>
+                <div className="mt-5 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">No payments yet.</div>
               ) : (
                 <div className="mt-5 grid gap-4">
                   {payments.map((payment) => (

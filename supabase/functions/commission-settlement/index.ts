@@ -171,7 +171,12 @@ Deno.serve(async (req) => {
       const settlementResponse = await supabaseRequest(
         `commission_settlements?reference=eq.${encodeURIComponent(body.reference)}&user_id=eq.${encodeURIComponent(user.id)}&provider_id=eq.${encodeURIComponent(provider.id)}&select=*&limit=1`,
       );
-      const settlement = (await settlementResponse.json())[0] as any;
+      const settlement = (await settlementResponse.json() as Array<{
+        status?: string;
+        amount_naira?: number | string;
+        payment_ids?: unknown;
+        is_test?: boolean;
+      }>)[0];
       if (!settlement) return json({ error: "Commission settlement not found" }, 404);
       if (settlement.status === "paid") return json({ ok: true, status: "paid", settlement });
 

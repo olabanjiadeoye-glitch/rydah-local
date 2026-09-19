@@ -1,5 +1,7 @@
 "use client";
 
+import { displayServiceArea } from "@/lib/locations";
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { getStoredSession, restGet, restInsert, restPatch, restRpc, type AuthSession } from "@/lib/supabase";
 
@@ -201,13 +203,13 @@ export default function MyJobsPage() {
             <h1 className="mt-1 text-2xl font-black">My Jobs</h1>
           </div>
           <div className="flex gap-2">
-            <a href="/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Providers</a>
-            <a href="/post-job" className="rounded-full bg-[#D4AF37] px-4 py-2 text-sm font-bold text-black">Post Job</a>
+            <Link href="/providers" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">Providers</Link>
+            <Link href="/post-job" className="rounded-full bg-[#D4AF37] px-4 py-2 text-sm font-bold text-black">Post Job</Link>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto max-w-5xl px-5 py-10">
+      <section className="mx-auto max-w-5xl px-5 py-6 sm:py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-black tracking-[0.18em] text-[#D4AF37]">CUSTOMER DASHBOARD</p>
@@ -221,15 +223,15 @@ export default function MyJobsPage() {
         {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}
 
         {loading ? (
-          <div className="mt-8 rounded-3xl border border-white/10 bg-[#121212] p-7 text-zinc-400">Loading your jobs...</div>
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-zinc-400">Loading your jobs...</div>
         ) : jobs.length === 0 ? (
-          <div className="mt-8 rounded-3xl border border-white/10 bg-[#121212] p-8 text-center">
+          <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-center">
             <h3 className="text-2xl font-black">No jobs yet</h3>
             <p className="mt-2 text-zinc-400">Post your first request and track it here.</p>
-            <a href="/post-job" className="mt-5 inline-block rounded-2xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Post a Job</a>
+            <Link href="/post-job" className="mt-5 inline-block rounded-2xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Post a Job</Link>
           </div>
         ) : (
-          <div className="mt-8 grid gap-5">
+          <div className="mt-6 grid gap-5">
             {jobs.map((job) => {
               const review = reviewByJob.get(job.id);
               const providerName = job.providers?.business_name || (job.provider_id ? "Assigned provider" : "Matching in progress");
@@ -251,7 +253,7 @@ export default function MyJobsPage() {
                           <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-black text-amber-300">ID REVIEWED • BIOMETRIC REQUIRED</span>
                         ) : null}
                       </div>
-                      <p className="mt-2 text-zinc-400">{job.location}</p>
+                      <p className="mt-2 text-zinc-400">{displayServiceArea(job.location)}</p>
                       <p className="mt-4 text-zinc-300">{job.description}</p>
                     </div>
                     <span className={`rounded-full px-3 py-2 text-xs font-black ${statusStyle(job.status)}`}>{label(job.status)}</span>
@@ -295,7 +297,7 @@ export default function MyJobsPage() {
                         <>
                           <p className="mt-2 text-xl font-black text-emerald-300">✓ Arrival PIN verified</p>
                           <p className="mt-2 text-sm leading-6 text-zinc-300">One more safety step is required before work can begin: use your phone camera to verify the provider&apos;s face against their biometrically verified Rydah identity.</p>
-                          <a href="/arrival-check" className="mt-4 inline-flex rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">Continue to Camera Verification</a>
+                          <Link href="/arrival-check" className="mt-4 inline-flex rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">Continue to Camera Verification</Link>
                         </>
                       ) : (
                         <>
@@ -328,7 +330,7 @@ export default function MyJobsPage() {
                         </div>
                         <div className="flex items-center gap-3">
                           <span className={`rounded-full px-3 py-2 text-xs font-black ${paymentStyle(job.payment_status)}`}>{label(job.payment_status)}</span>
-                          <a href={`/payments?job=${job.id}`} className="rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">{["paid", "cash_due"].includes(job.payment_status) ? "View Payment" : "Pay Securely"}</a>
+                          <Link href={`/payments?job=${job.id}`} className="rounded-2xl bg-[#D4AF37] px-5 py-3 text-sm font-black text-black">{["paid", "cash_due"].includes(job.payment_status) ? "View Payment" : "Pay Securely"}</Link>
                         </div>
                       </div>
                       <p className="mt-3 text-xs text-zinc-500">Online checkout is handled securely by Paystack. Only pay after you are satisfied the job is complete.</p>

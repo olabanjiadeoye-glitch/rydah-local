@@ -1,5 +1,7 @@
 "use client";
 
+import { displayServiceArea } from "@/lib/locations";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession, invokeFunction } from "@/lib/supabase";
 
@@ -204,7 +206,7 @@ export default function PaymentsPage() {
   }
 
   if (loading) {
-    return <main className="min-h-screen bg-[#080808] p-8 text-zinc-400">Loading payment…</main>;
+    return <main className="min-h-screen bg-[#080808] p-5 sm:p-6 text-zinc-400">Loading payment…</main>;
   }
 
   const amount = job?.quoted_amount ?? job?.providers?.starting_price ?? 0;
@@ -223,11 +225,11 @@ export default function PaymentsPage() {
             <p className="text-sm font-black tracking-[0.22em] text-[#D4AF37]">RYDAH LOCAL</p>
             <h1 className="mt-1 text-2xl font-black">Payment</h1>
           </div>
-          <a href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</a>
+          <Link href="/my-jobs" className="rounded-full border border-white/10 px-4 py-2 text-sm text-zinc-300">My Jobs</Link>
         </div>
       </header>
 
-      <section className="mx-auto max-w-3xl px-5 py-10">
+      <section className="mx-auto max-w-3xl px-5 py-6 sm:py-8">
         <div className="mb-5 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-4 text-sm text-[#E7C85A]">
           Secure checkout is handled by Paystack. Rydah never asks you to enter card details directly on this page.
         </div>
@@ -241,7 +243,7 @@ export default function PaymentsPage() {
               <div>
                 <p className="text-sm font-black tracking-[0.16em] text-[#D4AF37]">JOB PAYMENT</p>
                 <h2 className="mt-2 text-3xl font-black">{job.service_category}</h2>
-                <p className="mt-2 text-zinc-400">{job.providers?.business_name ?? "Provider"} • {job.location}</p>
+                <p className="mt-2 text-zinc-400">{job.providers?.business_name ?? "Provider"} • {displayServiceArea(job.location)}</p>
               </div>
               <div className="text-right">
                 <p className="text-sm text-zinc-500">Customer total</p>

@@ -1,12 +1,13 @@
+import Link from "next/link";
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-[#080808] px-5 py-10 text-white">
+    <main className="min-h-screen bg-[#080808] px-5 py-6 sm:py-8 text-white">
       <article className="mx-auto max-w-3xl">
-        <a href="/" className="text-sm font-black tracking-[0.2em] text-[#D4AF37]">RYDAH LOCAL</a>
+        <Link href="/" className="text-sm font-black tracking-[0.2em] text-[#D4AF37]">RYDAH LOCAL</Link>
         <h1 className="mt-4 text-4xl font-black">Privacy Notice</h1>
         <p className="mt-3 text-sm text-zinc-500">Effective: 18 September 2026</p>
 
-        <div className="mt-8 space-y-8 text-sm leading-7 text-zinc-300">
+        <div className="mt-6 space-y-8 text-sm leading-7 text-zinc-300">
           <section>
             <h2 className="text-xl font-black text-white">What we collect</h2>
             <p className="mt-2">Rydah Local may collect account details, contact information, job and service information, transaction records, provider profile and verification information, device/session information, profession-interest submissions, and support communications needed to operate the marketplace.</p>
@@ -71,7 +72,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-xl font-black text-white">Your choices and rights</h2>
             <p className="mt-2">Depending on applicable law, you may have rights to request access, correction, deletion, restriction, objection, or information about the handling of your personal data. When an account deletion is completed, Rydah removes the authentication account and anonymises retained job/provider personal information. Limited transaction, dispute and safety audit records may remain where reasonably necessary for financial reconciliation, fraud prevention, safety, legal obligations, or resolving claims.</p>
-            <p className="mt-3">To request deletion of your Rydah account and associated personal data, use our <a className="font-bold text-[#D4AF37]" href="/delete-account">account deletion page</a>.</p>
+            <p className="mt-3">To request deletion of your Rydah account and associated personal data, use our <Link className="font-bold text-[#D4AF37]" href="/delete-account">account deletion page</Link>.</p>
           </section>
 
           <section>
@@ -80,10 +81,10 @@ export default function PrivacyPage() {
           </section>
         </div>
 
-        <div className="mt-10 flex flex-wrap gap-3">
-          <a href="/terms" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Terms</a>
-          <a href="/support" className="rounded-xl border border-[#D4AF37]/40 px-4 py-2 font-bold text-[#D4AF37]">Support</a>
-          <a href="/" className="rounded-xl bg-[#D4AF37] px-4 py-2 font-bold text-black">Home</a>
+        <div className="mt-7 flex flex-wrap gap-3">
+          <Link href="/terms" className="rounded-xl border border-white/15 px-4 py-2 font-bold">Terms</Link>
+          <Link href="/support" className="rounded-xl border border-[#D4AF37]/40 px-4 py-2 font-bold text-[#D4AF37]">Support</Link>
+          <Link href="/" className="rounded-xl bg-[#D4AF37] px-4 py-2 font-bold text-black">Home</Link>
         </div>
       </article>
     </main>
