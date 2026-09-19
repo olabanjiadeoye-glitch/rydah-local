@@ -141,12 +141,12 @@ export default function PostJobPage() {
 
       if (!selectedProvider && liveLocations.includes(nearest.area)) {
         changeLocation(nearest.area, true);
-        setGpsMessage(`GPS found you near ${nearest.area} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
+        setGpsMessage(`GPS found you near ${displayServiceArea(nearest.area)} • approx. ${nearest.distanceKm.toFixed(1)} km from the area centre • accuracy ${Math.round(coordinates.accuracy)} m.`);
         return;
       }
 
       if (!selectedProvider && !liveLocations.includes(nearest.area)) {
-        setGpsMessage(`GPS found you near ${nearest.area}, but no biometric-verified provider is currently live in that area. Your coordinates will stay with this request if you choose an available area manually.`);
+        setGpsMessage(`GPS found you near ${displayServiceArea(nearest.area)}, but no biometric-verified provider is currently live in that area. Your coordinates will stay with this request if you choose an available area manually.`);
         return;
       }
 
