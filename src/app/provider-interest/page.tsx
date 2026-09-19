@@ -5,7 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { getStoredSession, restGet, restInsert, type AuthSession } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
 import { getCurrentDeviceLocation } from "@/lib/device-location";
-import { RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
+import { displayServiceArea, RYDAH_DEFAULT_SERVICE_AREA, RYDAH_SERVICE_AREAS, nearestServiceArea } from "@/lib/locations";
 
 type InterestRow = {
   id: string;
@@ -174,7 +174,7 @@ export default function ProviderInterestPage() {
               }}
               className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none"
             >
-              {RYDAH_SERVICE_AREAS.map((area) => <option key={area}>{area}</option>)}
+              {RYDAH_SERVICE_AREAS.map((area) => <option key={area} value={area}>{displayServiceArea(area)}</option>)}
             </select>
             <button
               type="button"
@@ -222,7 +222,7 @@ export default function ProviderInterestPage() {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <h3 className="text-xl font-black">{item.profession}</h3>
-                      <p className="mt-1 text-sm text-zinc-400">{item.location} • {item.experience_years} years experience</p>
+                      <p className="mt-1 text-sm text-zinc-400">{displayServiceArea(item.location)} • {item.experience_years} years experience</p>
                     </div>
                     <span className={`rounded-full px-3 py-2 text-xs font-black ${statusStyle(item.status)}`}>{item.status.toUpperCase()}</span>
                   </div>
