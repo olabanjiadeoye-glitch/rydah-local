@@ -165,12 +165,12 @@ export default function Home() {
           <div className="p-5 sm:p-6">
             <p className="text-xs font-black tracking-widest text-[#D4AF37]">HOW RYDAH PROTECTS THE JOB</p>
             <h2 className="mt-3 max-w-3xl text-3xl font-black sm:text-4xl">Designed to keep trust, identity and payment inside the platform.</h2>
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
               {trustSteps.map((step, index) => (
-                <div key={step.title} className={`rounded-3xl border border-white/10 bg-gradient-to-br ${step.accent} p-6`}>
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full ${step.badge} text-sm font-black text-black shadow-lg`}>{index + 1}</div>
-                  <h3 className="mt-4 text-xl font-black">{step.title}</h3>
-                  <p className="mt-2 leading-7 text-zinc-300">{step.text}</p>
+                <div key={step.title} className={`rounded-[1.5rem] border border-white/10 bg-gradient-to-br ${step.accent} p-4 sm:p-5`}>
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-full ${step.badge} text-sm font-black text-black shadow-lg`}>{index + 1}</div>
+                  <h3 className="mt-3 text-lg font-black sm:text-xl">{step.title}</h3>
+                  <p className="mt-1.5 text-sm leading-6 text-zinc-300 sm:text-base">{step.text}</p>
                 </div>
               ))}
             </div>
