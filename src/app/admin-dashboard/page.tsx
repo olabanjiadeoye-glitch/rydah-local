@@ -171,10 +171,14 @@ export default function AdminDashboardPage() {
   const pendingVerifications = verifications.filter((row) => row.status === "pending");
   const verifiedProviders = providers.filter((row) => row.is_verified);
   const availableVerifiedProviders = providers.filter((row) => row.is_verified && row.is_available);
-  const citySupply = RYDAH_TARGET_CITIES.map((city) => ({
-    city,
-    count: availableVerifiedProviders.filter((provider) => cityFromServiceArea(provider.location) === city).length,
-  }));
+  const citySupply = RYDAH_TARGET_CITIES.map((city) => {
+    const count = availableVerifiedProviders.filter((provider) => cityFromServiceArea(provider.location) === city).length;
+    return {
+      city,
+      count,
+      readiness: count >= 20 ? "Pilot-ready supply" : count >= 10 ? "Building supply" : "Needs provider supply",
+    };
+  });
   const activeJobs = jobs.filter((row) => !["completed", "cancelled"].includes(row.status));
   const completedJobs = jobs.filter((row) => row.status === "completed");
   const pendingPayouts = payouts.filter((row) => !row.is_test && row.status === "pending");
@@ -267,11 +271,13 @@ export default function AdminDashboardPage() {
               </div>
               <div className="mt-5">
                 <p className="text-xs font-black tracking-[0.14em] text-zinc-500">AVAILABLE VERIFIED PROVIDERS BY CITY</p>
+                <p className="mt-2 text-xs leading-5 text-zinc-500">Operational guide: build dense supply before heavy customer marketing. A city reaches “pilot-ready supply” here at 20 available verified providers; this is an internal launch threshold, not a guarantee of service availability.</p>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
                   {citySupply.map((item) => (
                     <div key={item.city} className="rounded-xl border border-white/10 bg-black/20 px-3 py-3">
                       <p className="text-sm font-bold">{item.city}</p>
                       <p className="mt-1 text-xl font-black text-emerald-400">{item.count}</p>
+                      <p className={`mt-1 text-[11px] font-bold ${item.count >= 20 ? "text-emerald-300" : item.count >= 10 ? "text-amber-300" : "text-red-300"}`}>{item.readiness}</p>
                     </div>
                   ))}
                 </div>
