@@ -33,6 +33,7 @@ export default function PostJobPage() {
   const [contactPhone, setContactPhone] = useState("");
   const [service, setService] = useState("");
   const [location, setLocation] = useState(RYDAH_DEFAULT_SERVICE_AREA);
+  const [landmarkText, setLandmarkText] = useState("");
   const [description, setDescription] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [jobId, setJobId] = useState("");
@@ -199,6 +200,7 @@ export default function PostJobPage() {
           provider_id: providerId,
           service_category: service,
           location,
+          landmark_text: landmarkText.trim() || null,
           latitude: gpsCoordinates?.latitude ?? null,
           longitude: gpsCoordinates?.longitude ?? null,
           location_accuracy_m: gpsCoordinates?.accuracy ?? null,
@@ -246,7 +248,7 @@ export default function PostJobPage() {
           <div className="rounded-3xl border border-[#D4AF37]/30 bg-[#121212] p-5 sm:p-6 text-center">
             <div className="text-5xl">✓</div>
             <h2 className="mt-4 text-3xl font-black">Request sent</h2>
-            <p className="mt-3 text-zinc-400">Your {urgent ? "urgent " : ""}request has been assigned to an available biometric-verified provider.</p>
+            <p className="mt-3 text-zinc-400">Your {urgent ? "urgent " : ""}request is recorded in Rydah and the assigned eligible provider has been notified. Track the job for the provider&apos;s quote, status and arrival steps.</p>
             {jobId && <p className="mt-3 text-xs text-zinc-600">Request ID: {jobId.slice(0, 8)}</p>}
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <Link href="/my-jobs" className="rounded-2xl bg-[#D4AF37] px-5 py-4 font-bold text-black">Track My Job</Link>
@@ -327,6 +329,16 @@ export default function PostJobPage() {
             {gpsMessage && <p className="mt-2 text-xs leading-5 text-emerald-300">{gpsMessage}</p>}
             <p className="mt-2 text-xs leading-5 text-zinc-500">GPS is optional. Rydah only stores job coordinates after you tap the GPS button; manual area selection always remains available.</p>
 
+            <label className="mt-5 block text-sm font-bold">Nearest landmark / estate / junction <span className="font-normal text-zinc-500">(optional)</span></label>
+            <input
+              value={landmarkText}
+              onChange={(event) => setLandmarkText(event.target.value)}
+              maxLength={160}
+              placeholder="e.g. Chevron Drive, beside the estate gate, near Mobil junction"
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600"
+            />
+            <p className="mt-2 text-xs leading-5 text-zinc-500">Use the way people actually find the place: estate, junction, landmark or nearby business. Rydah releases this detail to the assigned provider after you accept the quote.</p>
+
             {!selectedProvider && availability.length === 0 && (
               <div className="mt-4 rounded-2xl border border-amber-500/20 bg-amber-950/20 p-4 text-sm text-amber-200">No real verified providers are currently online. Please check back shortly.</div>
             )}
@@ -337,7 +349,7 @@ export default function PostJobPage() {
 
             <label className="mt-5 flex items-center gap-3 rounded-2xl border border-white/10 bg-[#1A1A1A] p-4">
               <input type="checkbox" checked={urgent} onChange={(event) => setUrgent(event.target.checked)} />
-              <span><span className="block font-bold">Urgent request</span><span className="text-sm text-zinc-500">I need someone as soon as possible.</span></span>
+              <span><span className="block font-bold">Urgent request</span><span className="text-sm text-zinc-500">I need someone as soon as possible. Rydah will notify the assigned eligible provider, but travel time still depends on traffic and where the provider is coming from.</span></span>
             </label>
 
             {error && <div className="mt-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{error}</div>}

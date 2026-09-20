@@ -62,6 +62,7 @@ type JobRow = {
   provider_id: string | null;
   service_category: string;
   location: string;
+  landmark_text: string | null;
   description: string;
   is_urgent: boolean;
   status: JobStatus;
@@ -910,6 +911,9 @@ export default function ProviderDashboardPage() {
                               <span className="rounded-full bg-[#D4AF37]/10 px-3 py-1 text-xs font-black text-[#D4AF37]">{label(job.status)}</span>
                             </div>
                             <p className="mt-2 text-sm text-zinc-500">{displayServiceArea(job.location)} • {new Date(job.created_at).toLocaleString()}</p>
+                            {contactReleased && job.landmark_text && (
+                              <p className="mt-1 text-sm text-zinc-400">📍 Landmark: {job.landmark_text}</p>
+                            )}
                           </div>
                         </div>
 
@@ -920,6 +924,9 @@ export default function ProviderDashboardPage() {
                           <div><p className="text-zinc-500">Phone</p><p className="mt-1 font-bold">{contactReleased ? (job.contact_phone || "Not provided") : "Released after quote acceptance"}</p></div>
                           <div><p className="text-zinc-500">Email</p><p className="mt-1 break-all font-bold">{contactReleased ? (job.contact_email || "Not provided") : "Released after quote acceptance"}</p></div>
                         </div>
+                        {!contactReleased && (
+                          <p className="mt-2 text-xs leading-5 text-zinc-500">Customer landmark, direct contact and precise GPS remain private until the customer accepts your quote.</p>
+                        )}
 
                         {contactReleased && job.latitude != null && job.longitude != null && (
                           <div className="mt-3 flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm">

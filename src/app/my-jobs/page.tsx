@@ -13,6 +13,7 @@ type JobRow = {
   provider_id: string | null;
   service_category: string;
   location: string;
+  landmark_text: string | null;
   description: string;
   is_urgent: boolean;
   status: JobStatus;
@@ -80,7 +81,7 @@ export default function MyJobsPage() {
     try {
       const [jobRows, reviewRows] = await Promise.all([
         restGet<JobRow[]>(
-          `jobs?select=id,provider_id,service_category,location,description,is_urgent,status,created_at,quoted_amount,quote_status,quote_accepted_at,payment_status,arrival_verified_at,arrival_face_verified_at,providers(business_name,starting_price,is_verified,biometric_verified)&customer_id=eq.${currentSession.user.id}&order=created_at.desc`,
+          `jobs?select=id,provider_id,service_category,location,landmark_text,description,is_urgent,status,created_at,quoted_amount,quote_status,quote_accepted_at,payment_status,arrival_verified_at,arrival_face_verified_at,providers(business_name,starting_price,is_verified,biometric_verified)&customer_id=eq.${currentSession.user.id}&order=created_at.desc`,
           currentSession.access_token,
         ),
         restGet<ReviewRow[]>(
@@ -254,6 +255,7 @@ export default function MyJobsPage() {
                         ) : null}
                       </div>
                       <p className="mt-2 text-zinc-400">{displayServiceArea(job.location)}</p>
+                      {job.landmark_text && <p className="mt-1 text-sm text-zinc-500">📍 Landmark: {job.landmark_text}</p>}
                       <p className="mt-4 text-zinc-300">{job.description}</p>
                     </div>
                     <span className={`rounded-full px-3 py-2 text-xs font-black ${statusStyle(job.status)}`}>{label(job.status)}</span>
@@ -264,6 +266,13 @@ export default function MyJobsPage() {
                     <div className="rounded-2xl bg-[#1A1A1A] p-4"><p className="text-xs text-zinc-500">Requested</p><p className="mt-1 font-bold">{new Date(job.created_at).toLocaleString()}</p></div>
                     <div className="rounded-2xl bg-[#1A1A1A] p-4"><p className="text-xs text-zinc-500">Request ID</p><p className="mt-1 font-bold">{job.id.slice(0, 8)}</p></div>
                   </div>
+
+                  {job.quote_status === "not_sent" && !["completed", "cancelled"].includes(job.status) && (
+                    <div className="mt-5 rounded-2xl border border-sky-500/20 bg-sky-500/10 p-4 text-sm leading-6 text-sky-100">
+                      <p className="font-black">Provider alerted • waiting for a quote</p>
+                      <p className="mt-1 text-zinc-300">Rydah has assigned this request and notified the provider. A provider being available for jobs does not guarantee immediate travel or response. If they do not respond in a reasonable time, you can cancel the request and choose another available provider.</p>
+                    </div>
+                  )}
 
                   {job.quoted_amount != null && job.quote_status !== "not_sent" && (
                     <div className="mt-5 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 p-5">
@@ -280,7 +289,12 @@ export default function MyJobsPage() {
                           </div>
                         )}
                       </div>
-                      {job.quote_status === "accepted" && <p className="mt-3 text-sm text-emerald-300">Quote accepted. Verify the provider on arrival before work begins.</p>}
+                      {job.quote_status === "pending" && (
+                        <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-xs leading-5 text-amber-100">
+                          Check the amount before accepting. If the work changes later, ask the provider to send a revised quote in Rydah instead of agreeing a different price by phone, WhatsApp or cash.
+                        </div>
+                      )}
+                      {job.quote_status === "accepted" && <p className="mt-3 text-sm text-emerald-300">Quote accepted. This is the agreed job price in Rydah. Verify the provider on arrival before work begins and keep payment inside Rydah.</p>}
                       {job.quote_status === "rejected" && <p className="mt-3 text-sm text-amber-300">Quote rejected. Wait for the provider to send a revised amount.</p>}
                     </div>
                   )}

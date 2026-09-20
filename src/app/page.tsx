@@ -28,7 +28,7 @@ const cityCoverage = [
 ];
 
 const lekkiHeroImage = "https://upload.wikimedia.org/wikipedia/commons/9/94/Lekki_link_bridge.jpg";
-const thirdMainlandImage = "https://images.unsplash.com/photo-1691743441282-72dbe8f91dcc?auto=format&fit=crop&fm=jpg&q=82&w=2200";
+const thirdMainlandImage = "https://images.unsplash.com/photo-1691743441282-72dbe8f91dcc?auto=format&fit=crop&fm=jpg&q=74&w=1600";
 
 export default function Home() {
   return (
