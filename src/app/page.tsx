@@ -113,13 +113,13 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="relative mt-6 overflow-hidden rounded-3xl border border-[#D4AF37]/20 bg-gradient-to-r from-[#D4AF37]/12 via-fuchsia-500/5 to-cyan-500/10 p-6 sm:flex sm:items-center sm:justify-between sm:gap-4">
+        <div className="relative mt-5 overflow-hidden rounded-[1.5rem] border border-[#D4AF37]/20 bg-gradient-to-r from-[#D4AF37]/12 via-fuchsia-500/5 to-cyan-500/10 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4 sm:p-5">
           <div>
             <p className="text-xs font-black tracking-widest text-[#E8C447]">PROFESSION NOT LISTED?</p>
-            <h3 className="mt-2 text-2xl font-black">Rydah is built to grow beyond six trades.</h3>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300">Create a Service Provider account and register your genuine profession and service area for marketplace review.</p>
+            <h3 className="mt-1.5 text-xl font-black sm:text-2xl">Rydah is built to grow beyond six trades.</h3>
+            <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-300">Create a Service Provider account and register your genuine profession and service area for marketplace review.</p>
           </div>
-          <Link href="/sign-in" className="mt-5 inline-block shrink-0 rounded-2xl bg-white px-5 py-4 text-sm font-black text-black transition hover:bg-zinc-100 sm:mt-0">Join as a Provider</Link>
+          <Link href="/sign-in" className="rydah-provider-cta-attention mt-4 inline-block shrink-0 rounded-xl bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-zinc-100 sm:mt-0">Join as a Provider</Link>
         </div>
       </section>
 
