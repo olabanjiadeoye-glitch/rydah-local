@@ -1,16 +1,22 @@
 "use client";
 
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function RydahSplash() {
+  const pathname = usePathname();
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    if (pathname === "/") {
+      setVisible(false);
+      return;
+    }
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const timer = window.setTimeout(() => setVisible(false), reduced ? 800 : 3000);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [pathname]);
 
   if (!visible) return null;
 
