@@ -345,8 +345,12 @@ export default function ProvidersPage() {
                   <div className="flex items-center gap-4">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#D4AF37]/10 text-2xl">🛠️</div>
                     <div>
-                      <div className="flex flex-wrap items-center gap-2"><h3 className="font-bold">{provider.name}</h3><span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-400">✓ VERIFIED</span></div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-bold">{provider.name}</h3>
+                        <span className="rounded-full bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-400">✓ BIOMETRIC VERIFIED</span>
+                      </div>
                       <p className="mt-1 text-sm text-zinc-400">{provider.category} • {displayServiceArea(provider.area)}</p>
+                      <p className="mt-1 text-xs text-zinc-500">Service-area listing • travel time is confirmed through the job flow, not promised by this card.</p>
                       {userCoordinates && RYDAH_SERVICE_AREA_CENTERS[provider.area] && (
                         <p className="mt-1 text-xs text-emerald-300">
                           ~{distanceKm(
@@ -362,12 +366,15 @@ export default function ProvidersPage() {
                   <button onClick={() => void toggleFavorite(provider)} aria-label="Toggle favourite" className="text-2xl">{favorites.includes(provider.id) ? "♥" : "♡"}</button>
                 </div>
                 <div className="mt-5 grid grid-cols-3 gap-3">
-                  <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">Rating</p><p className="mt-1 font-bold">⭐ {provider.rating.toFixed(1)}</p></div>
-                  <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">Jobs</p><p className="mt-1 font-bold">{provider.jobs}</p></div>
-                  <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">From</p><p className="mt-1 text-sm font-bold">{money(provider.price)}</p></div>
+                  <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">Customer rating</p><p className="mt-1 font-bold">{provider.jobs > 0 && provider.rating > 0 ? `⭐ ${provider.rating.toFixed(1)}` : "New provider"}</p></div>
+                  <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">Completed jobs</p><p className="mt-1 font-bold">{provider.jobs}</p></div>
+                  <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">From</p><p className="mt-1 text-sm font-bold">{provider.price > 0 ? money(provider.price) : "Quote first"}</p></div>
                 </div>
                 <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-white/10 px-4 py-3">
-                  <p className="text-sm font-semibold text-green-400">● Available now</p>
+                  <div>
+                    <p className="text-sm font-semibold text-green-400">● Available for Rydah jobs</p>
+                    <p className="mt-1 text-[11px] text-zinc-500">Availability does not guarantee immediate arrival.</p>
+                  </div>
                   <button onClick={() => setSelectedProvider(provider)} className="rounded-xl bg-[#D4AF37] px-4 py-3 text-sm font-bold text-black">View Profile</button>
                 </div>
               </article>
@@ -404,9 +411,9 @@ export default function ProvidersPage() {
             </div>
             <p className="mt-5 leading-7 text-zinc-300">{selectedProvider.bio}</p>
             <div className="mt-5 grid grid-cols-3 gap-3 text-center">
-              <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">Rating</p><p className="mt-1 font-bold">⭐ {selectedProvider.rating.toFixed(1)}</p></div>
-              <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">Jobs</p><p className="mt-1 font-bold">{selectedProvider.jobs}</p></div>
-              <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">From</p><p className="mt-1 font-bold">{money(selectedProvider.price)}</p></div>
+              <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">Customer rating</p><p className="mt-1 font-bold">{selectedProvider.jobs > 0 && selectedProvider.rating > 0 ? `⭐ ${selectedProvider.rating.toFixed(1)}` : "New provider"}</p></div>
+              <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">Completed jobs</p><p className="mt-1 font-bold">{selectedProvider.jobs}</p></div>
+              <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">From</p><p className="mt-1 font-bold">{selectedProvider.price > 0 ? money(selectedProvider.price) : "Quote first"}</p></div>
             </div>
             <div className="mt-5 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-4 text-xs leading-5 text-zinc-400">For safety, request and pay through Rydah. Provider profile descriptions cannot include off-platform contact details.</div>
             <a href={`/post-job?provider=${encodeURIComponent(selectedProvider.slug)}`} className="mt-4 block rounded-2xl bg-[#D4AF37] px-5 py-4 text-center font-bold text-black">Request Service</a>
