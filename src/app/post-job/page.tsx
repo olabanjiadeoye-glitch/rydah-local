@@ -35,6 +35,7 @@ export default function PostJobPage() {
   const [location, setLocation] = useState(RYDAH_DEFAULT_SERVICE_AREA);
   const [landmarkText, setLandmarkText] = useState("");
   const [description, setDescription] = useState("");
+  const [contactWarningOpen, setContactWarningOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [jobId, setJobId] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -160,11 +161,22 @@ export default function PostJobPage() {
     }
   };
 
+  const updateDescription = (nextValue: string) => {
+    if (containsOffPlatformContact(nextValue)) {
+      setContactWarningOpen(true);
+      setError(offPlatformContactMessage);
+      return;
+    }
+    setDescription(nextValue);
+    if (error === offPlatformContactMessage) setError("");
+  };
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!session) return;
 
     if (containsOffPlatformContact(description)) {
+      setContactWarningOpen(true);
       setError(offPlatformContactMessage);
       return;
     }
@@ -258,7 +270,7 @@ export default function PostJobPage() {
         ) : (
           <form onSubmit={submit} className="rounded-3xl border border-white/10 bg-[#121212] p-6">
             <div className="mb-5 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-4 text-sm leading-6 text-zinc-300">
-              <strong className="text-[#D4AF37]">Keep the booking on Rydah.</strong> Put your contact number only in the Phone field below. Job descriptions cannot contain phone numbers, email addresses, WhatsApp details or external links.
+              <strong className="text-[#D4AF37]">Keep the booking on Rydah.</strong> Put your contact number only in the Phone field below. Job descriptions cannot contain phone numbers, email addresses, social-media handles, WhatsApp/Telegram details, websites or external links.
             </div>
 
             {selectedProvider && (
@@ -344,8 +356,16 @@ export default function PostJobPage() {
             )}
 
             <label className="mt-5 block text-sm font-bold">Describe the job</label>
-            <textarea required minLength={10} rows={5} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Tell the provider what you need. Do not include contact or payment details." className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600" />
-            <p className="mt-2 text-xs text-zinc-500">Rydah blocks contact details and external links in descriptions to reduce off-platform booking and protect the service record.</p>
+            <textarea
+              required
+              minLength={10}
+              rows={5}
+              value={description}
+              onChange={(event) => updateDescription(event.target.value)}
+              placeholder="Describe the work only — no phone, email, social media or links."
+              className="mt-2 w-full rounded-2xl border border-white/10 bg-[#1A1A1A] px-4 py-4 outline-none placeholder:text-zinc-600"
+            />
+            <p className="mt-2 text-xs text-zinc-500">Rydah immediately rejects phone numbers, email addresses, social-media handles/platforms and external links in job descriptions. Use the official contact fields above.</p>
 
             <label className="mt-5 flex items-center gap-3 rounded-2xl border border-white/10 bg-[#1A1A1A] p-4">
               <input type="checkbox" checked={urgent} onChange={(event) => setUrgent(event.target.checked)} />
@@ -358,6 +378,27 @@ export default function PostJobPage() {
           </form>
         )}
       </section>
+
+      {contactWarningOpen && (
+        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/80 p-5 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="contact-warning-title">
+          <div className="w-full max-w-md rounded-3xl border border-red-500/30 bg-[#121212] p-6 shadow-2xl">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-500/15 text-3xl" aria-hidden="true">!</div>
+            <h2 id="contact-warning-title" className="mt-4 text-center text-2xl font-black">Contact details declined</h2>
+            <p className="mt-3 text-center text-sm leading-6 text-zinc-300">{offPlatformContactMessage}</p>
+            <div className="mt-4 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-4 text-xs leading-5 text-zinc-400">
+              This protects the customer, provider, agreed quote, payment trail and Rydah dispute record.
+            </div>
+            <button
+              type="button"
+              autoFocus
+              onClick={() => setContactWarningOpen(false)}
+              className="mt-5 w-full rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black"
+            >
+              Remove details & continue
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
