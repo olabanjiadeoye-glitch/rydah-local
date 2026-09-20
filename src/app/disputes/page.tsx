@@ -198,7 +198,7 @@ export default function DisputesPage() {
 
       setDescription("");
       setRequestFullRefund(false);
-      setMessage("Your dispute has been submitted to Rydah for review.");
+      setMessage("Your dispute has been submitted to Rydah for human review. Keep any photos, receipts or other supporting evidence until the case is resolved.");
       await initialise(session);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to submit the dispute.");
@@ -223,6 +223,11 @@ export default function DisputesPage() {
           <p className="mt-3 text-sm leading-6 text-zinc-400">
             Report a service or payment problem. Refund requests are reviewed by Rydah; submitting a dispute never moves money automatically.
           </p>
+          <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-zinc-300">
+            <p className="font-black text-white">Keep evidence while the job is fresh.</p>
+            <p className="mt-1">Useful evidence can include before/after photos, receipts for parts, packaging or serial numbers, the agreed Rydah quote, and a clear description of what happened. Keep sensitive card details, passwords and ID numbers out of your evidence.</p>
+            <p className="mt-2 text-zinc-500">If a human reviewer asks for image evidence, use the official Rydah support email and include the dispute/job reference so it can be matched to the recorded case.</p>
+          </div>
         </div>
 
         {message && <div className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 text-sm text-emerald-300">{message}</div>}
