@@ -30,6 +30,7 @@ type JobRow = {
   payment_status: "unpaid" | "pending" | "paid" | "cash_due" | "failed" | "refunded";
   is_urgent: boolean;
   created_at: string;
+  first_quote_at: string | null;
 };
 
 type PaymentRow = {
@@ -99,7 +100,7 @@ export default function AdminDashboardPage() {
           currentSession.access_token,
         ),
         restGet<JobRow[]>(
-          "jobs?select=id,service_category,location,status,payment_status,is_urgent,created_at&order=created_at.desc",
+          "jobs?select=id,service_category,location,status,payment_status,is_urgent,created_at,first_quote_at&order=created_at.desc",
           currentSession.access_token,
         ),
         restGet<PaymentRow[]>(
@@ -181,6 +182,17 @@ export default function AdminDashboardPage() {
   });
   const activeJobs = jobs.filter((row) => !["completed", "cancelled"].includes(row.status));
   const completedJobs = jobs.filter((row) => row.status === "completed");
+  const quotedJobs = jobs.filter((row) => row.first_quote_at);
+  const averageFirstQuoteMinutes = quotedJobs.length > 0
+    ? Math.round(quotedJobs.reduce((sum, row) => {
+        const created = new Date(row.created_at).getTime();
+        const quoted = new Date(row.first_quote_at as string).getTime();
+        return sum + Math.max(0, (quoted - created) / 60000);
+      }, 0) / quotedJobs.length)
+    : 0;
+  const waitingOver15Minutes = activeJobs.filter((row) => (
+    !row.first_quote_at && Date.now() - new Date(row.created_at).getTime() >= 15 * 60 * 1000
+  )).length;
   const pendingPayouts = payouts.filter((row) => !row.is_test && row.status === "pending");
   const paidPayouts = payouts.filter((row) => !row.is_test && row.status === "paid");
   const pendingPayoutAmount = pendingPayouts.reduce((sum, row) => sum + Number(row.amount_naira || 0), 0);
@@ -268,6 +280,18 @@ export default function AdminDashboardPage() {
                 <div className="rounded-2xl bg-black/25 p-4"><p className="text-xs text-zinc-500">This month Rydah revenue</p><p className="mt-1 text-2xl font-black text-[#D4AF37]">{naira(monthlyRydahRevenue)}</p></div>
                 <div className="rounded-2xl bg-black/25 p-4"><p className="text-xs text-zinc-500">Live paid/cash-due jobs</p><p className="mt-1 text-2xl font-black">{monthlyLivePayments.length}</p></div>
                 <div className="rounded-2xl bg-black/25 p-4"><p className="text-xs text-zinc-500">Average live job value</p><p className="mt-1 text-2xl font-black">{naira(averageLiveJobValue)}</p></div>
+              </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <p className="text-xs text-zinc-500">Average first provider quote</p>
+                  <p className="mt-1 text-2xl font-black">{quotedJobs.length > 0 ? `${averageFirstQuoteMinutes} min` : "No data yet"}</p>
+                  <p className="mt-1 text-xs text-zinc-500">Measured from request creation to the first provider quote.</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  <p className="text-xs text-zinc-500">Active requests waiting 15+ min</p>
+                  <p className={`mt-1 text-2xl font-black ${waitingOver15Minutes > 0 ? "text-amber-300" : "text-emerald-300"}`}>{waitingOver15Minutes}</p>
+                  <p className="mt-1 text-xs text-zinc-500">Use this as an early warning that provider response is too slow.</p>
+                </div>
               </div>
               <div className="mt-5">
                 <p className="text-xs font-black tracking-[0.14em] text-zinc-500">AVAILABLE VERIFIED PROVIDERS BY CITY</p>
