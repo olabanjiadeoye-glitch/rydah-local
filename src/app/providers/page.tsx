@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { getCurrentDeviceLocation, type DeviceCoordinates } from "@/lib/device-location";
 import { cityFromServiceArea, displayServiceArea, distanceKm, nearestServiceArea, RYDAH_SERVICE_AREA_CENTERS, RYDAH_TARGET_CITIES, serviceAreasForCity } from "@/lib/locations";
-import { getStoredSession, restDelete, restGet, restInsert, type AuthSession } from "@/lib/supabase";
+import { getStoredSession, restDelete, restGet, restInsert, restRpc, type AuthSession } from "@/lib/supabase";
 
 type Provider = {
   id: string;
@@ -16,6 +16,12 @@ type Provider = {
   jobs: number;
   price: number;
   bio: string;
+};
+
+type PublicReviewSummary = {
+  review_count: number;
+  average_rating: number;
+  recent: Array<{ rating: number; comment: string; created_at: string }>;
 };
 
 type DbProvider = {
@@ -50,6 +56,8 @@ export default function ProvidersPage() {
   const [serviceGroup, setServiceGroup] = useState<ServiceGroup | "">("");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
+  const [reviewSummary, setReviewSummary] = useState<PublicReviewSummary | null>(null);
+  const [reviewLoading, setReviewLoading] = useState(false);
   const [session, setSession] = useState<AuthSession | null>(null);
   const [status, setStatus] = useState("Loading biometric-verified providers...");
   const [loadError, setLoadError] = useState("");
@@ -113,6 +121,37 @@ export default function ProvidersPage() {
 
     void load();
   }, []);
+
+  useEffect(() => {
+    if (!selectedProvider) {
+      setReviewSummary(null);
+      setReviewLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setReviewLoading(true);
+    setReviewSummary(null);
+
+    void restRpc<PublicReviewSummary>(
+      "public_provider_review_summary",
+      { p_provider_id: selectedProvider.id },
+      session?.access_token,
+    )
+      .then((summary) => {
+        if (!cancelled) setReviewSummary(summary);
+      })
+      .catch(() => {
+        if (!cancelled) setReviewSummary(null);
+      })
+      .finally(() => {
+        if (!cancelled) setReviewLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedProvider, session?.access_token]);
 
   const categories = useMemo(() => {
     const discovered = providers.map((provider) => provider.category).filter(Boolean);
@@ -406,7 +445,7 @@ export default function ProvidersPage() {
         <div className="fixed inset-0 z-50 flex items-end bg-black/80 p-4 sm:items-center sm:justify-center">
           <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-[#121212] p-6">
             <div className="flex items-start justify-between gap-4">
-              <div><p className="text-xs font-bold tracking-widest text-[#D4AF37]">VERIFIED PROVIDER</p><h2 className="mt-2 text-2xl font-black">{selectedProvider.name}</h2><p className="mt-1 text-zinc-400">{selectedProvider.category} • {selectedProvider.area}</p></div>
+              <div><p className="text-xs font-bold tracking-widest text-[#D4AF37]">BIOMETRIC-VERIFIED PROVIDER</p><h2 className="mt-2 text-2xl font-black">{selectedProvider.name}</h2><p className="mt-1 text-zinc-400">{selectedProvider.category} • {displayServiceArea(selectedProvider.area)}</p></div>
               <button onClick={() => setSelectedProvider(null)} className="rounded-full border border-white/10 px-3 py-2">✕</button>
             </div>
             <p className="mt-5 leading-7 text-zinc-300">{selectedProvider.bio}</p>
@@ -415,6 +454,31 @@ export default function ProvidersPage() {
               <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">Completed jobs</p><p className="mt-1 font-bold">{selectedProvider.jobs}</p></div>
               <div className="rounded-2xl bg-[#1A1A1A] p-3"><p className="text-xs text-zinc-500">From</p><p className="mt-1 font-bold">{selectedProvider.price > 0 ? money(selectedProvider.price) : "Quote first"}</p></div>
             </div>
+
+            <div className="mt-5 rounded-2xl border border-white/10 bg-[#0D0D0D] p-4">
+              <p className="text-xs font-black tracking-[0.14em] text-[#D4AF37]">REAL CUSTOMER REVIEWS</p>
+              {reviewLoading ? (
+                <p className="mt-2 text-sm text-zinc-500">Loading completed-job reviews…</p>
+              ) : reviewSummary && reviewSummary.review_count > 0 ? (
+                <>
+                  <p className="mt-2 text-sm font-bold text-zinc-200">{reviewSummary.review_count} completed-job review{reviewSummary.review_count === 1 ? "" : "s"} • ⭐ {Number(reviewSummary.average_rating).toFixed(1)}</p>
+                  {reviewSummary.recent.length > 0 && (
+                    <div className="mt-3 grid gap-2">
+                      {reviewSummary.recent.map((review, index) => (
+                        <div key={`${review.created_at}-${index}`} className="rounded-xl bg-white/[0.03] p-3">
+                          <p className="text-xs text-[#E5C65A]">{"★".repeat(review.rating)}<span className="text-zinc-700">{"★".repeat(5 - review.rating)}</span></p>
+                          <p className="mt-1 text-sm leading-5 text-zinc-300">{review.comment}</p>
+                          <p className="mt-1 text-[11px] text-zinc-600">{new Date(review.created_at).toLocaleDateString()}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="mt-2 text-sm text-zinc-500">No completed-job customer reviews yet. Rydah does not invent ratings or testimonials for new providers.</p>
+              )}
+            </div>
+
             <div className="mt-5 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-4 text-xs leading-5 text-zinc-400">For safety, request and pay through Rydah. Provider profile descriptions cannot include off-platform contact details.</div>
             <a href={`/post-job?provider=${encodeURIComponent(selectedProvider.slug)}`} className="mt-4 block rounded-2xl bg-[#D4AF37] px-5 py-4 text-center font-bold text-black">Request Service</a>
           </div>
