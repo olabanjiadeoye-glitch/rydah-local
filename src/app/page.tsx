@@ -1,6 +1,7 @@
 import Link from "next/link";
 import RydahCareAssistant from "./rydah-care-assistant";
 import BrandLogo from "./brand-logo";
+import HomeWelcome from "./home-welcome";
 
 const services = [
   { name: "Electrician", icon: "⚡", description: "Electrical repairs & installation", surface: "from-amber-400/15 via-orange-400/5 to-transparent", iconSurface: "bg-amber-400/15" },
@@ -31,7 +32,9 @@ const thirdMainlandImage = "https://images.unsplash.com/photo-1691743441282-72db
 
 export default function Home() {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#080808] text-white">
+    <>
+      <HomeWelcome />
+      <main className="min-h-screen overflow-x-hidden bg-[#080808] text-white">
       <header className="sticky top-0 z-40 border-b border-white/10 bg-[#080808]/88 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-4">
           <Link href="/" aria-label="Rydah Local home"><BrandLogo /></Link>
@@ -143,7 +146,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-6">
+      <section className="mx-auto max-w-6xl px-5 py-3 sm:py-6">
         <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-[#101010]">
           <div className="relative min-h-[250px] overflow-hidden sm:min-h-[300px]">
             <div
@@ -178,8 +181,8 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-6 sm:py-8">
-        <div className="grid gap-5 lg:grid-cols-2">
+      <section className="mx-auto max-w-6xl px-5 py-3 sm:py-6">
+        <div className="grid gap-3 lg:grid-cols-2 lg:gap-5">
           <div className="relative overflow-hidden rounded-3xl border border-orange-300/20 bg-gradient-to-br from-orange-500/20 via-rose-500/10 to-[#0d0d0d] p-5 sm:p-6 shadow-[0_18px_50px_rgba(249,115,22,0.08)]">
             <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#D4AF37]/15 blur-3xl" aria-hidden="true" />
             <p className="relative text-xs font-black tracking-widest text-amber-300">URGENT HELP</p>
@@ -198,7 +201,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-6 sm:py-8">
+      <section className="mx-auto max-w-6xl px-5 py-3 sm:py-6">
         <div className="relative overflow-hidden rounded-[2rem] border border-violet-300/20 bg-gradient-to-br from-violet-500/15 via-[#17130a] to-emerald-500/10 p-5 sm:p-6">
           <div className="absolute -left-16 bottom-0 h-48 w-48 rounded-full bg-violet-400/10 blur-3xl" aria-hidden="true" />
           <div className="absolute -right-16 top-0 h-48 w-48 rounded-full bg-emerald-400/10 blur-3xl" aria-hidden="true" />
@@ -230,5 +233,6 @@ export default function Home() {
 
       <RydahCareAssistant />
     </main>
+    </>
   );
 }
