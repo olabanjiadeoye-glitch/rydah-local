@@ -43,6 +43,7 @@ export default function HomeWelcome() {
   const router = useRouter();
   const [visible, setVisible] = useState(true);
   const [leaving, setLeaving] = useState(false);
+  const [activeIndicator, setActiveIndicator] = useState(0);
 
   useEffect(() => {
     try {
@@ -78,6 +79,18 @@ export default function HomeWelcome() {
 
   useEffect(() => {
     if (!visible) document.body.style.overflow = "";
+  }, [visible]);
+
+  useEffect(() => {
+    if (!visible) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+
+    const timer = window.setInterval(() => {
+      setActiveIndicator((current) => (current + 1) % 3);
+    }, 1600);
+
+    return () => window.clearInterval(timer);
   }, [visible]);
 
   if (!visible) return null;
@@ -156,9 +169,16 @@ export default function HomeWelcome() {
               </div>
 
               <div className="mt-5 flex justify-center gap-2" aria-hidden="true">
-                <span className="h-1.5 w-8 rounded-full bg-[#E5B93A]" />
-                <span className="h-1.5 w-6 rounded-full bg-white/20" />
-                <span className="h-1.5 w-6 rounded-full bg-white/20" />
+                {[0, 1, 2].map((index) => (
+                  <span
+                    key={index}
+                    className={`h-1.5 rounded-full transition-all duration-500 ease-out ${
+                      activeIndicator === index
+                        ? "w-8 bg-[#E5B93A] shadow-[0_0_12px_rgba(229,185,58,0.45)]"
+                        : "w-6 bg-white/20"
+                    }`}
+                  />
+                ))}
               </div>
             </div>
           </div>
