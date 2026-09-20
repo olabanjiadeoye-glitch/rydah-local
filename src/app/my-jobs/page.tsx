@@ -267,6 +267,13 @@ export default function MyJobsPage() {
                     <div className="rounded-2xl bg-[#1A1A1A] p-4"><p className="text-xs text-zinc-500">Request ID</p><p className="mt-1 font-bold">{job.id.slice(0, 8)}</p></div>
                   </div>
 
+                  {job.quote_status === "not_sent" && !["completed", "cancelled"].includes(job.status) && (
+                    <div className="mt-5 rounded-2xl border border-sky-500/20 bg-sky-500/10 p-4 text-sm leading-6 text-sky-100">
+                      <p className="font-black">Provider alerted • waiting for a quote</p>
+                      <p className="mt-1 text-zinc-300">Rydah has assigned this request and notified the provider. A provider being available for jobs does not guarantee immediate travel or response. If they do not respond in a reasonable time, you can cancel the request and choose another available provider.</p>
+                    </div>
+                  )}
+
                   {job.quoted_amount != null && job.quote_status !== "not_sent" && (
                     <div className="mt-5 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/5 p-5">
                       <div className="flex flex-wrap items-center justify-between gap-4">
