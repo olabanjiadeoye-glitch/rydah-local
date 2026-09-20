@@ -8,10 +8,10 @@ const ENTRY_KEY = "rydah-home-entered";
 const skylineImage = "https://images.unsplash.com/photo-1691743441282-72dbe8f91dcc?auto=format&fit=crop&fm=jpg&q=86&w=1800";
 
 const entryServices = [
-  { label: "Home Services", icon: "wrench" },
-  { label: "Vehicle Services", icon: "car" },
-  { label: "Property Care", icon: "home" },
-  { label: "and More…", icon: "briefcase" },
+  { label: "Home Services", icon: "wrench", href: "/providers?group=home" },
+  { label: "Vehicle Services", icon: "car", href: "/providers?group=vehicle" },
+  { label: "Property Care", icon: "home", href: "/providers?group=property" },
+  { label: "and More…", icon: "briefcase", href: "/providers" },
 ] as const;
 
 function ServiceIcon({ icon }: { icon: (typeof entryServices)[number]["icon"] }) {
@@ -75,6 +75,11 @@ export default function HomeWelcome() {
   function signIn() {
     rememberEntry();
     router.push("/sign-in");
+  }
+
+  function openService(href: string) {
+    rememberEntry();
+    router.push(href);
   }
 
   useEffect(() => {
@@ -159,12 +164,18 @@ export default function HomeWelcome() {
 
               <div className="mt-5 grid grid-cols-4 gap-2 text-center">
                 {entryServices.map((service) => (
-                  <div key={service.label} className="min-w-0">
+                  <button
+                    key={service.label}
+                    type="button"
+                    onClick={() => openService(service.href)}
+                    className="min-w-0 rounded-xl px-1 py-1.5 transition hover:bg-white/5 active:scale-95"
+                    aria-label={`Open ${service.label}`}
+                  >
                     <div className="mx-auto flex h-10 w-10 items-center justify-center text-[#EAC64C]">
                       <ServiceIcon icon={service.icon} />
                     </div>
                     <p className="mt-1 text-[10px] font-semibold leading-4 text-zinc-100 sm:text-[11px]">{service.label}</p>
-                  </div>
+                  </button>
                 ))}
               </div>
 

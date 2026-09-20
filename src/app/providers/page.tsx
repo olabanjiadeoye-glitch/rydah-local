@@ -31,6 +31,12 @@ type DbProvider = {
 };
 
 const launchCategories = ["Electrician", "Plumber", "AC Technician", "Generator", "Cleaning", "Mechanic"];
+const serviceGroups = {
+  home: ["Electrician", "Plumber", "AC Technician", "Generator", "Cleaning"],
+  vehicle: ["Mechanic"],
+  property: ["Electrician", "Plumber", "AC Technician", "Cleaning"],
+} as const;
+type ServiceGroup = keyof typeof serviceGroups;
 const LOCAL_FAVOURITES = "rydah-local-favourites";
 const money = (value: number) => `₦${value.toLocaleString("en-NG")}`;
 
@@ -41,6 +47,7 @@ export default function ProvidersPage() {
   const [location, setLocation] = useState("All Areas");
   const [sort, setSort] = useState("Recommended");
   const [category, setCategory] = useState("All");
+  const [serviceGroup, setServiceGroup] = useState<ServiceGroup | "">("");
   const [favorites, setFavorites] = useState<string[]>([]);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [session, setSession] = useState<AuthSession | null>(null);
@@ -55,6 +62,10 @@ export default function ProvidersPage() {
     const params = new URLSearchParams(window.location.search);
     const requested = params.get("category");
     if (requested) setCategory(requested);
+    const requestedGroup = params.get("group");
+    if (requestedGroup && requestedGroup in serviceGroups) {
+      setServiceGroup(requestedGroup as ServiceGroup);
+    }
 
     const storedSession = getStoredSession();
     setSession(storedSession);
@@ -126,7 +137,8 @@ export default function ProvidersPage() {
         || provider.area === location
         || Boolean(selectedCity && cityFromServiceArea(provider.area) === selectedCity);
       const matchesCategory = category === "All" || provider.category === category;
-      return matchesSearch && matchesLocation && matchesCategory;
+      const matchesGroup = !serviceGroup || serviceGroups[serviceGroup].includes(provider.category as never);
+      return matchesSearch && matchesLocation && matchesCategory && matchesGroup;
     });
 
     if (sort === "Highest Rated") result = [...result].sort((a, b) => b.rating - a.rating);
@@ -145,7 +157,7 @@ export default function ProvidersPage() {
       });
     }
     return result;
-  }, [providers, activeSearch, location, sort, category, userCoordinates]);
+  }, [providers, activeSearch, location, sort, category, serviceGroup, userCoordinates]);
 
   async function detectCurrentLocation() {
     setGpsBusy(true);
@@ -298,11 +310,17 @@ export default function ProvidersPage() {
 
       <section className="mx-auto max-w-6xl px-5">
         <div className="flex gap-2 overflow-x-auto pb-3">
-          {categories.map((item) => <button key={item} onClick={() => setCategory(item)} className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold ${category === item ? "bg-[#D4AF37] text-black" : "border border-white/10 bg-[#121212] text-zinc-300"}`}>{item}</button>)}
+          {categories.map((item) => <button key={item} onClick={() => { setCategory(item); setServiceGroup(""); }} className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold ${category === item && !serviceGroup ? "bg-[#D4AF37] text-black" : "border border-white/10 bg-[#121212] text-zinc-300"}`}>{item}</button>)}
         </div>
       </section>
 
       <section id="provider-results" className="mx-auto max-w-6xl scroll-mt-6 px-5 py-6">
+        {serviceGroup && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-4 py-3 text-sm text-[#E5C65A]">
+            <span>{serviceGroup === "home" ? "Home Services" : serviceGroup === "vehicle" ? "Vehicle Services" : "Property Care"} shortcut applied.</span>
+            <button type="button" onClick={() => setServiceGroup("")} className="shrink-0 rounded-lg border border-[#D4AF37]/25 px-3 py-1.5 text-xs font-black">Show all</button>
+          </div>
+        )}
         {searchMessage && <div className="mb-4 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 px-4 py-3 text-sm text-[#E5C65A]">{searchMessage} {visibleProviders.length} verified provider{visibleProviders.length === 1 ? "" : "s"} currently available.</div>}
         <div className="mb-5 flex items-end justify-between">
           <div><p className="text-xs font-bold tracking-widest text-[#D4AF37]">VERIFIED & AVAILABLE</p><h2 className="mt-1 text-2xl font-bold">Ready to take a job</h2></div>
