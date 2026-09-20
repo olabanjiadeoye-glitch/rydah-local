@@ -215,7 +215,7 @@ export async function restDelete(table: string, query: string, token: string): P
   if (!response.ok) throw new Error(await readError(response));
 }
 
-export async function restRpc<T>(fn: string, payload: unknown, token: string): Promise<T> {
+export async function restRpc<T>(fn: string, payload: unknown, token?: string): Promise<T> {
   assertConfigured();
   const response = await fetchWithOptionalRefresh(
     `${SUPABASE_URL}/rest/v1/rpc/${fn}`,
