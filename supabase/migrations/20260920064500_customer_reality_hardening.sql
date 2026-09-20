@@ -3,6 +3,10 @@
 alter table public.jobs
   add column if not exists landmark_text text;
 
+alter table public.jobs
+  add column if not exists first_quote_at timestamptz,
+  add column if not exists quote_sent_at timestamptz;
+
 do $$
 begin
   if not exists (
@@ -57,6 +61,48 @@ as $function$
     where p.user_id = auth.uid()
       and private.provider_billing_active(p.id)
   ) as feed;
+$function$;
+
+create or replace function public.provider_send_job_quote(p_job_id uuid, p_amount integer)
+returns jsonb
+language plpgsql
+security definer
+set search_path to 'public', 'private', 'auth', 'pg_temp'
+as $function$
+declare
+  updated public.jobs%rowtype;
+begin
+  if auth.uid() is null then raise exception 'Authentication required'; end if;
+  if p_amount is null or p_amount <= 0 then raise exception 'Quote must be greater than zero'; end if;
+
+  update public.jobs j
+  set quoted_amount = p_amount,
+      first_quote_at = coalesce(j.first_quote_at, now()),
+      quote_sent_at = now()
+  where j.id = p_job_id
+    and j.status in ('open','matched','accepted')
+    and exists (
+      select 1
+      from public.providers p
+      where p.id = j.provider_id
+        and p.user_id = auth.uid()
+        and p.is_verified = true
+        and p.biometric_verified = true
+        and private.provider_billing_active(p.id)
+    )
+  returning j.* into updated;
+
+  if not found then
+    raise exception 'Assigned job not found, billing inactive, verification incomplete, or job is no longer quotable';
+  end if;
+
+  return to_jsonb(updated)
+    - 'contact_email'
+    - 'contact_phone'
+    - 'contact_name'
+    - 'landmark_text'
+    - 'arrival_code_hash';
+end;
 $function$;
 
 create or replace function public.public_provider_review_summary(p_provider_id uuid)
