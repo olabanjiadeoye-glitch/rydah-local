@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-const ENTRY_KEY = "rydah-home-entered";
 const skylineImage = "https://images.unsplash.com/photo-1691743441282-72dbe8f91dcc?auto=format&fit=crop&fm=jpg&q=86&w=1800";
 
 const entryServices = [
@@ -46,13 +45,6 @@ export default function HomeWelcome() {
   const [activeIndicator, setActiveIndicator] = useState(0);
 
   useEffect(() => {
-    try {
-      if (window.sessionStorage.getItem(ENTRY_KEY) === "1") {
-        setVisible(false);
-        return;
-      }
-    } catch {}
-
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -60,25 +52,16 @@ export default function HomeWelcome() {
     };
   }, []);
 
-  function rememberEntry() {
-    try {
-      window.sessionStorage.setItem(ENTRY_KEY, "1");
-    } catch {}
-  }
-
   function enterRydah() {
-    rememberEntry();
     setLeaving(true);
     window.setTimeout(() => setVisible(false), 260);
   }
 
   function signIn() {
-    rememberEntry();
     router.push("/sign-in");
   }
 
   function openService(href: string) {
-    rememberEntry();
     router.push(href);
   }
 
