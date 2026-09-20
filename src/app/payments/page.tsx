@@ -308,14 +308,21 @@ export default function PaymentsPage() {
             )}
 
             {canPay && (
-              <div className="mt-7 grid gap-3 sm:grid-cols-2">
+              <>
+                <div className="mt-6 rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/5 p-4 text-sm leading-6 text-zinc-300">
+                  <p className="font-black text-[#D4AF37]">Choose payment inside Rydah</p>
+                  <p className="mt-1">Paystack is the protected digital route and may show the payment methods enabled for Rydah at checkout. Rydah never asks you to send money to a provider&apos;s personal account to complete an in-app payment.</p>
+                  <p className="mt-2 text-zinc-400">Cash is only allowed for eligible jobs of ₦5,000 or less. Even when cash is used, keep the job and agreed quote recorded in Rydah so the service trail remains available.</p>
+                </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <button disabled={saving} onClick={() => void startPaystackPayment()} className="rounded-2xl bg-[#D4AF37] px-5 py-4 font-black text-black disabled:opacity-50">
                   {saving ? "Please wait…" : `Pay ${naira(amount)} with Paystack`}
                 </button>
                 <button disabled={saving || !cashAllowed} onClick={() => void selectCash()} className="rounded-2xl border border-white/10 px-5 py-4 font-bold disabled:opacity-35">
                   Cash {cashAllowed ? "" : "(Not available)"}
                 </button>
-              </div>
+                </div>
+              </>
             )}
 
             {payment?.method === "paystack" && payment.status === "pending" && (
@@ -325,7 +332,7 @@ export default function PaymentsPage() {
             )}
 
             {!cashAllowed && amount > 5000 && !isSettled && (
-              <p className="mt-4 text-sm text-zinc-500">Cash is disabled for jobs above ₦5,000 under the Rydah payment policy.</p>
+              <p className="mt-4 text-sm text-zinc-500">Cash is disabled for jobs above ₦5,000 under the Rydah payment policy. Use the protected digital checkout instead; do not move the booking to an off-platform transfer.</p>
             )}
           </div>
         )}
