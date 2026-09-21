@@ -46,6 +46,23 @@ type ProviderBillingState = {
   last_subscription_paid_at: string | null;
   next_payment_at: string | null;
   billing_ready: boolean;
+  promo_code: string | null;
+  promo_market_key: string | null;
+  promo_slot_number: number | null;
+  promo_claimed_at: string | null;
+  promo_free_until: string | null;
+  promo_active: boolean;
+  promo_days_remaining: number;
+  subscription_due_now: boolean;
+};
+
+type ProviderPromoMarket = {
+  market_key: string;
+  city_name: string;
+  region_name: string;
+  slot_limit: number;
+  claimed_count: number;
+  remaining: number;
 };
 
 type BiometricStatus = "not_started" | "pending" | "verified" | "failed" | "review_required";
@@ -86,6 +103,16 @@ type BillingResponse = {
   authorization_url?: string;
   redirect_url?: string;
   billing?: ProviderBillingState;
+  promo_markets?: ProviderPromoMarket[];
+  claim?: {
+    claimed?: boolean;
+    city_name?: string;
+    region_name?: string;
+    slot_number?: number;
+    slot_limit?: number;
+    remaining?: number;
+    free_until?: string;
+  };
 };
 
 const categories = ["Electrician", "Plumber", "AC Technician", "Generator", "Cleaning", "Mechanic"];
@@ -157,6 +184,8 @@ export default function ProviderOnboardingPage() {
   const [session, setSession] = useState<AuthSession | null>(null);
   const [provider, setProvider] = useState<ProviderRow | null>(null);
   const [billing, setBilling] = useState<ProviderBillingState | null>(null);
+  const [promoMarkets, setPromoMarkets] = useState<ProviderPromoMarket[]>([]);
+  const [promoCity, setPromoCity] = useState<string>("Lagos");
   const [verification, setVerification] = useState<VerificationRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -240,9 +269,14 @@ export default function ProviderOnboardingPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function billingAction(current: AuthSession, action: string) {
-    const response = await invokeFunction("provider-billing", { action }, current.access_token);
+  async function billingAction(
+    current: AuthSession,
+    action: string,
+    extra: Record<string, unknown> = {},
+  ) {
+    const response = await invokeFunction("provider-billing", { action, ...extra }, current.access_token);
     const result = (await response.json().catch(() => ({}))) as BillingResponse;
+    if (result.promo_markets) setPromoMarkets(result.promo_markets);
     if (!response.ok) throw new Error(result.error || result.message || "Unable to update provider billing.");
     if (result.billing) setBilling(result.billing);
     return result;
@@ -318,6 +352,31 @@ export default function ProviderOnboardingPage() {
       setError(detail);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function claimFoundingPromo() {
+    if (!session) return;
+    setBusy(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const result = await billingAction(session, "claim_promo", { city: promoCity });
+      const city = result.claim?.city_name;
+      if (city && RYDAH_TARGET_CITIES.includes(city as (typeof RYDAH_TARGET_CITIES)[number])) {
+        const firstArea = serviceAreasForCity(city as (typeof RYDAH_TARGET_CITIES)[number])[0];
+        if (firstArea) setLocation(firstArea);
+      }
+      setMessage(
+        result.message ||
+          "Founding 100 place confirmed. Registration is free and your first 3 months are free.",
+      );
+      await loadAll(session);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to claim a Founding 100 place.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -398,7 +457,11 @@ export default function ProviderOnboardingPage() {
       );
 
       if (!rows[0]) throw new Error("Your provider profile was not returned by Rydah.");
-      setMessage("Profile saved. Now connect your bank for the ₦500 monthly provider payment.");
+      setMessage(
+        billing?.promo_active
+          ? `Profile saved. Your Founding 100 free access is active until ${new Date(String(billing.promo_free_until)).toLocaleDateString("en-GB")}.`
+          : `Profile saved. Now connect your bank for the ${naira(billing?.monthly_fee_naira)} monthly provider payment.`,
+      );
       await loadAll(session);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to save your provider profile.");
@@ -715,21 +778,92 @@ export default function ProviderOnboardingPage() {
           </div>
         )}
 
+        {billing?.promo_code === "founding_100" && (
+          <div className="mt-5 rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-black tracking-[0.18em] text-emerald-300">FOUNDING 100 PROVIDER</p>
+                <h2 className="mt-1 text-xl font-black">Registration free • first 3 months free</h2>
+              </div>
+              <span className="rounded-full bg-emerald-500/15 px-3 py-2 text-xs font-black text-emerald-300">
+                SLOT #{billing.promo_slot_number}
+              </span>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-zinc-300">
+              {billing.promo_active
+                ? `You have ${billing.promo_days_remaining} day${billing.promo_days_remaining === 1 ? "" : "s"} remaining. Your free period ends ${new Date(String(billing.promo_free_until)).toLocaleDateString("en-GB")}. After that, the normal ${naira(billing.monthly_fee_naira)}/month provider subscription is required.`
+                : `Your 3-month free period has ended. Your registration remains waived; activate the ${naira(billing.monthly_fee_naira)}/month subscription to continue receiving jobs.`}
+            </p>
+          </div>
+        )}
+
         {currentStep === 1 && billing && (
           <div className="mt-6 rounded-3xl border border-[#D4AF37]/25 bg-gradient-to-br from-[#17130a] to-[#101010] p-6">
             <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">STEP 1</p>
             <h1 className="mt-2 text-3xl font-black">Activate your provider account</h1>
             <p className="mt-3 text-sm leading-6 text-zinc-400">
-              Pay {naira(billing.registration_fee_naira)} once to register as a Rydah service provider.
+              The first 100 providers can secure free registration plus 3 months of free provider access. Promotional places are reserved by launch market.
             </p>
+
+            <div className="mt-5 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-black text-emerald-300">FOUNDING 100 OFFER</p>
+                  <p className="mt-1 text-xs leading-5 text-zinc-300">
+                    Lagos has 40 places. Abuja/FCT, Ibadan/Oyo, Warri/Delta and Port Harcourt/Rivers have 15 places each.
+                  </p>
+                </div>
+                <span className="rounded-full bg-black/30 px-3 py-2 text-xs font-black text-emerald-200">100 TOTAL</span>
+              </div>
+
+              <label className="mt-4 block">
+                <span className="text-xs font-bold text-zinc-300">Your main launch city</span>
+                <select
+                  value={promoCity}
+                  onChange={(event) => setPromoCity(event.target.value)}
+                  className="mt-2 w-full rounded-xl border border-white/10 bg-[#111] px-4 py-3 outline-none"
+                >
+                  {promoMarkets.map((market) => (
+                    <option key={market.market_key} value={market.city_name}>
+                      {market.city_name} — {market.remaining} of {market.slot_limit} places left
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              {promoMarkets.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
+                  {promoMarkets.map((market) => (
+                    <div key={market.market_key} className="rounded-xl border border-white/10 bg-black/20 p-3 text-center">
+                      <p className="text-xs font-black">{market.city_name}</p>
+                      <p className={`mt-1 text-xs font-bold ${market.remaining > 0 ? "text-emerald-300" : "text-red-300"}`}>
+                        {market.remaining} left
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button
+                type="button"
+                disabled={busy || promoMarkets.length === 0 || (promoMarkets.find((market) => market.city_name === promoCity)?.remaining ?? 0) <= 0}
+                onClick={() => void claimFoundingPromo()}
+                className="mt-4 w-full rounded-xl bg-emerald-400 px-4 py-3 text-sm font-black text-black disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {busy ? "Claiming…" : "Claim My Free 3-Month Founding Place"}
+              </button>
+              <p className="mt-3 text-xs leading-5 text-zinc-400">
+                If your city allocation is full, normal {naira(billing.registration_fee_naira)} registration and {naira(billing.monthly_fee_naira)}/month membership apply immediately.
+              </p>
+            </div>
 
             <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5">
               <div className="flex items-center justify-between gap-4">
-                <span className="text-sm text-zinc-400">Registration fee</span>
+                <span className="text-sm text-zinc-400">Standard registration fee</span>
                 <span className="text-2xl font-black">{naira(billing.registration_fee_naira)}</span>
               </div>
               <p className="mt-3 text-xs leading-5 text-zinc-500">
-                This is separate from the {naira(billing.monthly_fee_naira)} monthly provider membership shown later.
+                This applies when no Founding 100 place remains in your selected launch market. It is separate from the {naira(billing.monthly_fee_naira)} monthly provider membership.
               </p>
             </div>
 
@@ -854,6 +988,11 @@ export default function ProviderOnboardingPage() {
           <div className="mt-6 rounded-3xl border border-white/10 bg-[#121212] p-6">
             <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">STEP 3</p>
             <h1 className="mt-2 text-3xl font-black">Connect your bank</h1>
+            {billing.subscription_due_now && billing.promo_code === "founding_100" && (
+              <div className="mt-4 rounded-2xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm leading-6 text-amber-100">
+                Your Founding 100 three-month free period has ended. Your registration fee stays waived; activate the monthly subscription now to return to the marketplace.
+              </div>
+            )}
             <p className="mt-3 text-sm leading-6 text-zinc-400">
               Approve a secure bank instruction so Rydah can collect {naira(billing.monthly_fee_naira)} once each month while you use the provider marketplace.
             </p>
