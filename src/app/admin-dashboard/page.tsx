@@ -363,6 +363,7 @@ export default function AdminDashboardPage() {
                 <h3 className="mt-1 text-2xl font-black">Run Rydah</h3>
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   <Link href="/admin/providers" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Provider Verification</p><p className="mt-1 text-sm text-zinc-500">Approve trusted professionals.</p></Link>
+                  <Link href="/admin/founding-providers" className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5"><p className="font-black text-emerald-300">Founding 100 Monitor</p><p className="mt-1 text-sm text-zinc-500">Track promotional provider places, free periods and remaining city allocations.</p></Link>
                   <Link href="/admin/finance" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Finance & Commission</p><p className="mt-1 text-sm text-zinc-500">Revenue, ledger and commission rate.</p></Link>
                   <Link href="/payout-admin" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Provider Payouts</p><p className="mt-1 text-sm text-zinc-500">Review and settle withdrawal requests.</p></Link>
                   <Link href="/notifications" className="rounded-2xl border border-white/10 bg-[#1A1A1A] p-5"><p className="font-black">Notifications</p><p className="mt-1 text-sm text-zinc-500">See verification and job updates.</p></Link>
