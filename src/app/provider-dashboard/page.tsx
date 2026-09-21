@@ -52,6 +52,14 @@ type ProviderBillingState = {
   last_subscription_paid_at: string | null;
   next_payment_at: string | null;
   billing_ready: boolean;
+  promo_code: string | null;
+  promo_market_key: string | null;
+  promo_slot_number: number | null;
+  promo_claimed_at: string | null;
+  promo_free_until: string | null;
+  promo_active: boolean;
+  promo_days_remaining: number;
+  subscription_due_now: boolean;
 };
 
 type JobStatus = "open" | "matched" | "accepted" | "in_progress" | "completed" | "cancelled";
@@ -701,9 +709,13 @@ export default function ProviderDashboardPage() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-black tracking-[0.18em] text-[#D4AF37]">PROVIDER BILLING</p>
-                <h2 className="mt-2 text-2xl font-black">Keep your Rydah provider account active</h2>
+                <h2 className="mt-2 text-2xl font-black">
+                  {billing.promo_active ? "Your Founding 100 free period is active" : "Keep your Rydah provider account active"}
+                </h2>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
-                  Provider membership is ₦{billing.registration_fee_naira.toLocaleString()} once for registration, then ₦{billing.monthly_fee_naira.toLocaleString()} every month by approved Nigerian bank Direct Debit.
+                  {billing.promo_active
+                    ? `Your registration is waived and you have ${billing.promo_days_remaining} day${billing.promo_days_remaining === 1 ? "" : "s"} of free provider access remaining. After the free period, membership is ₦${billing.monthly_fee_naira.toLocaleString()} per month.`
+                    : `Provider membership is ₦${billing.registration_fee_naira.toLocaleString()} once for registration, then ₦${billing.monthly_fee_naira.toLocaleString()} every month by approved Nigerian bank Direct Debit.`}
                 </p>
               </div>
               <span className={`rounded-full px-3 py-2 text-xs font-black ${billing.billing_ready ? "bg-emerald-500/15 text-emerald-300" : "bg-amber-500/15 text-amber-300"}`}>
@@ -714,13 +726,21 @@ export default function ProviderDashboardPage() {
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <p className="text-xs font-black text-zinc-500">REGISTRATION</p>
-                <p className="mt-1 text-lg font-black">₦{billing.registration_fee_naira.toLocaleString()} one-time</p>
+                <p className="mt-1 text-lg font-black">
+                  {billing.registration_status === "waived" ? "FREE — WAIVED" : `₦${billing.registration_fee_naira.toLocaleString()} one-time`}
+                </p>
                 <p className="mt-1 text-sm text-zinc-400">Status: {label(billing.registration_status)}</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <p className="text-xs font-black text-zinc-500">MONTHLY SUBSCRIPTION</p>
-                <p className="mt-1 text-lg font-black">₦{billing.monthly_fee_naira.toLocaleString()} / month</p>
-                <p className="mt-1 text-sm text-zinc-400">Direct Debit: {label(billing.subscription_status)}</p>
+                <p className="mt-1 text-lg font-black">
+                  {billing.promo_active
+                    ? `FREE until ${new Date(String(billing.promo_free_until)).toLocaleDateString("en-GB")}`
+                    : `₦${billing.monthly_fee_naira.toLocaleString()} / month`}
+                </p>
+                <p className="mt-1 text-sm text-zinc-400">
+                  {billing.promo_active ? "Founding 100 promotional access" : `Direct Debit: ${label(billing.subscription_status)}`}
+                </p>
               </div>
             </div>
 
@@ -731,7 +751,13 @@ export default function ProviderDashboardPage() {
             )}
 
             <div className="mt-5 flex flex-wrap gap-3">
-              {!["paid", "waived"].includes(billing.registration_status) ? (
+              {billing.promo_active ? (
+                <p className="rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm font-bold text-emerald-300">
+                  ✓ Founding 100 slot #{billing.promo_slot_number} active
+                  {billing.promo_free_until ? ` • free through ${new Date(billing.promo_free_until).toLocaleDateString("en-GB")}` : ""}
+                  {" • "}monthly billing starts after the free period.
+                </p>
+              ) : !["paid", "waived"].includes(billing.registration_status) ? (
                 <button
                   type="button"
                   disabled={billingBusy}
@@ -763,7 +789,7 @@ export default function ProviderDashboardPage() {
                 </>
               ) : billing.billing_ready ? (
                 <p className="text-sm font-bold text-emerald-300">
-                  ✓ Registration paid and monthly Direct Debit subscription active
+                  ✓ Registration confirmed and monthly Direct Debit subscription active
                   {billing.next_payment_at ? ` • next billing: ${new Date(billing.next_payment_at).toLocaleDateString("en-GB")}` : ""}
                 </p>
               ) : (
