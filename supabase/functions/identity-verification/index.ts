@@ -273,30 +273,34 @@ Deno.serve(async (req) => {
       if (!liveResult) {
         const sessionResults = docs.filter((item) => String(item.sessionId || "") === livenessSessionId);
         const explicitFailure = sessionResults.some((item) => item.passed === false);
+        const startedAtMs = Date.parse(String(verification.biometric_updated_at || ""));
+        const sessionExpired = Number.isFinite(startedAtMs) && Date.now() - startedAtMs > 15 * 60 * 1000;
+        const shouldFail = explicitFailure || sessionExpired;
         const checkedAt = new Date().toISOString();
+        const resultText = explicitFailure
+          ? "Live face check did not pass. Please retry using the camera."
+          : sessionExpired
+            ? "Your previous camera session expired before Rydah received a final result. Start a new camera check."
+            : "Live face result is still being finalized. Please check again in a moment.";
 
         await supabaseRequest(`provider_verifications?id=eq.${encodeURIComponent(verification.id)}`, {
           method: "PATCH",
           headers: { Prefer: "return=minimal" },
           body: JSON.stringify({
-            biometric_status: explicitFailure ? "failed" : "pending",
-            biometric_result_code: explicitFailure ? "liveness_failed" : "liveness_processing",
-            biometric_result_text: explicitFailure
-              ? "Live face check did not pass. Please retry using the camera."
-              : "Live face result is still being finalized. Please check again in a moment.",
+            biometric_status: shouldFail ? "failed" : "pending",
+            biometric_result_code: explicitFailure ? "liveness_failed" : sessionExpired ? "liveness_expired" : "liveness_processing",
+            biometric_result_text: resultText,
             biometric_liveness_session_id: livenessSessionId,
             biometric_liveness_verified_at: null,
-            biometric_liveness_result: explicitFailure ? "failed" : "processing",
+            biometric_liveness_result: explicitFailure ? "failed" : sessionExpired ? "expired" : "processing",
             biometric_updated_at: checkedAt,
             updated_at: checkedAt,
           }),
         });
 
         return json(
-          { error: explicitFailure
-              ? "Live face check did not pass. Please retry using the camera."
-              : "Live face result is still being finalized. Please check again in a moment." },
-          explicitFailure ? 422 : 409,
+          { error: resultText },
+          shouldFail ? 422 : 409,
         );
       }
 
