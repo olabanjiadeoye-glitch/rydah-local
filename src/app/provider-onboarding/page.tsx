@@ -119,9 +119,9 @@ const categories = ["Electrician", "Plumber", "AC Technician", "Generator", "Cle
 const idTypes: VerificationRow["id_type"][] = ["NIN", "International Passport"];
 
 const steps = [
-  { number: 1, title: "Registration", short: "Pay once" },
+  { number: 1, title: "Registration", short: "Free / pay once" },
   { number: 2, title: "Your service", short: "Set profile" },
-  { number: 3, title: "Monthly payment", short: "Connect bank" },
+  { number: 3, title: "Membership", short: "Free / bank" },
   { number: 4, title: "Verify identity", short: "ID + face" },
   { number: 5, title: "Ready", short: "Go online" },
 ] as const;

@@ -15,6 +15,10 @@ Android package ID: `online.rydahlocal.app`
 
 Booking availability in each service area depends on active, verified provider supply.
 
+## Founding 100 provider launch programme
+
+Rydah reserves 100 promotional provider places: Lagos 40; Abuja/FCT 15; Ibadan/Oyo 15; Warri/Delta 15; Port Harcourt/Rivers 15. A confirmed promotional provider receives a waived registration fee and three months of free provider access. After expiry, the normal ₦500/month provider subscription is required. All quotas and expiry dates are enforced server-side.
+
 ## Stack
 
 - Next.js 16 / React 19

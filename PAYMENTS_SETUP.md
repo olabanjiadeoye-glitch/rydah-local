@@ -37,15 +37,37 @@ Use Paystack test mode first. Confirm that a successful payment changes `payment
 
 ## Provider registration and monthly subscription
 
-Provider marketplace access is gated by provider billing:
+Provider marketplace access is gated by provider billing.
+
+### Founding 100 launch promotion
+
+The first promotional allocation is database-enforced by launch market:
+
+- Lagos: 40 places
+- Abuja / FCT: 15 places
+- Ibadan / Oyo State: 15 places
+- Warri / Delta State: 15 places
+- Port Harcourt / Rivers State: 15 places
+
+A provider only receives the promotion after the app confirms a remaining place in the selected launch market. A confirmed Founding 100 provider gets:
+
+- the ₦500 registration fee permanently waived;
+- 3 months of free provider marketplace access from the claim timestamp;
+- automatic in-app/device-notification reminders before expiry and when the free period ends;
+- the normal ₦500/month Direct Debit requirement after the free period.
+
+Promotional places are market-specific and are not moved between cities when one market fills. A provider outside the remaining promotional allocation follows the standard billing flow immediately.
+
+### Standard provider billing
 
 1. Provider creates a Provider account.
-2. Provider pays a one-time ₦500 registration fee through Paystack.
-3. After registration is confirmed, the provider creates their provider profile.
+2. If no Founding 100 place is available/claimed, provider pays the one-time ₦500 registration fee through Paystack.
+3. Provider creates the provider profile.
 4. Provider approves a Nigerian bank Direct Debit mandate through Paystack.
 5. Rydah creates a ₦500 monthly Paystack subscription using that Direct Debit authorization.
-6. The provider must keep registration paid and the monthly subscription active before going available, receiving jobs, sending quotes or changing job status.
-7. Failed, disabled or non-renewing subscriptions take the provider profile offline until billing is restored.
+6. The provider must keep registration paid/waived and either a live Founding 100 free period or an active monthly subscription before going available, receiving jobs, sending quotes or changing job status.
+7. At Founding 100 expiry, an inactive subscription removes marketplace access and takes the provider offline until monthly billing is activated.
+8. Failed, disabled or non-renewing subscriptions take the provider profile offline until billing is restored.
 
 Provider billing is currently tied to the same Paystack environment as Rydah checkout. While `payment_gateway_live_enabled` is 0 and the Paystack secret is a test key, the provider billing flow remains in test mode and does not collect live provider money.
 

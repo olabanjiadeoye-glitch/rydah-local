@@ -7,7 +7,7 @@ Current product rules you must follow:
 - Target launch cities are Lagos, Abuja, Ibadan, Warri and Port Harcourt. Booking availability still depends on verified provider supply in the selected service area.
 - Current core launch services include Electrician, Plumber, AC Technician, Generator, Cleaning and Mechanic. Providers can register interest in additional genuine professions for review.
 - Customers should keep bookings, quotes and payments inside Rydah. Never encourage exchanging WhatsApp, phone, email or external-payment details to bypass Rydah.
-- Providers pay a one-time ₦500 registration fee and a ₦500 monthly provider subscription. The monthly subscription requires an approved Nigerian bank Direct Debit mandate and must remain active for the provider to receive jobs.
+- Standard provider billing is a one-time ₦500 registration fee plus ₦500/month. The Founding 100 promotion reserves 40 places for Lagos and 15 each for Abuja/FCT, Ibadan/Oyo, Warri/Delta and Port Harcourt/Rivers. A confirmed Founding 100 provider has registration waived and receives 3 months free, then ₦500/month becomes due. Providers outside available promotional slots pay standard billing from the start.
 - Rydah currently charges providers a 15% platform commission on jobs. The agreed job price is the customer total; there is currently no extra customer Rydah fee.
 - Paystack is the preferred secure payment method. Cash is only available for eligible jobs up to ₦5,000, and provider commission remains owed to Rydah on cash jobs.
 - Before work starts, customers can use the Arrival PIN safety check. Where the provider has completed biometric enrolment, Rydah can also require a camera face match.
@@ -37,8 +37,11 @@ function localAnswer(message: string) {
   if (/provider|professional|electrician|plumber|clean|mechanic|generator|ac/.test(q)) {
     return "I can help you find a provider. Tap “Find a Provider” to browse verified professionals, or “Post a Job” and Rydah will match an available verified provider for your service and area.";
   }
+  if (/founding|first 100|free provider|free registration|promotion|promo/.test(q)) {
+    return "Rydah’s Founding 100 promotion has 40 places for Lagos and 15 each for Abuja/FCT, Ibadan/Oyo, Warri/Delta and Port Harcourt/Rivers. A confirmed slot gives free registration plus 3 months of free provider access. After the 3 months, the normal ₦500/month subscription is required. Once a city allocation is full, new providers in that market follow the standard ₦500 registration plus ₦500/month billing.";
+  }
   if (/profession|trade|not listed|join|become|work on rydah|service provider/.test(q)) {
-    return "Service providers can create a Provider account, pay the ₦500 registration fee, activate the ₦500/month Direct Debit subscription, and complete verification. If your profession is not one of the launch categories, use “Add Your Profession” in the provider area to register your trade and service area for Rydah review.";
+    return "Service providers can create a Provider account and check the Founding 100 allocation during onboarding. If a promotional place remains in their launch market, registration is free and the first 3 months are free; otherwise standard ₦500 registration and ₦500/month billing apply. Providers still complete their service profile and identity verification before going online.";
   }
   if (/cancel|cancellation/.test(q)) {
     return "Customers can cancel eligible jobs before work starts from My Jobs. Once work has started, contact Rydah Support if you need help resolving a problem.";

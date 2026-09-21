@@ -155,7 +155,7 @@ export default function SignInPage() {
 
                 <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-zinc-400">
                   {role === "provider"
-                    ? "Provider setup is guided step by step: pay the ₦500 registration fee, add your service, connect the ₦500 monthly bank payment, verify your identity, then go online."
+                    ? "Provider setup is guided step by step. Founding 100 places can include free registration plus 3 months free; otherwise the standard ₦500 registration and ₦500/month provider membership apply. Add your service, complete billing when due, verify your identity, then go online."
                     : "Customer accounts can browse verified providers, post jobs and track payments."}
                 </div>
 
