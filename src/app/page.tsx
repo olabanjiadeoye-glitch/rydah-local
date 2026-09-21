@@ -116,7 +116,23 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="relative mt-5 overflow-hidden rounded-[1.5rem] border border-[#D4AF37]/20 bg-gradient-to-r from-[#D4AF37]/12 via-fuchsia-500/5 to-cyan-500/10 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4 sm:p-5">
+        <div className="relative mt-5 overflow-hidden rounded-[1.5rem] border border-emerald-500/25 bg-gradient-to-r from-emerald-500/12 via-[#D4AF37]/8 to-transparent p-5 sm:flex sm:items-center sm:justify-between sm:gap-5">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs font-black tracking-widest text-emerald-300">FOUNDING 100 PROVIDERS</p>
+              <span className="rounded-full bg-emerald-500/15 px-3 py-1 text-[10px] font-black text-emerald-300">LIMITED PLACES</span>
+            </div>
+            <h3 className="mt-2 text-2xl font-black">Free registration + your first 3 months free.</h3>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-zinc-300">
+              40 places are reserved for Lagos, with 15 each for Abuja/FCT, Ibadan/Oyo, Warri/Delta and Port Harcourt/Rivers. After the free period, normal provider membership is ₦500/month.
+            </p>
+          </div>
+          <Link href="/sign-in" className="mt-4 inline-block shrink-0 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 sm:mt-0">
+            Claim a Provider Place
+          </Link>
+        </div>
+
+        <div className="relative mt-4 overflow-hidden rounded-[1.5rem] border border-[#D4AF37]/20 bg-gradient-to-r from-[#D4AF37]/12 via-fuchsia-500/5 to-cyan-500/10 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4 sm:p-5">
           <div>
             <p className="text-xs font-black tracking-widest text-[#E8C447]">PROFESSION NOT LISTED?</p>
             <h3 className="mt-1.5 text-xl font-black sm:text-2xl">Rydah is built to grow beyond six trades.</h3>
