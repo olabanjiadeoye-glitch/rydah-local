@@ -66,7 +66,7 @@ Use genuine captures of the current production app at 1080 × 1920 portrait:
 
 1. **Home / brand promise** — Rydah Local hero, Nigeria focus and primary actions.
 2. **Services** — popular service categories and marketplace entry points.
-3. **Provider discovery** — provider browsing, service/city filters and nearby-provider controls.
+3. **Safety & trust** — identity verification, arrival checks and on-platform protection.
 4. **Account access** — sign-in / join flow.
 
 The automated capture workflow stores these as Play-ready 24-bit PNG screenshots.
