@@ -33,7 +33,7 @@ jobs:
       - name: Capture genuine production screenshots
         run: |
           mkdir -p build/play-screenshots
-          cat > /tmp/capture.cjs <<'EOF'
+          cat > capture-play-screenshots.cjs <<'EOF'
           const { chromium } = require('playwright');
 
           const origin = 'https://rydahlocal.online';
@@ -81,7 +81,7 @@ jobs:
             process.exit(1);
           });
           EOF
-          node /tmp/capture.cjs
+          node capture-play-screenshots.cjs
 
       - name: Verify screenshot files
         run: |
