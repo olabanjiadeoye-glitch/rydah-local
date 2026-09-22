@@ -1,0 +1,97 @@
+name: Google Play Screenshot Capture
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/play-store-screenshots.yml"
+      - "release/google-play/**"
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save --package-lock=false playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Capture genuine production screenshots
+        run: |
+          mkdir -p build/play-screenshots
+          cat > /tmp/capture.cjs <<'EOF'
+          const { chromium } = require('playwright');
+
+          const origin = 'https://rydahlocal.online';
+          const out = 'build/play-screenshots';
+
+          async function settle(page) {
+            await page.waitForLoadState('domcontentloaded');
+            await page.waitForTimeout(5500);
+          }
+
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const context = await browser.newContext({
+              viewport: { width: 1080, height: 1920 },
+              deviceScaleFactor: 1,
+              isMobile: true,
+              hasTouch: true,
+              locale: 'en-GB',
+              colorScheme: 'dark',
+            });
+
+            const page = await context.newPage();
+
+            await page.goto(origin + '/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+            await settle(page);
+            await page.screenshot({ path: out + '/01-home.png', fullPage: false });
+
+            await page.goto(origin + '/', { waitUntil: 'domcontentloaded', timeout: 60000 });
+            await settle(page);
+            await page.evaluate(() => window.scrollTo(0, 1050));
+            await page.waitForTimeout(1000);
+            await page.screenshot({ path: out + '/02-services.png', fullPage: false });
+
+            await page.goto(origin + '/providers?category=Electrician&city=Lagos', { waitUntil: 'domcontentloaded', timeout: 60000 });
+            await settle(page);
+            await page.screenshot({ path: out + '/03-providers.png', fullPage: false });
+
+            await page.goto(origin + '/sign-in', { waitUntil: 'domcontentloaded', timeout: 60000 });
+            await settle(page);
+            await page.screenshot({ path: out + '/04-sign-in.png', fullPage: false });
+
+            await browser.close();
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          EOF
+          node /tmp/capture.cjs
+
+      - name: Verify screenshot files
+        run: |
+          file build/play-screenshots/*.png
+          test "$(find build/play-screenshots -name '*.png' | wc -l)" -eq 4
+
+      - name: Upload Play screenshot artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rydah-local-play-screenshots
+          if-no-files-found: error
+          retention-days: 90
+          path: build/play-screenshots/*.png

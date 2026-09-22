@@ -1,153 +1,166 @@
-# Rydah Local — Google Play Data Safety Draft
+# Rydah Local — Google Play Data Safety Working Answers
 
-> Working draft for Play Console. Review against the production configuration immediately before submission. Do not copy answers blindly if the app's production behaviour changes.
+Prepared: 22 September 2026
+
+> This is the release working sheet for Play Console. It is based on the current Rydah Local production code and privacy notice. Recheck third-party processor terms and the final production configuration immediately before submission.
 
 ## App identity
 - App: Rydah Local
 - Android package: `online.rydahlocal.app`
 - Website: https://rydahlocal.online
 - Privacy policy: https://rydahlocal.online/privacy
-- Account deletion resource: https://rydahlocal.online/delete-account
+- Account deletion: https://rydahlocal.online/delete-account
 
-## Security / user controls
-- Data is transmitted over HTTPS in production.
-- Rydah provides an account-deletion request path in the signed-in app and through a public web resource.
-- Passwords are handled by Supabase Auth; Rydah application pages do not store plaintext passwords.
-- Payment-card entry is handled by Paystack rather than by Rydah pages.
-- Provider identity/liveness checks are handled through Youverify-backed verification flows.
-- Rydah should not claim independent security certification unless one has actually been completed.
+## Top-level Play answers
+- **Does the app collect or share required user data types?** Yes.
+- **Is all user data encrypted in transit?** Yes — production traffic uses HTTPS/TLS.
+- **Can users request deletion of their data?** Yes.
+- **Does the app support account creation?** Yes.
+- **In-app account deletion path available?** Yes.
+- **Public account-deletion web resource available?** Yes.
+- **Contains ads?** No.
+- **Independent security certification?** No claim should be made unless a real certification is completed.
 
-## Data categories currently relevant
+## Data types to declare
 
-### Personal information
-Likely collected:
+### Personal info
+**Collected**
 - Name
 - Email address
 - Phone number
-- User IDs / account identifiers
-- Provider business/profile information
-- Address/location text supplied for service requests
+- User/account ID
+- Customer service address / location text
+- Provider profile/business information
+- Other personal info needed for provider identity verification
 
-Purposes:
+**Purposes**
 - Account management
-- Marketplace matching and service delivery
-- Fraud prevention and safety
+- App functionality / service delivery
+- Fraud prevention, security and compliance
 - Customer support
-- Notifications and transactional communication
+- Transactional communications
 
 ### Location
-Optional collection:
-- Precise device latitude/longitude when a customer explicitly taps **Use My Current Location** while creating a job
-- Device-reported location accuracy
-- Service-area text selected or suggested from GPS
+**Collected optionally**
+- Precise latitude/longitude
+- Reported location accuracy
+- Service-area selection/suggestion
 
-Purposes:
-- Core app functionality
-- Matching the job to a supported service area
-- Allowing the assigned provider to navigate to an accepted job
+The customer explicitly chooses **Use My Current Location** when posting a job. Manual area selection remains available. Exact provider live GPS is not published in the marketplace.
 
-Important implementation notes:
-- GPS is optional; manual area selection remains available.
-- Out-of-coverage GPS positions are not stored with the job.
-- Exact customer job coordinates are released only to the assigned provider after quote acceptance.
-- Exact provider live GPS coordinates are not published or stored in the public provider marketplace record; provider GPS is used on-device to suggest a service area.
+**Purposes**
+- App functionality
+- Service-area matching
+- Navigation to an accepted job
 
-### Financial information
-Rydah stores or processes:
-- Payment references
-- Job amounts / quotes
-- Commission and settlement records
-- Provider payout/settlement status
+### Financial info
+Rydah processes/stores:
+- Job quote/amount
+- Payment reference and status
+- Commission records
+- Provider billing / subscription status
+- Settlement and payout status
 
-Rydah should **not** claim to store full card numbers, CVV or card PINs. Card/payment entry is handled by Paystack.
+**Do not declare Rydah as storing**
+- Full card number
+- CVV
+- Card PIN
 
-### Photos / identity verification data
-Provider verification may process:
-- Live camera/liveness capture through the identity-verification provider
-- Identity document / identity-number verification information
-- Verification result, status and audit metadata
+Card entry is handled by Paystack.
 
-Production Play disclosure must reflect exactly what Youverify returns to Rydah and what Rydah retains. Current application intent is to retain verification results/audit fields and limited ID information rather than full live selfie material where possible.
+### Photos and videos / identity verification
+Provider verification and arrival safety checks may transmit:
+- live camera/liveness images or video,
+- face-match material,
+- identity-document or identity-number verification information.
 
-### App activity / marketplace data
+Current Rydah design retains verification status/results, provider/session references, timestamps and limited audit information rather than raw liveness video where possible. The full production disclosure must match the actual Youverify response/retention contract.
+
+**Purposes**
+- Fraud prevention and security
+- Provider identity verification
+- Core marketplace safety functionality
+
+### App activity / user-generated content
 Collected:
 - Jobs/service requests
 - Job descriptions
 - Provider quotes
 - Job status/history
-- Notifications
-- Favourites / marketplace interactions where persisted
-- Support/complaint information
-- Safety incident reports and review status
-- Payment/service disputes and refund-review status
+- Favourites/marketplace interactions where persisted
+- Reviews
+- Safety reports
+- Disputes and support descriptions
+- Rydah Care support messages when submitted
+- Notification history where persisted
 
-Purposes:
-- Core app functionality
-- Safety and fraud prevention
+**Purposes**
+- App functionality
+- Safety/fraud prevention
 - Customer support
 - Marketplace operations
 - Financial reconciliation
 
-### Device / session / notification data
+### Device or other identifiers / session information
 May include:
-- Authentication/session information
-- Browser/device information exposed in normal web requests/logs
+- Authentication/session identifiers
+- Normal browser/request metadata
+- Web Push subscription endpoint and cryptographic subscription keys when notifications are enabled
 - Security/audit metadata
-- Web Push subscription endpoint and encryption keys when a user opts in to device notifications
 
-Purposes:
+**Purposes**
 - Account security
 - App functionality
-- Delivery of job, safety, payment, dispute and verification notifications
+- Push notifications
+- Abuse prevention
 
-Review Supabase, Vercel and any production analytics/logging configuration before answering Play's device identifiers and diagnostics questions.
+### Diagnostics
+Do not declare crash-reporting SDK data unless such a service is actually added. Recheck Vercel/Supabase operational logging before final submission to determine whether any Play-defined diagnostics category applies.
 
-## Third-party processors / sharing review
+## Third parties / processors
 
 ### Supabase
-Used for authentication, database and backend infrastructure. Treat data sent to Supabase as processing necessary to provide app functionality.
+Authentication, database and backend infrastructure.
 
 ### Paystack
-Used for supported online payments and provider settlement/payout flows. Financial transaction data and payment metadata may be sent to Paystack.
+Payment processing and provider billing/settlement flows.
 
 ### Youverify
-Used for identity verification, face matching and liveness checks. Identity and biometric-related data necessary for verification may be sent to Youverify.
+Identity verification, face matching and liveness.
 
 ### Vercel
-Hosts the web application and may process ordinary request/log information needed to deliver the service.
+Web application hosting and ordinary request/log processing.
 
-## Ads
-Current Rydah product should answer **No ads** unless an advertising SDK or ad placement is intentionally added before release.
+## Collection versus sharing
+Google Play treats some transfers to qualifying service providers differently from third-party “sharing”. For each Paystack, Youverify, Supabase and Vercel data flow, verify the current contract/terms before choosing the Play form's **shared** checkbox.
 
-## Account creation and deletion
-Rydah supports account creation. Google Play therefore requires:
-- an in-app account deletion request path; and
+Do not mark a data type “not collected” merely because a processor rather than Rydah receives it: off-device transmission controlled by the app can still count as collection.
+
+## Optional versus required
+- GPS: optional.
+- Push notifications: optional.
+- Provider camera/identity verification: required only for users choosing the provider role where verification is needed for marketplace work.
+- Customer account/profile details: required for authenticated customer functions.
+- Job description/location: required when the user chooses to create a job.
+
+## Data deletion
+Rydah provides:
+- an in-app deletion path; and
 - a public web deletion resource.
 
-Current web resource:
-https://rydahlocal.online/delete-account
+Current deletion design removes the authentication account and anonymises/deletes account-linked personal records where configured. Limited transaction, dispute, fraud/safety or legally required records may be retained when necessary.
 
-The implemented admin deletion workflow removes the Supabase Auth account, deletes account-linked records where configured to cascade, anonymises retained customer job/provider identity data, and removes the direct user link from retained financial records. Limited transaction, dispute and safety records may remain where reasonably necessary for reconciliation, fraud prevention, safety, legal obligations, or resolving claims.
+## App access
+Some functionality is sign-in restricted. Play review must receive a reusable dedicated test account with English instructions. Never give reviewers a real customer/admin account.
 
-## Items to verify before final Play answers
-1. Production Youverify retention behaviour and DPA / privacy terms.
-2. Production Paystack data flows and webhook payloads.
-3. Whether any analytics SDK is added before release.
-4. Whether crash reporting is added before release.
-5. Confirm Google Play's final disclosure wording for optional precise job-location GPS. The production implementation collects GPS only after explicit user action and retains it with the job for accepted-job navigation.
-6. Confirm production Web Push delivery behaviour on Android/PWA and whether Play categorises the stored push endpoint as a device or other identifier for the final questionnaire.
-7. Exact retention period for completed jobs, payments, disputes, safety incidents and verification audit records.
-8. Actual operational SLA used by Rydah support to complete account deletion requests.
-9. Whether users can upload job photos or other user-generated files in the production build.
-10. Whether any AI assistant conversation content is retained server-side.
-
-## Reviewer access
-If Play review requires authentication, provide a dedicated reviewer/test account with enough seeded data to exercise:
-- customer marketplace
-- job posting
-- quote review
-- My Jobs
-- provider onboarding/verification explanation
-- support/privacy/account deletion
-
-Do not provide a real user's credentials or a production admin account to reviewers.
+## Final verification list
+Before pressing **Save/Submit** in Data Safety:
+1. Confirm production Youverify data returned to Rydah and retention terms.
+2. Confirm production Paystack data flows and webhook payloads.
+3. Confirm no analytics/advertising SDK was added.
+4. Confirm whether crash/diagnostic logging meets a Play disclosure category.
+5. Confirm Web Push categorisation under the then-current Play form.
+6. Confirm actual retention periods for completed jobs, payments, disputes, safety reports and verification audit records.
+7. Confirm Rydah Care conversation retention behaviour.
+8. Confirm whether user-uploaded job photos/files exist in the submitted version.
+9. Compare every final checkbox with the live privacy notice and submitted Android behaviour.
