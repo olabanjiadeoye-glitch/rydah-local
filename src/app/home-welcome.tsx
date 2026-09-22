@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const skylineImage = "https://images.unsplash.com/photo-1691743441282-72dbe8f91dcc?auto=format&fit=crop&fm=jpg&q=72&w=1200";
+const rydahTaxiUrl = "https://rydal-taxi.well-chick-6808.chatgpt.site";
 
 const entryServices = [
   { label: "Home Services", icon: "wrench", href: "/providers?group=home" },
@@ -89,6 +90,17 @@ export default function HomeWelcome() {
       aria-label="Welcome to Rydah Local"
     >
       <div className="relative min-h-[100svh] overflow-hidden">
+        <a
+          href={rydahTaxiUrl}
+          aria-label="Open RydahTaxi"
+          className="fixed right-4 top-[34%] z-[320] flex h-14 w-14 flex-col items-center justify-center rounded-2xl border border-[#F2D368]/70 bg-black/85 text-[#F2D368] shadow-[0_0_0_1px_rgba(212,175,55,0.18),0_10px_30px_rgba(0,0,0,0.45),0_0_24px_rgba(212,175,55,0.26)] backdrop-blur-md transition hover:scale-105 active:scale-95 motion-safe:animate-[pulse_2.8s_ease-in-out_infinite]"
+        >
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 17h14l1-6-2-4H6l-2 4 1 6Z" />
+            <path d="M7 17v2M17 17v2M7.5 13h.01M16.5 13h.01M6 7l1-2h10l1 2" />
+          </svg>
+          <span className="mt-0.5 text-[8px] font-black uppercase tracking-[0.12em]">Taxi</span>
+        </a>
         <div
           className="absolute inset-0 scale-[1.03] bg-cover bg-center"
           style={{ backgroundImage: `url('${skylineImage}')` }}
