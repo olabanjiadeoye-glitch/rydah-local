@@ -8,7 +8,7 @@ const skylineImage = "https://images.unsplash.com/photo-1691743441282-72dbe8f91d
 
 const entryServices = [
   { label: "Home Services", icon: "wrench", href: "/providers?group=home" },
-  { label: "Vehicle Services", icon: "car", href: "https://rydal-taxi.well-chick-6808.chatgpt.site" },
+  { label: "Vehicle Services", icon: "car", href: "/providers?group=vehicle" },
   { label: "Property Care", icon: "home", href: "/providers?group=property" },
   { label: "and More…", icon: "briefcase", href: "/providers" },
 ] as const;
@@ -62,10 +62,6 @@ export default function HomeWelcome() {
   }
 
   function openService(href: string) {
-    if (/^https?:\/\//i.test(href)) {
-      window.location.assign(href);
-      return;
-    }
     router.push(href);
   }
 
