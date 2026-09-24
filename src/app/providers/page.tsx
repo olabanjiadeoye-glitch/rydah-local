@@ -208,6 +208,19 @@ export default function ProvidersPage() {
     }, 0);
   }
 
+  function resetDiscovery() {
+    setQuery("");
+    setActiveSearch("");
+    setLocation("All Areas");
+    setSort("Recommended");
+    setCategory("All");
+    setServiceGroup("");
+    setUserCoordinates(null);
+    setGpsMessage("");
+    setSearchMessage("");
+    window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+  }
+
   async function toggleFavorite(provider: Provider) {
     const alreadySaved = favorites.includes(provider.id);
     const next = alreadySaved ? favorites.filter((id) => id !== provider.id) : [...favorites, provider.id];
@@ -330,12 +343,26 @@ export default function ProvidersPage() {
         {loadError && <div className="mb-5 rounded-2xl border border-red-500/20 bg-red-950/20 p-4 text-sm text-red-300">{loadError}</div>}
 
         {visibleProviders.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-[#121212] p-5 sm:p-6 text-center">
-            <p className="text-xl font-bold">No available verified providers found</p>
-            <p className="mt-2 text-zinc-500">
-              No biometric-verified provider is currently available for this selection. Lagos, Abuja, Ibadan, Warri and Port Harcourt remain Rydah target cities, and supply will appear here as verified providers come online.
+          <div className="overflow-hidden rounded-3xl border border-[#D4AF37]/20 bg-gradient-to-br from-[#17130a] via-[#121212] to-[#0d0d0d] p-5 text-center sm:p-7">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-2xl" aria-hidden="true">🛠️</div>
+            <p className="mt-4 text-2xl font-black">No verified provider is online for this search yet</p>
+            <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
+              Rydah only shows providers who have completed the required verification and are genuinely available. We do not fill the marketplace with demo or unverified profiles.
             </p>
-            <Link href="/post-job" className="mt-5 inline-block rounded-xl bg-[#D4AF37] px-5 py-3 font-bold text-black">Post a Job</Link>
+            <div className="mx-auto mt-5 grid max-w-2xl gap-3 sm:grid-cols-3">
+              <button type="button" onClick={resetDiscovery} className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-black text-white transition hover:border-[#D4AF37]/45">
+                Try another area
+              </button>
+              <Link href="/post-job" className="rounded-xl bg-[#D4AF37] px-4 py-3 text-sm font-black text-black transition hover:bg-[#E5C65A]">
+                Post a Job
+              </Link>
+              <Link href="/sign-in?mode=sign-up&role=provider" className="rydah-provider-cta-attention rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-black text-emerald-200">
+                Join as Provider
+              </Link>
+            </div>
+            <p className="mt-4 text-xs leading-5 text-zinc-500">
+              Launch coverage: Lagos, Abuja, Ibadan, Warri and Port Harcourt. Availability grows as approved providers complete onboarding and go online.
+            </p>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">

@@ -127,7 +127,7 @@ export default function Home() {
               40 places are reserved for Lagos, with 15 each for Abuja/FCT, Ibadan/Oyo, Warri/Delta and Port Harcourt/Rivers. After the free period, normal provider membership is ₦500/month.
             </p>
           </div>
-          <Link href="/sign-in" className="mt-4 inline-block shrink-0 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 sm:mt-0">
+          <Link href="/sign-in?mode=sign-up&role=provider" className="mt-4 inline-block shrink-0 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-black text-black transition hover:bg-emerald-300 sm:mt-0">
             Claim a Provider Place
           </Link>
         </div>
@@ -138,7 +138,7 @@ export default function Home() {
             <h3 className="mt-1.5 text-xl font-black sm:text-2xl">Rydah is built to grow beyond six trades.</h3>
             <p className="mt-1.5 max-w-2xl text-sm leading-6 text-zinc-300">Create a Service Provider account and register your genuine profession and service area for marketplace review.</p>
           </div>
-          <Link href="/sign-in" className="rydah-provider-cta-attention mt-4 inline-block shrink-0 rounded-xl bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-zinc-100 sm:mt-0">Join as a Provider</Link>
+          <Link href="/sign-in?mode=sign-up&role=provider" className="rydah-provider-cta-attention mt-4 inline-block shrink-0 rounded-xl bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-zinc-100 sm:mt-0">Join as a Provider</Link>
         </div>
       </section>
 

@@ -54,6 +54,11 @@ export default function SignInPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setNextPath(safeNextPath(params.get("next")));
+
+    if (params.get("mode") === "sign-up") setMode("sign-up");
+    if (params.get("role") === "provider") setRole("provider");
+    if (params.get("role") === "customer") setRole("customer");
+
     if (params.get("confirmed") === "1") {
       setMessage("Email confirmed. You can sign in now.");
       if (window.location.hash) {
