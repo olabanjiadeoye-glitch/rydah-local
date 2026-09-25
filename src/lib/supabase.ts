@@ -253,6 +253,28 @@ export async function invokeFunction(
   );
 }
 
+export async function storageUpload(bucket: string, path: string, file: File, token: string): Promise<void> {
+  assertConfigured();
+  const response = await fetchWithOptionalRefresh(
+    `${SUPABASE_URL}/storage/v1/object/${encodeURIComponent(bucket)}/${path.split("/").map(encodeURIComponent).join("/")}`,
+    { method: "POST", body: file },
+    token,
+    { "Content-Type": file.type, "x-upsert": "false" },
+  );
+  if (!response.ok) throw new Error(await readError(response));
+}
+
+export async function storageDelete(bucket: string, paths: string[], token: string): Promise<void> {
+  assertConfigured();
+  const response = await fetchWithOptionalRefresh(
+    `${SUPABASE_URL}/storage/v1/object/${encodeURIComponent(bucket)}`,
+    { method: "DELETE", body: JSON.stringify({ prefixes: paths }) },
+    token,
+    { "Content-Type": "application/json" },
+  );
+  if (!response.ok) throw new Error(await readError(response));
+}
+
 export async function signInWithPassword(email: string, password: string): Promise<AuthSession> {
   assertConfigured();
   const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
