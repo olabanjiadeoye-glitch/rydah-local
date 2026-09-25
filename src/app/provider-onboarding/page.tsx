@@ -8,6 +8,7 @@ import {
   restGet,
   restInsert,
   restPatch,
+  storageUpload,
   type AuthSession,
 } from "@/lib/supabase";
 import { containsOffPlatformContact, offPlatformContactMessage } from "@/lib/anti-bypass";
@@ -201,6 +202,7 @@ export default function ProviderOnboardingPage() {
   const [location, setLocation] = useState(RYDAH_DEFAULT_SERVICE_AREA);
   const [startingPrice, setStartingPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [workPhotos, setWorkPhotos] = useState<File[]>([]);
   const [gpsMessage, setGpsMessage] = useState("");
 
   const [legalName, setLegalName] = useState("");
@@ -461,6 +463,18 @@ export default function ProviderOnboardingPage() {
       );
 
       if (!rows[0]) throw new Error("Your provider profile was not returned by Rydah.");
+      const newProvider = rows[0];
+      for (let index = 0; index < workPhotos.length; index += 1) {
+        const file = workPhotos[index];
+        const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+        const path = `${session.user.id}/${newProvider.id}/${crypto.randomUUID()}.${ext}`;
+        await storageUpload("provider-work", path, file, session.access_token);
+        await restInsert(
+          "provider_work_photos",
+          { provider_id: newProvider.id, user_id: session.user.id, storage_path: path, sort_order: index },
+          session.access_token,
+        );
+      }
       setMessage(
         billing?.promo_active
           ? `Profile saved. Your Founding 100 free access is active until ${new Date(String(billing.promo_free_until)).toLocaleDateString("en-GB")}.`
@@ -988,6 +1002,34 @@ export default function ProviderOnboardingPage() {
                 Keep phone numbers, WhatsApp and external links out of your profile.
               </span>
             </label>
+
+            <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
+              <span className="text-sm font-bold">Photos of your work <span className="font-normal text-zinc-500">(optional)</span></span>
+              <p className="mt-1 text-xs leading-5 text-zinc-500">Attach up to 5 genuine photos of jobs you have completed. JPG, PNG or WebP, maximum 5 MB each. Photos stay private until your provider verification is approved.</p>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                multiple
+                onChange={(event) => {
+                  const files = Array.from(event.target.files || []);
+                  const valid = files.filter((file) => file.size <= 5 * 1024 * 1024).slice(0, 5);
+                  if (files.some((file) => file.size > 5 * 1024 * 1024)) setError("Each work photo must be 5 MB or smaller.");
+                  else if (files.length > 5) setError("You can attach a maximum of 5 work photos.");
+                  else setError("");
+                  setWorkPhotos(valid);
+                }}
+                className="mt-3 block w-full rounded-xl border border-white/10 bg-[#1A1A1A] px-3 py-3 text-sm text-zinc-300"
+              />
+              {workPhotos.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {workPhotos.map((file, index) => (
+                    <span key={`${file.name}-${index}`} className="rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-2 text-xs text-[#E5C65A]">
+                      {index + 1}. {file.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <button
               disabled={busy}
