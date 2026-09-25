@@ -115,7 +115,7 @@ type BillingResponse = {
   };
 };
 
-const categories = ["Electrician", "Plumber", "AC Technician", "Generator", "Cleaning", "Mechanic"];
+const categories = ["Electrician", "Plumber", "AC Technician", "Generator", "Cleaning", "Mechanic", "Other / Add my profession"];
 const idTypes: VerificationRow["id_type"][] = ["NIN", "International Passport"];
 
 const steps = [
@@ -426,6 +426,10 @@ export default function ProviderOnboardingPage() {
   async function createProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!session || !registrationDone) return;
+    if (category === "Other / Add my profession") {
+      setError("Add your profession or service first, then return here after Rydah approves it.");
+      return;
+    }
     if (containsOffPlatformContact(description)) {
       setError(offPlatformContactMessage);
       return;
@@ -912,6 +916,16 @@ export default function ProviderOnboardingPage() {
               >
                 {categories.map((item) => <option key={item}>{item}</option>)}
               </select>
+              {category === "Other / Add my profession" && (
+                <div className="mt-3 rounded-2xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 p-4">
+                  <p className="text-sm leading-6 text-zinc-300">
+                    Don&apos;t see your service? Add your profession for Rydah review. Once approved, it can be published without showing unreviewed services as live.
+                  </p>
+                  <Link href="/provider-interest" className="mt-3 inline-flex rounded-xl border border-[#D4AF37]/40 px-4 py-3 text-sm font-black text-[#E5C65A]">
+                    + Add My Profession / Service
+                  </Link>
+                </div>
+              )}
             </label>
 
             <label className="mt-5 block">
