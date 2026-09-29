@@ -656,7 +656,6 @@ export default function ProviderOnboardingPage() {
         presentation: "modal",
         sessionId: credentials.session_id,
         sessionToken: credentials.session_token,
-        entityId: provider.id,
         sandboxEnvironment: (credentials.environment || identityEnvironment) !== "live",
         tasks: [
           { id: "motions", difficulty: "medium", maxNods: 2, maxBlinks: 2, timeout: 30000 },
