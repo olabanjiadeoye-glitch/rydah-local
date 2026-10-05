@@ -124,29 +124,31 @@ export default function HomeWelcome() {
         <style jsx>{`
           .rydah-river {
             background:
-              linear-gradient(to bottom, rgba(6,10,12,.08), rgba(2,8,12,.58)),
-              repeating-radial-gradient(ellipse at 50% 0%, rgba(245,222,130,.26) 0 1px, rgba(255,255,255,.07) 2px 3px, transparent 4px 18px);
-            background-size: 100% 100%, 190px 42px;
-            animation: rydahCurrent 4.8s linear infinite;
-            transform: perspective(240px) rotateX(7deg) scale(1.12);
-            transform-origin: top center;
-            will-change: background-position, transform;
+              linear-gradient(to bottom, rgba(4,8,10,.03), rgba(2,6,9,.24)),
+              repeating-linear-gradient(178deg, transparent 0 22px, rgba(255,255,255,.055) 23px, transparent 25px 48px);
+            background-size:100% 100%, 240px 96px;
+            animation: rydahCurrent 12s ease-in-out infinite alternate;
+            will-change:background-position;
           }
           .rydah-river-glints {
-            background: repeating-linear-gradient(176deg, transparent 0 16px, rgba(255,241,168,.18) 17px 18px, transparent 19px 34px);
-            filter: blur(.35px);
-            animation: rydahGlints 3.6s ease-in-out infinite alternate;
-            will-change: transform, opacity;
+            background: radial-gradient(ellipse at 48% 32%, rgba(246,222,130,.11), transparent 42%);
+            animation: rydahGlints 6s ease-in-out infinite alternate;
           }
-          .rydah-boat { position:absolute; left:-72px; display:flex; align-items:center; filter:drop-shadow(0 5px 5px rgba(0,0,0,.55)); animation: rydahBoat 13s linear infinite; will-change:transform; }
-          .rydah-wake { position:absolute; right:42px; top:27px; width:78px; height:10px; border-top:2px solid rgba(255,255,255,.46); border-radius:50%; transform:skewX(-28deg); filter:blur(.4px); animation: rydahWake 1.2s ease-in-out infinite alternate; }
-          @keyframes rydahCurrent { from { background-position:0 0, 0 0; } to { background-position:0 0, 380px 28px; } }
-          @keyframes rydahGlints { from { transform:translate3d(-3%,0,0) scaleY(.98); opacity:.38; } to { transform:translate3d(3%,-4px,0) scaleY(1.04); opacity:.82; } }
-          @keyframes rydahBoat { 0% { transform:translate3d(0,2px,0) scale(.82); } 48% { transform:translate3d(calc(50vw + 72px),-2px,0) scale(.92); } 100% { transform:translate3d(calc(100vw + 144px),3px,0) scale(.82); } }
-          @keyframes rydahWake { from { opacity:.28; transform:skewX(-28deg) scaleX(.72); } to { opacity:.65; transform:skewX(-28deg) scaleX(1.08); } }
+          .rydah-boat { position:absolute; left:0; display:flex; align-items:center; filter:drop-shadow(0 4px 5px rgba(0,0,0,.6)); animation: rydahBoat 11s linear infinite; will-change:transform; }
+          .rydah-wake { position:absolute; right:43px; top:27px; width:92px; height:9px; border-top:1px solid rgba(255,255,255,.32); border-radius:50%; filter:blur(.7px); animation: rydahWake 1.6s ease-in-out infinite alternate; }
+          @keyframes rydahCurrent { from { background-position:0 0, -45px 0; } to { background-position:0 0, 45px 8px; } }
+          @keyframes rydahGlints { from { opacity:.28; transform:translateY(1px); } to { opacity:.48; transform:translateY(-2px); } }
+          @keyframes rydahBoat {
+            0% { transform:translate3d(-140px,3px,0) rotate(-1deg); }
+            25% { transform:translate3d(calc(25vw - 35px),0,0) rotate(.6deg); }
+            50% { transform:translate3d(calc(50vw - 10px),3px,0) rotate(-.5deg); }
+            75% { transform:translate3d(calc(75vw + 20px),0,0) rotate(.5deg); }
+            100% { transform:translate3d(calc(100vw + 90px),2px,0) rotate(-1deg); }
+          }
+          @keyframes rydahWake { from { opacity:.18; transform:skewX(-24deg) scaleX(.75); } to { opacity:.42; transform:skewX(-24deg) scaleX(1.08); } }
           @media (prefers-reduced-motion: reduce) {
             .rydah-river,.rydah-river-glints,.rydah-boat,.rydah-wake { animation:none !important; }
-            .rydah-boat { left:42%; }
+            .rydah-boat { transform:translate3d(42vw,0,0); }
           }
         `}</style>
         <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/35 to-black/95" aria-hidden="true" />
