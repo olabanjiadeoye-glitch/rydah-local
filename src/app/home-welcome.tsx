@@ -106,42 +106,47 @@ export default function HomeWelcome() {
           style={{ backgroundImage: `url('${skylineImage}')` }}
           aria-hidden="true"
         />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[34%] overflow-hidden" aria-hidden="true">
-          <div className="rydah-water absolute -inset-x-[18%] inset-y-0 opacity-30 mix-blend-soft-light" />
-          <div className="rydah-water-shimmer absolute -inset-x-[12%] inset-y-[12%] opacity-20" />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[35%] overflow-hidden" aria-hidden="true">
+          <div className="rydah-river absolute inset-0" />
+          <div className="rydah-river-glints absolute inset-0" />
+          <div className="rydah-boat-track absolute inset-x-0 top-[36%] h-12">
+            <div className="rydah-boat">
+              <span className="rydah-wake" />
+              <svg width="54" height="24" viewBox="0 0 108 48" fill="none" aria-hidden="true">
+                <path d="M18 25h77l-9 13H31c-8 0-13-5-13-13Z" fill="#171717" stroke="#E5B93A" strokeWidth="2"/>
+                <path d="M39 24V12h29l10 12" fill="#242424" stroke="#E5B93A" strokeWidth="2"/>
+                <path d="M49 12V5h8v7M62 12V7h6v5" stroke="#E5B93A" strokeWidth="2"/>
+                <path d="M45 18h10M60 18h10" stroke="#F6DE82" strokeWidth="2"/>
+              </svg>
+            </div>
+          </div>
         </div>
         <style jsx>{`
-          .rydah-water {
+          .rydah-river {
             background:
-              radial-gradient(ellipse at 18% 42%, rgba(255,255,255,.24) 0 1px, transparent 2px 100%),
-              radial-gradient(ellipse at 68% 62%, rgba(244,206,85,.18) 0 1px, transparent 2px 100%),
-              repeating-radial-gradient(ellipse at 50% 115%, transparent 0 12px, rgba(255,255,255,.12) 13px 14px, transparent 15px 27px);
-            background-size: 92px 38px, 126px 48px, 180px 58px;
-            filter: blur(.25px);
-            transform: translate3d(0,0,0) skewX(-2deg);
-            animation: rydahRiverFlow 9s linear infinite, rydahRiverBreathe 4.8s ease-in-out infinite alternate;
-            will-change: transform, background-position;
+              linear-gradient(to bottom, rgba(6,10,12,.08), rgba(2,8,12,.58)),
+              repeating-radial-gradient(ellipse at 50% 0%, rgba(245,222,130,.26) 0 1px, rgba(255,255,255,.07) 2px 3px, transparent 4px 18px);
+            background-size: 100% 100%, 190px 42px;
+            animation: rydahCurrent 4.8s linear infinite;
+            transform: perspective(240px) rotateX(7deg) scale(1.12);
+            transform-origin: top center;
+            will-change: background-position, transform;
           }
-          .rydah-water-shimmer {
-            background: repeating-linear-gradient(174deg, transparent 0 17px, rgba(255,255,255,.12) 18px 19px, transparent 20px 34px);
-            animation: rydahRiverShimmer 7s linear infinite;
+          .rydah-river-glints {
+            background: repeating-linear-gradient(176deg, transparent 0 16px, rgba(255,241,168,.18) 17px 18px, transparent 19px 34px);
+            filter: blur(.35px);
+            animation: rydahGlints 3.6s ease-in-out infinite alternate;
             will-change: transform, opacity;
           }
-          @keyframes rydahRiverFlow {
-            from { background-position: 0 0, 0 0, 0 0; }
-            to { background-position: 184px 8px, -252px 5px, 360px 12px; }
-          }
-          @keyframes rydahRiverBreathe {
-            from { transform: translate3d(-1.5%,0,0) skewX(-2deg) scaleY(.98); opacity: .72; }
-            to { transform: translate3d(1.5%,-2px,0) skewX(2deg) scaleY(1.03); opacity: 1; }
-          }
-          @keyframes rydahRiverShimmer {
-            from { transform: translate3d(-4%,0,0); opacity: .45; }
-            50% { opacity: .85; }
-            to { transform: translate3d(4%,-3px,0); opacity: .5; }
-          }
+          .rydah-boat { position:absolute; left:-72px; display:flex; align-items:center; filter:drop-shadow(0 5px 5px rgba(0,0,0,.55)); animation: rydahBoat 13s linear infinite; will-change:transform; }
+          .rydah-wake { position:absolute; right:42px; top:27px; width:78px; height:10px; border-top:2px solid rgba(255,255,255,.46); border-radius:50%; transform:skewX(-28deg); filter:blur(.4px); animation: rydahWake 1.2s ease-in-out infinite alternate; }
+          @keyframes rydahCurrent { from { background-position:0 0, 0 0; } to { background-position:0 0, 380px 28px; } }
+          @keyframes rydahGlints { from { transform:translate3d(-3%,0,0) scaleY(.98); opacity:.38; } to { transform:translate3d(3%,-4px,0) scaleY(1.04); opacity:.82; } }
+          @keyframes rydahBoat { 0% { transform:translate3d(0,2px,0) scale(.82); } 48% { transform:translate3d(calc(50vw + 72px),-2px,0) scale(.92); } 100% { transform:translate3d(calc(100vw + 144px),3px,0) scale(.82); } }
+          @keyframes rydahWake { from { opacity:.28; transform:skewX(-28deg) scaleX(.72); } to { opacity:.65; transform:skewX(-28deg) scaleX(1.08); } }
           @media (prefers-reduced-motion: reduce) {
-            .rydah-water, .rydah-water-shimmer { animation: none !important; }
+            .rydah-river,.rydah-river-glints,.rydah-boat,.rydah-wake { animation:none !important; }
+            .rydah-boat { left:42%; }
           }
         `}</style>
         <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/35 to-black/95" aria-hidden="true" />
