@@ -93,66 +93,19 @@ export default function HomeWelcome() {
         <a
           href={rydahTaxiUrl}
           aria-label="Open RydahTaxi"
-          className="rydah-taxi fixed right-4 top-[34%] z-[320] flex h-[68px] w-[68px] flex-col items-center justify-center rounded-[20px] border-2 border-[#F6D85F] bg-gradient-to-br from-[#2a2413]/95 via-black/95 to-[#0b0b0b]/95 text-[#FFE27A] shadow-[inset_0_2px_0_rgba(255,255,255,.22),inset_0_-5px_10px_rgba(0,0,0,.65),0_10px_0_#6f5007,0_14px_24px_rgba(0,0,0,.65),0_0_28px_rgba(246,216,95,.65)] backdrop-blur-md transition active:translate-y-1 active:shadow-[inset_0_2px_0_rgba(255,255,255,.18),0_5px_0_#6f5007,0_8px_18px_rgba(0,0,0,.6)]"
+          className="fixed right-4 top-[34%] z-[320] flex h-14 w-14 flex-col items-center justify-center rounded-2xl border border-[#F2D368]/70 bg-black/85 text-[#F2D368] shadow-[0_0_0_1px_rgba(212,175,55,0.18),0_10px_30px_rgba(0,0,0,0.45),0_0_24px_rgba(212,175,55,0.26)] backdrop-blur-md transition hover:scale-105 active:scale-95 motion-safe:animate-[pulse_2.8s_ease-in-out_infinite]"
         >
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M5 17h14l1-6-2-4H6l-2 4 1 6Z" />
             <path d="M7 17v2M17 17v2M7.5 13h.01M16.5 13h.01M6 7l1-2h10l1 2" />
           </svg>
-          <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.12em]">Taxi</span>
+          <span className="mt-0.5 text-[8px] font-black uppercase tracking-[0.12em]">Taxi</span>
         </a>
         <div
           className="absolute inset-0 scale-[1.03] bg-cover bg-center"
           style={{ backgroundImage: `url('${skylineImage}')` }}
           aria-hidden="true"
         />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[6] h-[35%] overflow-hidden" aria-hidden="true">
-          <div className="rydah-river absolute inset-0" />
-          <div className="rydah-river-glints absolute inset-0" />
-          <div className="rydah-boat-track absolute inset-x-0 top-[36%] h-12">
-            <div className="rydah-boat">
-              <span className="rydah-wake" />
-              <svg width="68" height="30" viewBox="0 0 108 48" fill="none" aria-hidden="true">
-                <path d="M18 25h77l-9 13H31c-8 0-13-5-13-13Z" fill="#171717" stroke="#E5B93A" strokeWidth="2"/>
-                <path d="M39 24V12h29l10 12" fill="#242424" stroke="#E5B93A" strokeWidth="2"/>
-                <path d="M49 12V5h8v7M62 12V7h6v5" stroke="#E5B93A" strokeWidth="2"/>
-                <path d="M45 18h10M60 18h10" stroke="#F6DE82" strokeWidth="2"/>
-              </svg>
-            </div>
-          </div>
-        </div>
-        <style jsx>{`
-          .rydah-river {
-            background:
-              linear-gradient(to bottom, rgba(4,8,10,.03), rgba(2,6,9,.24)),
-              repeating-linear-gradient(178deg, transparent 0 22px, rgba(255,255,255,.16) 23px, transparent 25px 48px);
-            background-size:100% 100%, 240px 96px;
-            animation: rydahCurrent 5.5s linear infinite;
-            will-change:background-position;
-          }
-          .rydah-river-glints {
-            background: radial-gradient(ellipse at 48% 32%, rgba(246,222,130,.24), transparent 42%);
-            animation: rydahGlints 3.8s ease-in-out infinite alternate;
-          }
-          .rydah-boat { position:absolute; left:0; display:flex; align-items:center; filter:drop-shadow(0 4px 5px rgba(0,0,0,.6)); animation: rydahBoat 8s linear infinite; will-change:transform; }
-          .rydah-wake { position:absolute; right:43px; top:27px; width:92px; height:9px; border-top:1px solid rgba(255,255,255,.32); border-radius:50%; filter:blur(.7px); animation: rydahWake 1.6s ease-in-out infinite alternate; }
-          .rydah-taxi { animation: rydahTaxiBlink 1.65s ease-in-out infinite; transform:perspective(260px) rotateY(-8deg) rotateX(3deg); transform-origin:center; }
-          @keyframes rydahTaxiBlink { 0%,100% { filter:brightness(1); box-shadow:inset 0 2px 0 rgba(255,255,255,.22),inset 0 -5px 10px rgba(0,0,0,.65),0 10px 0 #6f5007,0 14px 24px rgba(0,0,0,.65),0 0 20px rgba(246,216,95,.45); } 50% { filter:brightness(1.3); box-shadow:inset 0 2px 0 rgba(255,255,255,.32),inset 0 -5px 10px rgba(0,0,0,.55),0 10px 0 #8b6508,0 16px 30px rgba(0,0,0,.7),0 0 42px rgba(255,221,93,.95); } }
-          @keyframes rydahCurrent { from { background-position:0 0, -45px 0; } to { background-position:0 0, 45px 8px; } }
-          @keyframes rydahGlints { from { opacity:.28; transform:translateY(1px); } to { opacity:.48; transform:translateY(-2px); } }
-          @keyframes rydahBoat {
-            0% { transform:translate3d(-140px,3px,0) rotate(-1deg); }
-            25% { transform:translate3d(calc(25vw - 35px),0,0) rotate(.6deg); }
-            50% { transform:translate3d(calc(50vw - 10px),3px,0) rotate(-.5deg); }
-            75% { transform:translate3d(calc(75vw + 20px),0,0) rotate(.5deg); }
-            100% { transform:translate3d(calc(100vw + 90px),2px,0) rotate(-1deg); }
-          }
-          @keyframes rydahWake { from { opacity:.18; transform:skewX(-24deg) scaleX(.75); } to { opacity:.42; transform:skewX(-24deg) scaleX(1.08); } }
-          @media (prefers-reduced-motion: reduce) {
-            .rydah-river,.rydah-river-glints,.rydah-boat,.rydah-wake,.rydah-taxi { animation:none !important; }
-            .rydah-boat { transform:translate3d(42vw,0,0); }
-          }
-        `}</style>
         <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/35 to-black/95" aria-hidden="true" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(212,175,55,0.18),transparent_34%)]" aria-hidden="true" />
         <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-black via-black/75 to-transparent" aria-hidden="true" />
