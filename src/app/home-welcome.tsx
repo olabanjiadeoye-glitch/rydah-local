@@ -106,6 +106,44 @@ export default function HomeWelcome() {
           style={{ backgroundImage: `url('${skylineImage}')` }}
           aria-hidden="true"
         />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[34%] overflow-hidden" aria-hidden="true">
+          <div className="rydah-water absolute -inset-x-[18%] inset-y-0 opacity-30 mix-blend-soft-light" />
+          <div className="rydah-water-shimmer absolute -inset-x-[12%] inset-y-[12%] opacity-20" />
+        </div>
+        <style jsx>{`
+          .rydah-water {
+            background:
+              radial-gradient(ellipse at 18% 42%, rgba(255,255,255,.24) 0 1px, transparent 2px 100%),
+              radial-gradient(ellipse at 68% 62%, rgba(244,206,85,.18) 0 1px, transparent 2px 100%),
+              repeating-radial-gradient(ellipse at 50% 115%, transparent 0 12px, rgba(255,255,255,.12) 13px 14px, transparent 15px 27px);
+            background-size: 92px 38px, 126px 48px, 180px 58px;
+            filter: blur(.25px);
+            transform: translate3d(0,0,0) skewX(-2deg);
+            animation: rydahRiverFlow 9s linear infinite, rydahRiverBreathe 4.8s ease-in-out infinite alternate;
+            will-change: transform, background-position;
+          }
+          .rydah-water-shimmer {
+            background: repeating-linear-gradient(174deg, transparent 0 17px, rgba(255,255,255,.12) 18px 19px, transparent 20px 34px);
+            animation: rydahRiverShimmer 7s linear infinite;
+            will-change: transform, opacity;
+          }
+          @keyframes rydahRiverFlow {
+            from { background-position: 0 0, 0 0, 0 0; }
+            to { background-position: 184px 8px, -252px 5px, 360px 12px; }
+          }
+          @keyframes rydahRiverBreathe {
+            from { transform: translate3d(-1.5%,0,0) skewX(-2deg) scaleY(.98); opacity: .72; }
+            to { transform: translate3d(1.5%,-2px,0) skewX(2deg) scaleY(1.03); opacity: 1; }
+          }
+          @keyframes rydahRiverShimmer {
+            from { transform: translate3d(-4%,0,0); opacity: .45; }
+            50% { opacity: .85; }
+            to { transform: translate3d(4%,-3px,0); opacity: .5; }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .rydah-water, .rydah-water-shimmer { animation: none !important; }
+          }
+        `}</style>
         <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/35 to-black/95" aria-hidden="true" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(212,175,55,0.18),transparent_34%)]" aria-hidden="true" />
         <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-black via-black/75 to-transparent" aria-hidden="true" />
