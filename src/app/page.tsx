@@ -13,7 +13,7 @@ const services = [
 ];
 
 const trustSteps = [
-  { title: "Provider verification required", text: "Providers must complete live camera liveness and ID face matching before receiving new jobs. Verification onboarding is not yet active.", accent: "from-violet-500/20 to-fuchsia-500/5", badge: "bg-violet-400" },
+  { title: "Provider verification required", text: "Providers must complete live camera liveness and ID face matching before receiving new jobs. Only providers who successfully complete these checks can become available for bookings.", accent: "from-violet-500/20 to-fuchsia-500/5", badge: "bg-violet-400" },
   { title: "Quote before work", text: "See and accept the provider quote inside Rydah before work starts.", accent: "from-sky-500/20 to-cyan-500/5", badge: "bg-sky-400" },
   { title: "Arrival safety check", text: "Use the one-time Arrival PIN and provider face matching before work starts.", accent: "from-emerald-500/20 to-teal-500/5", badge: "bg-emerald-400" },
   { title: "Payment records on Rydah", text: "Keep quotes and payment records within Rydah. Live Paystack checkout is not yet enabled.", accent: "from-amber-500/20 to-orange-500/5", badge: "bg-[#D4AF37]" },
