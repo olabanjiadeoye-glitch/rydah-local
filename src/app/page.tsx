@@ -13,10 +13,10 @@ const services = [
 ];
 
 const trustSteps = [
-  { title: "Biometric-verified professionals", text: "Eligible providers complete live camera liveness plus ID face matching before they can receive new Rydah jobs.", accent: "from-violet-500/20 to-fuchsia-500/5", badge: "bg-violet-400" },
+  { title: "Provider verification required", text: "Providers must complete live camera liveness and ID face matching before receiving new jobs. Verification onboarding is not yet active.", accent: "from-violet-500/20 to-fuchsia-500/5", badge: "bg-violet-400" },
   { title: "Quote before work", text: "See and accept the provider quote inside Rydah before work starts.", accent: "from-sky-500/20 to-cyan-500/5", badge: "bg-sky-400" },
   { title: "Arrival safety check", text: "Use the one-time Arrival PIN and provider face matching before work starts.", accent: "from-emerald-500/20 to-teal-500/5", badge: "bg-emerald-400" },
-  { title: "Protected payment trail", text: "Use secure Paystack checkout so the job, commission and payment record stay inside Rydah.", accent: "from-amber-500/20 to-orange-500/5", badge: "bg-[#D4AF37]" },
+  { title: "Payment records on Rydah", text: "Keep quotes and payment records within Rydah. Live Paystack checkout is not yet enabled.", accent: "from-amber-500/20 to-orange-500/5", badge: "bg-[#D4AF37]" },
 ];
 
 const cityCoverage = [
@@ -68,7 +68,7 @@ export default function Home() {
             </h1>
 
             <p className="mt-7 max-w-3xl text-lg leading-8 text-zinc-100 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] sm:text-xl">
-              Find verified local professionals, agree the quote, confirm who arrived and keep your payment record protected in one place.
+              Explore local services and request quotes. Availability depends on active, biometric-verified providers in your area.
             </p>
 
             <div className="mt-9 grid max-w-3xl gap-3 sm:grid-cols-3">
@@ -78,8 +78,8 @@ export default function Home() {
             </div>
 
             <div className="mt-7 grid max-w-4xl gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-violet-300/20 bg-violet-950/35 p-4 backdrop-blur-md"><p className="text-xs font-black text-violet-200">IDENTITY</p><p className="mt-1 font-bold">Rydah Verified providers</p></div>
-              <div className="rounded-2xl border border-emerald-300/20 bg-emerald-950/35 p-4 backdrop-blur-md"><p className="text-xs font-black text-emerald-200">PAYMENTS</p><p className="mt-1 font-bold">Secure Paystack checkout</p></div>
+              <div className="rounded-2xl border border-violet-300/20 bg-violet-950/35 p-4 backdrop-blur-md"><p className="text-xs font-black text-violet-200">IDENTITY</p><p className="mt-1 font-bold">Provider verification required</p></div>
+              <div className="rounded-2xl border border-emerald-300/20 bg-emerald-950/35 p-4 backdrop-blur-md"><p className="text-xs font-black text-emerald-200">PAYMENTS</p><p className="mt-1 font-bold">Live checkout not yet available</p></div>
               <div className="rounded-2xl border border-sky-300/20 bg-sky-950/35 p-4 backdrop-blur-md"><p className="text-xs font-black text-sky-200">ARRIVAL</p><p className="mt-1 font-bold">PIN + camera safety checks</p></div>
             </div>
           </div>
@@ -203,7 +203,7 @@ export default function Home() {
             <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-[#D4AF37]/15 blur-3xl" aria-hidden="true" />
             <p className="relative text-xs font-black tracking-widest text-amber-300">URGENT HELP</p>
             <h2 className="relative mt-3 text-3xl font-black">Need someone quickly?</h2>
-            <p className="relative mt-3 leading-7 text-zinc-300">Post an urgent request and Rydah will look for a suitable verified professional. Rydah Local is not an emergency service.</p>
+            <p className="relative mt-3 leading-7 text-zinc-300">Post an urgent request, but verified providers may not yet be available in your area. Rydah Local is not an emergency service.</p>
             <Link href="/post-job?urgent=1" className="relative mt-6 inline-block rounded-2xl bg-gradient-to-r from-[#D4AF37] to-amber-300 px-6 py-4 font-black text-black transition hover:-translate-y-0.5">Request Urgent Help</Link>
           </div>
 
