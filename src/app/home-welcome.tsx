@@ -144,7 +144,7 @@ export default function HomeWelcome() {
             <div className="w-full">
               <div className="mb-4 flex items-center justify-between text-[11px] font-black uppercase tracking-[0.17em] text-[#EBC956]">
                 <span>📍 Nigeria</span>
-                <span>5 launch cities</span>
+                <span>5 planned cities</span>
               </div>
 
               <div className="rounded-[2rem] border border-[#D4AF37]/25 bg-black/72 p-5 shadow-[0_18px_60px_rgba(0,0,0,0.42)] backdrop-blur-md">
