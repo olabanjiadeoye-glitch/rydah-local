@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const skylineImage = "https://images.unsplash.com/photo-1691743441282-72dbe8f91dcc?auto=format&fit=crop&fm=jpg&q=72&w=1200";
-const rydahTaxiUrl = "https://rydal-taxi.well-chick-6808.chatgpt.site";
+const rydahTaxiUrl = "https://rydahtaxi.com";
 
 const entryServices = [
   { label: "Home Services", icon: "wrench", href: "/providers?group=home" },
