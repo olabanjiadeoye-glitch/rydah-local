@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: "/",
     name: "Rydah Local",
     short_name: "Rydah",
-    description: "Find trusted, biometric-verified local professionals and manage jobs, quotes, safety checks and payments across Lagos, Abuja, Ibadan, Warri and Port Harcourt.",
+    description: "Explore local services and manage service requests, quotes and safety steps. Provider availability depends on verification and billing. Lagos, Abuja, Ibadan, Warri and Port Harcourt are planned markets.",
     start_url: "/",
     scope: "/",
     display: "standalone",
