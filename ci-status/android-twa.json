@@ -1,8 +1,8 @@
 {
   "workflow": "Android TWA Build",
-  "status": "success",
-  "runNumber": "32",
-  "sourceSha": "003453f9f9e58a9ba3eacd15829d7fc376b19e2b",
+  "status": "failure",
+  "runNumber": "33",
+  "sourceSha": "bcb4d91bd41e455a0386e38bc573db3ba4eeb75d",
   "packageId": "online.rydahlocal.app",
   "versionCode": 1,
   "versionName": "0.1.0",
@@ -10,11 +10,11 @@
     "prepare": "success",
     "bubblewrapContainer": "success",
     "generateProject": "success",
-    "bundle": "success",
-    "verifyTarget": "success",
-    "playAssets": "success",
-    "locateAab": "success",
-    "uploadArtifacts": "success",
-    "prerelease": "success"
+    "bundle": "skipped",
+    "verifyTarget": "skipped",
+    "playAssets": "skipped",
+    "locateAab": "skipped",
+    "uploadArtifacts": "skipped",
+    "prerelease": "skipped"
   }
 }
