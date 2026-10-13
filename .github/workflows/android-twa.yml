@@ -52,7 +52,7 @@ jobs:
           path = gradle_files[0]
           content = path.read_text()
           # Bubblewrap can emit Groovy or Kotlin DSL, with different minSdk syntax.
-          pattern = r'(?m)^(\s*minSdk(?:Version)?\s*(?:=\s*|\(\s*))(?P<value>\d+)(?P<suffix>\s*\)?)'
+          pattern = r'(?m)^([ \t]*minSdk(?:Version)?[ \t]*(?:=[ \t]*|\([ \t]*)?)(?P<value>\d+)(?P<suffix>[ \t]*\)?)'
           matches = list(re.finditer(pattern, content))
           if len(matches) != 1:
               candidates = [line.strip() for line in content.splitlines() if 'minSdk' in line]
