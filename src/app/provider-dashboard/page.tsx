@@ -620,7 +620,11 @@ export default function ProviderDashboardPage() {
     setError("");
     setMessage("");
     try {
-      await restRpc<boolean>("verify_job_arrival", { p_job_id: job.id, p_code: code }, session.access_token);
+      const verified = await restRpc<boolean>("verify_job_arrival", { p_job_id: job.id, p_code: code }, session.access_token);
+      if (!verified) {
+        setError("Arrival PIN is incorrect. Please check the code and try again. After five incorrect attempts, ask the customer to generate a new PIN.");
+        return;
+      }
       setArrivalCodes((current) => ({ ...current, [job.id]: "" }));
       setMessage(biometricArrivalRequired
         ? "Arrival PIN verified. Ask the customer to complete the Rydah camera face match before you start work."
