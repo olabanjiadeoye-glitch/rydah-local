@@ -41,6 +41,23 @@ jobs:
             ghcr.io/googlechromelabs/bubblewrap:latest \
             update --skipVersionUpgrade
 
+      - name: Enforce Play-compatible minimum SDK 24
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          gradle_files = list(Path("build/android-twa/app").glob("build.gradle*"))
+          if len(gradle_files) != 1:
+              raise SystemExit(f"Expected one app Gradle file, found: {gradle_files}")
+          path = gradle_files[0]
+          content = path.read_text()
+          updated, count = re.subn(r'(?m)^(\s*minSdk(?:Version)?\s*(?:=\s*)?)23(\b)', r'\g<1>24\2', content)
+          if count != 1:
+              raise SystemExit(f"Expected one minSdk 23 setting, found {count}; inspect generated Gradle config")
+          path.write_text(updated)
+          print(f"Updated {path}: minSdk 23 -> 24")
+          PY
+
       - name: Build unsigned Android App Bundle
         id: bundle
         run: |
