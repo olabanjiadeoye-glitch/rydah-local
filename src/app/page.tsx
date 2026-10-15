@@ -242,9 +242,6 @@ export default function Home() {
           <a href="mailto:admin@rydahlocal.online" className="text-zinc-400">admin@rydahlocal.online</a>
         </div>
         <p className="mt-5 text-sm text-zinc-700">© 2026 Rydah Local</p>
-        <p className="mx-auto mt-4 max-w-3xl text-[10px] leading-4 text-zinc-700">
-          Bridge imagery: Lekki–Ikoyi Link Bridge by Olasunkanmiariyo via Wikimedia Commons (CC BY-SA 4.0); Third Mainland Bridge by Jesse-Maurice Iyoha via Unsplash.
-        </p>
       </footer>
 
       <RydahCareAssistant />
