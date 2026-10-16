@@ -126,7 +126,7 @@ export default function HomeWelcome() {
         <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-black via-black/75 to-transparent" aria-hidden="true" />
 
         {/* Decorative Nigerian-flag parachute; never blocks taps or navigation. */}
-        <div className="rydah-parachute pointer-events-none absolute left-[3%] top-0 z-[1] w-[76px] opacity-0 sm:w-[94px]" aria-hidden="true">
+        <div className="rydah-parachute pointer-events-none absolute left-[3%] top-0 z-[1] w-[62px] opacity-0 sm:w-[76px]" aria-hidden="true">
           <svg viewBox="0 0 120 148" width="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="rydah-green-canopy" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#39D77C" /><stop offset=".5" stopColor="#008751" /><stop offset="1" stopColor="#00482C" /></linearGradient>
@@ -140,8 +140,15 @@ export default function HomeWelcome() {
             </g>
             <path d="M6 57C7 24 29 7 60 7s53 17 54 50c-15-8-24-8-36 0-12-8-24-8-36 0-12-8-22-8-36 0Z" stroke="#E7F6E8" strokeWidth="2.5" />
             <path d="M6 57 43 116M42 57l9 59M78 57l-9 59M114 57l-37 59" stroke="#F5F5F5" strokeWidth="1.8" />
-            <path d="M43 116h34l-5 16H48z" fill="#C99A30" stroke="#FFE49A" strokeWidth="2" />
-            <circle cx="60" cy="109" r="6" fill="#FFE49A" />
+            {/* Worker in PPE suspended beneath the parachute */}
+            <path d="M50 105q10-9 20 0v5H50z" fill="#F2C94C" stroke="#493914" strokeWidth="1.5" />
+            <path d="M54 103v-3q6-7 12 0v3" fill="#F2C94C" stroke="#493914" strokeWidth="1.3" />
+            <circle cx="60" cy="112" r="5.2" fill="#B97B51" />
+            <path d="M52 118h16l3 15H49z" fill="#F3B92C" stroke="#FCE58A" strokeWidth="1.5" />
+            <path d="M56 118v14M64 118v14" stroke="#D9E3E9" strokeWidth="2.4" />
+            <path d="M50 122l-6 10M70 122l6 10" stroke="#F3B92C" strokeWidth="4" strokeLinecap="round" />
+            <path d="M55 133l-3 11M65 133l3 11" stroke="#263443" strokeWidth="4.5" strokeLinecap="round" />
+            <path d="M48 145h8M64 145h8" stroke="#15191F" strokeWidth="4" strokeLinecap="round" />
           </svg>
         </div>
         <style jsx>{`
