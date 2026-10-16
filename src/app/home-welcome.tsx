@@ -9,9 +9,8 @@ const rydahTaxiUrl = "https://rydahtaxi.com";
 
 const entryServices = [
   { label: "Home Services", icon: "wrench", href: "/providers?group=home" },
-  { label: "Vehicle Services", icon: "car", href: "/providers?group=vehicle" },
-  { label: "Property Care", icon: "home", href: "/providers?group=property" },
-  { label: "and More…", icon: "briefcase", href: "/providers" },
+  { label: "Vehicle Services", icon: "car", href: rydahTaxiUrl },
+  { label: "Property Investment", icon: "home", href: "/property-investment" },
 ] as const;
 
 function ServiceIcon({ icon }: { icon: (typeof entryServices)[number]["icon"] }) {
@@ -63,6 +62,10 @@ export default function HomeWelcome() {
   }
 
   function openService(href: string) {
+    if (href.startsWith("https://")) {
+      window.location.assign(href);
+      return;
+    }
     router.push(href);
   }
 
@@ -169,7 +172,7 @@ export default function HomeWelcome() {
                 </button>
               </div>
 
-              <div className="mt-5 grid grid-cols-4 gap-2 text-center">
+              <div className="mt-5 grid grid-cols-3 gap-2 text-center">
                 {entryServices.map((service) => (
                   <button
                     key={service.label}
