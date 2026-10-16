@@ -43,7 +43,6 @@ export default function HomeWelcome() {
   const [visible, setVisible] = useState(true);
   const [leaving, setLeaving] = useState(false);
   const [activeIndicator, setActiveIndicator] = useState(0);
-  const [realParachuteLoaded, setRealParachuteLoaded] = useState(false);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -126,60 +125,6 @@ export default function HomeWelcome() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(212,175,55,0.18),transparent_34%)]" aria-hidden="true" />
         <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-black via-black/75 to-transparent" aria-hidden="true" />
 
-        {/* Decorative Nigerian-flag parachute; never blocks taps or navigation. */}
-        <div className="rydah-parachute pointer-events-none absolute left-[3%] top-0 z-[1] w-[62px] opacity-0 sm:w-[76px]" aria-hidden="true">
-          <img
-            src="/rydah_worker_parachute.webp"
-            alt=""
-            loading="eager"
-            decoding="async"
-            onLoad={() => setRealParachuteLoaded(true)}
-            onError={() => setRealParachuteLoaded(false)}
-            className={`block h-auto w-full ${realParachuteLoaded ? "" : "hidden"}`}
-          />
-          {!realParachuteLoaded && <svg viewBox="0 0 120 148" width="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="rydah-green-canopy" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#39D77C" /><stop offset=".5" stopColor="#008751" /><stop offset="1" stopColor="#00482C" /></linearGradient>
-              <linearGradient id="rydah-white-canopy" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#FFFFFF" /><stop offset=".55" stopColor="#E9F1ED" /><stop offset="1" stopColor="#9CAEA5" /></linearGradient>
-              <clipPath id="rydah-parachute-canopy"><path d="M6 57C7 24 29 7 60 7s53 17 54 50c-15-8-24-8-36 0-12-8-24-8-36 0-12-8-22-8-36 0Z" /></clipPath>
-            </defs>
-            <g clipPath="url(#rydah-parachute-canopy)">
-              <path fill="url(#rydah-green-canopy)" d="M0 0h40v66H0z" />
-              <path fill="url(#rydah-white-canopy)" d="M40 0h40v66H40z" />
-              <path fill="url(#rydah-green-canopy)" d="M80 0h40v66H80z" />
-            </g>
-            <path d="M6 57C7 24 29 7 60 7s53 17 54 50c-15-8-24-8-36 0-12-8-24-8-36 0-12-8-22-8-36 0Z" stroke="#E7F6E8" strokeWidth="2.5" />
-            <path d="M6 57 43 116M42 57l9 59M78 57l-9 59M114 57l-37 59" stroke="#F5F5F5" strokeWidth="1.8" />
-            {/* Worker in PPE suspended beneath the parachute */}
-            <path d="M50 105q10-9 20 0v5H50z" fill="#F2C94C" stroke="#493914" strokeWidth="1.5" />
-            <path d="M54 103v-3q6-7 12 0v3" fill="#F2C94C" stroke="#493914" strokeWidth="1.3" />
-            <circle cx="60" cy="112" r="5.2" fill="#B97B51" />
-            <path d="M52 118h16l3 15H49z" fill="#F3B92C" stroke="#FCE58A" strokeWidth="1.5" />
-            <path d="M56 118v14M64 118v14" stroke="#D9E3E9" strokeWidth="2.4" />
-            <path d="M50 122l-6 10M70 122l6 10" stroke="#F3B92C" strokeWidth="4" strokeLinecap="round" />
-            <path d="M55 133l-3 11M65 133l3 11" stroke="#263443" strokeWidth="4.5" strokeLinecap="round" />
-            <path d="M48 145h8M64 145h8" stroke="#15191F" strokeWidth="4" strokeLinecap="round" />
-          </svg>}
-        </div>
-        <style jsx>{`
-          .rydah-parachute {
-            animation: rydahParachuteDescent 11s linear infinite;
-            transform-style: preserve-3d;
-            filter: drop-shadow(5px 9px 9px rgba(0,0,0,.55)) drop-shadow(-2px -2px 3px rgba(255,255,255,.3));
-          }
-          @keyframes rydahParachuteDescent {
-            0% { opacity: 0; transform: perspective(460px) translate3d(-18px,-170px,0) rotateY(-22deg) rotateZ(-9deg); }
-            5% { opacity: .95; }
-            25% { transform: perspective(460px) translate3d(18px,20vh,16px) rotateY(18deg) rotateZ(7deg); }
-            50% { transform: perspective(460px) translate3d(-8px,49vh,28px) rotateY(-15deg) rotateZ(-6deg); }
-            75% { opacity: .95; transform: perspective(460px) translate3d(24px,78vh,12px) rotateY(14deg) rotateZ(6deg); }
-            96% { opacity: .95; }
-            100% { opacity: 0; transform: perspective(460px) translate3d(-8px,115vh,0) rotateY(-20deg) rotateZ(-8deg); }
-          }
-          @media (prefers-reduced-motion: reduce) {
-            .rydah-parachute { animation: none; display: none; }
-          }
-        `}</style>
         <div className="relative mx-auto flex min-h-[100svh] w-full max-w-md flex-col px-5 pb-[max(22px,env(safe-area-inset-bottom))] pt-[max(26px,env(safe-area-inset-top))]">
           <div className="flex flex-1 flex-col items-center justify-between gap-5">
             <div className="w-full text-center">
