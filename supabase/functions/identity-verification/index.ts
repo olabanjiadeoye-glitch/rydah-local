@@ -142,7 +142,7 @@ async function youverifyGet(path: string, token: string, baseUrl: string) {
   if (!response.ok) {
     const providerMessage = String(payload?.message || payload?.error || "");
     if (response.status === 403 && providerMessage.toLowerCase().includes("permission denied")) {
-      throw new Error("Youverify API key does not have permission to read liveness history. Update the sandbox API key permissions, then try Check Latest Verification Result again.");
+      throw new Error("Youverify API key does not have permission to read liveness history. Ask Youverify to enable liveness-history read access for the configured environment, then retry.");
     }
     throw new Error(providerMessage || `Identity provider request failed (${response.status})`);
   }
@@ -201,6 +201,8 @@ Deno.serve(async (req) => {
     const user = await getSignedInUser(req);
     const body = await req.json().catch(() => ({})) as Record<string, unknown>;
     let action = String(body.action || "");
+    // Only a server-confirmed Youverify liveness result may authorize live ID matching.
+    let serverValidatedLiveness = false;
     const { provider, verification } = await providerAndVerificationForUser(user.id);
     const config = youverifyConfig();
 
@@ -310,6 +312,7 @@ Deno.serve(async (req) => {
       }
 
       body.selfie = liveFaceImage;
+      serverValidatedLiveness = true;
       body.liveness_verified = true;
       body.liveness_session_id = livenessSessionId;
       body.use_sandbox_sample = false;
@@ -317,8 +320,11 @@ Deno.serve(async (req) => {
     }
 
     if (action === "verify_face_id") {
+      if (config.environment === "sandbox" && !serverValidatedLiveness && String(body.id_number || "").replace(/\s+/g, "").trim() !== "11111111111") {
+        return json({ error: "Youverify sandbox only accepts test identity numbers. Production identities require approved live credentials and a live verification session." }, 409);
+      }
       if (body.consent !== true) return json({ error: "Consent is required before face and ID verification" }, 400);
-      if (config.environment === "live" && body.liveness_verified !== true) {
+      if (config.environment === "live" && !serverValidatedLiveness) {
         return json({ error: "A passed live camera and liveness check is required before identity matching." }, 409);
       }
       if (!config.token) {
