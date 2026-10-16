@@ -125,6 +125,41 @@ export default function HomeWelcome() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(212,175,55,0.18),transparent_34%)]" aria-hidden="true" />
         <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-black via-black/75 to-transparent" aria-hidden="true" />
 
+        {/* Decorative Nigerian-flag parachute; never blocks taps or navigation. */}
+        <div className="rydah-parachute pointer-events-none absolute left-[3%] top-0 z-[1] w-[76px] opacity-0 sm:w-[94px]" aria-hidden="true">
+          <svg viewBox="0 0 120 148" width="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <clipPath id="rydah-parachute-canopy"><path d="M6 57C7 24 29 7 60 7s53 17 54 50c-15-8-24-8-36 0-12-8-24-8-36 0-12-8-22-8-36 0Z" /></clipPath>
+            </defs>
+            <g clipPath="url(#rydah-parachute-canopy)">
+              <path fill="#008751" d="M0 0h40v66H0z" />
+              <path fill="#fff" d="M40 0h40v66H40z" />
+              <path fill="#008751" d="M80 0h40v66H80z" />
+            </g>
+            <path d="M6 57C7 24 29 7 60 7s53 17 54 50c-15-8-24-8-36 0-12-8-24-8-36 0-12-8-22-8-36 0Z" stroke="#E7F6E8" strokeWidth="2.5" />
+            <path d="M6 57 43 116M42 57l9 59M78 57l-9 59M114 57l-37 59" stroke="#F5F5F5" strokeWidth="1.8" />
+            <path d="M43 116h34l-5 16H48z" fill="#C99A30" stroke="#FFE49A" strokeWidth="2" />
+            <circle cx="60" cy="109" r="6" fill="#FFE49A" />
+          </svg>
+        </div>
+        <style jsx>{`
+          .rydah-parachute {
+            animation: rydahParachuteDescent 18s ease-in-out infinite;
+            filter: drop-shadow(0 5px 8px rgba(0,0,0,.4));
+          }
+          @keyframes rydahParachuteDescent {
+            0%, 9% { opacity: 0; transform: translate(-30px,-170px) rotate(-8deg); }
+            14% { opacity: .9; }
+            30% { transform: translate(12px,12vh) rotate(5deg); }
+            48% { transform: translate(-7px,29vh) rotate(-4deg); }
+            65% { opacity: .85; transform: translate(18px,47vh) rotate(5deg); }
+            76% { opacity: 0; transform: translate(30px,58vh) rotate(-2deg); }
+            100% { opacity: 0; transform: translate(30px,58vh) rotate(-2deg); }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .rydah-parachute { animation: none; display: none; }
+          }
+        `}</style>
         <div className="relative mx-auto flex min-h-[100svh] w-full max-w-md flex-col px-5 pb-[max(22px,env(safe-area-inset-bottom))] pt-[max(26px,env(safe-area-inset-top))]">
           <div className="flex flex-1 flex-col items-center justify-between gap-5">
             <div className="w-full text-center">
