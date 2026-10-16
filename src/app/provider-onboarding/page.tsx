@@ -464,23 +464,35 @@ export default function ProviderOnboardingPage() {
 
       if (!rows[0]) throw new Error("Your provider profile was not returned by Rydah.");
       const newProvider = rows[0];
+      // The profile is saved before optional work photos. A failed photo upload
+      // must never trap a provider on Step 2 or encourage duplicate profiles.
+      let failedPhotos = 0;
       for (let index = 0; index < workPhotos.length; index += 1) {
         const file = workPhotos[index];
         const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
         const path = `${session.user.id}/${newProvider.id}/${crypto.randomUUID()}.${ext}`;
-        await storageUpload("provider-work", path, file, session.access_token);
-        await restInsert(
-          "provider_work_photos",
-          { provider_id: newProvider.id, user_id: session.user.id, storage_path: path, sort_order: index },
-          session.access_token,
-        );
+        try {
+          await storageUpload("provider-work", path, file, session.access_token);
+          await restInsert(
+            "provider_work_photos",
+            { provider_id: newProvider.id, user_id: session.user.id, storage_path: path, sort_order: index },
+            session.access_token,
+          );
+        } catch {
+          failedPhotos += 1;
+        }
       }
+      // Update local state immediately even if the follow-up status refresh fails.
+      setProvider(newProvider);
+      setWorkPhotos([]);
       setMessage(
-        billing?.promo_active
+        (billing?.promo_active
           ? `Profile saved. Your Founding 100 free access is active until ${new Date(String(billing.promo_free_until)).toLocaleDateString("en-GB")}.`
-          : `Profile saved. Now connect your bank for the ${naira(billing?.monthly_fee_naira)} monthly provider payment.`,
+          : `Profile saved. Next, connect your bank for the ${naira(billing?.monthly_fee_naira)} monthly provider payment.`) +
+          (failedPhotos ? ` ${failedPhotos} optional work photo(s) could not be uploaded; you can add them later.` : ""),
       );
-      await loadAll(session);
+      // Refresh billing and verification independently; never undo a successful save.
+      void loadAll(session);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Unable to save your provider profile.");
     } finally {
