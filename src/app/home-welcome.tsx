@@ -43,6 +43,7 @@ export default function HomeWelcome() {
   const [visible, setVisible] = useState(true);
   const [leaving, setLeaving] = useState(false);
   const [activeIndicator, setActiveIndicator] = useState(0);
+  const [realParachuteLoaded, setRealParachuteLoaded] = useState(false);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -127,7 +128,16 @@ export default function HomeWelcome() {
 
         {/* Decorative Nigerian-flag parachute; never blocks taps or navigation. */}
         <div className="rydah-parachute pointer-events-none absolute left-[3%] top-0 z-[1] w-[62px] opacity-0 sm:w-[76px]" aria-hidden="true">
-          <svg viewBox="0 0 120 148" width="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <img
+            src="/rydah_worker_parachute.webp"
+            alt=""
+            loading="eager"
+            decoding="async"
+            onLoad={() => setRealParachuteLoaded(true)}
+            onError={() => setRealParachuteLoaded(false)}
+            className={`block h-auto w-full ${realParachuteLoaded ? "" : "hidden"}`}
+          />
+          {!realParachuteLoaded && <svg viewBox="0 0 120 148" width="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="rydah-green-canopy" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#39D77C" /><stop offset=".5" stopColor="#008751" /><stop offset="1" stopColor="#00482C" /></linearGradient>
               <linearGradient id="rydah-white-canopy" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#FFFFFF" /><stop offset=".55" stopColor="#E9F1ED" /><stop offset="1" stopColor="#9CAEA5" /></linearGradient>
@@ -149,7 +159,7 @@ export default function HomeWelcome() {
             <path d="M50 122l-6 10M70 122l6 10" stroke="#F3B92C" strokeWidth="4" strokeLinecap="round" />
             <path d="M55 133l-3 11M65 133l3 11" stroke="#263443" strokeWidth="4.5" strokeLinecap="round" />
             <path d="M48 145h8M64 145h8" stroke="#15191F" strokeWidth="4" strokeLinecap="round" />
-          </svg>
+          </svg>}
         </div>
         <style jsx>{`
           .rydah-parachute {
