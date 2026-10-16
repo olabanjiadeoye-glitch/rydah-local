@@ -96,13 +96,13 @@ export default function HomeWelcome() {
         <a
           href={rydahTaxiUrl}
           aria-label="Open RydahTaxi"
-          className="rydah-taxi-3d fixed right-4 top-[34%] z-[320] flex h-[68px] w-[68px] flex-col items-center justify-center rounded-[20px] border-2 border-[#F6D85F] bg-gradient-to-br from-[#302815]/95 via-[#080808]/95 to-black text-[#FFE27A] shadow-[inset_0_2px_0_rgba(255,255,255,.24),inset_0_-6px_10px_rgba(0,0,0,.7),0_9px_0_#725207,0_14px_24px_rgba(0,0,0,.68),0_0_28px_rgba(246,216,95,.55)] backdrop-blur-md transition active:translate-y-1"
+          className="rydah-taxi-3d fixed right-4 top-[34%] z-[320] flex h-[58px] w-[58px] flex-col items-center justify-center rounded-full border-2 border-[#F6D85F] bg-gradient-to-br from-[#302815]/95 via-[#080808]/95 to-black text-[#FFE27A] shadow-[inset_0_2px_0_rgba(255,255,255,.24),inset_0_-6px_10px_rgba(0,0,0,.7),0_9px_0_#725207,0_14px_24px_rgba(0,0,0,.68),0_0_28px_rgba(246,216,95,.55)] backdrop-blur-md transition active:translate-y-1"
         >
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M5 17h14l1-6-2-4H6l-2 4 1 6Z" />
             <path d="M7 17v2M17 17v2M7.5 13h.01M16.5 13h.01M6 7l1-2h10l1 2" />
           </svg>
-          <span className="mt-0.5 text-[9px] font-black uppercase tracking-[0.12em]">Taxi</span>
+          <span className="mt-0.5 text-[8px] font-black uppercase tracking-[0.1em]">Taxi</span>
         </a>
         <style jsx>{`
           .rydah-taxi-3d {
