@@ -43,6 +43,7 @@ export default function HomeWelcome() {
   const [visible, setVisible] = useState(true);
   const [leaving, setLeaving] = useState(false);
   const [activeIndicator, setActiveIndicator] = useState(0);
+  const [referenceArtworkLoaded, setReferenceArtworkLoaded] = useState(false);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -121,7 +122,16 @@ export default function HomeWelcome() {
           style={{ backgroundImage: `url('${skylineImage}')` }}
           aria-hidden="true"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/35 to-black/95" aria-hidden="true" />
+        {/* Exact approved artwork, fixed in place; the existing layout stays functional. */}
+        <img
+          src="/rydah-home-static.webp"
+          alt=""
+          aria-hidden="true"
+          onLoad={() => setReferenceArtworkLoaded(true)}
+          onError={() => setReferenceArtworkLoaded(false)}
+          className={`pointer-events-none absolute inset-0 h-full w-full object-cover object-top ${referenceArtworkLoaded ? "" : "hidden"}`}
+        />
+        <div className={`absolute inset-0 bg-gradient-to-b from-black/45 via-black/35 to-black/95 ${referenceArtworkLoaded ? "hidden" : ""}`} aria-hidden="true" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(212,175,55,0.18),transparent_34%)]" aria-hidden="true" />
         <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-black via-black/75 to-transparent" aria-hidden="true" />
 
