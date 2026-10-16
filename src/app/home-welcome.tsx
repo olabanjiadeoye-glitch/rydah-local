@@ -129,12 +129,14 @@ export default function HomeWelcome() {
         <div className="rydah-parachute pointer-events-none absolute left-[3%] top-0 z-[1] w-[76px] opacity-0 sm:w-[94px]" aria-hidden="true">
           <svg viewBox="0 0 120 148" width="100%" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
+              <linearGradient id="rydah-green-canopy" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#39D77C" /><stop offset=".5" stopColor="#008751" /><stop offset="1" stopColor="#00482C" /></linearGradient>
+              <linearGradient id="rydah-white-canopy" x1="0" y1="0" x2="1" y2="1"><stop stopColor="#FFFFFF" /><stop offset=".55" stopColor="#E9F1ED" /><stop offset="1" stopColor="#9CAEA5" /></linearGradient>
               <clipPath id="rydah-parachute-canopy"><path d="M6 57C7 24 29 7 60 7s53 17 54 50c-15-8-24-8-36 0-12-8-24-8-36 0-12-8-22-8-36 0Z" /></clipPath>
             </defs>
             <g clipPath="url(#rydah-parachute-canopy)">
-              <path fill="#008751" d="M0 0h40v66H0z" />
-              <path fill="#fff" d="M40 0h40v66H40z" />
-              <path fill="#008751" d="M80 0h40v66H80z" />
+              <path fill="url(#rydah-green-canopy)" d="M0 0h40v66H0z" />
+              <path fill="url(#rydah-white-canopy)" d="M40 0h40v66H40z" />
+              <path fill="url(#rydah-green-canopy)" d="M80 0h40v66H80z" />
             </g>
             <path d="M6 57C7 24 29 7 60 7s53 17 54 50c-15-8-24-8-36 0-12-8-24-8-36 0-12-8-22-8-36 0Z" stroke="#E7F6E8" strokeWidth="2.5" />
             <path d="M6 57 43 116M42 57l9 59M78 57l-9 59M114 57l-37 59" stroke="#F5F5F5" strokeWidth="1.8" />
@@ -144,17 +146,18 @@ export default function HomeWelcome() {
         </div>
         <style jsx>{`
           .rydah-parachute {
-            animation: rydahParachuteDescent 18s ease-in-out infinite;
-            filter: drop-shadow(0 5px 8px rgba(0,0,0,.4));
+            animation: rydahParachuteDescent 11s linear infinite;
+            transform-style: preserve-3d;
+            filter: drop-shadow(5px 9px 9px rgba(0,0,0,.55)) drop-shadow(-2px -2px 3px rgba(255,255,255,.3));
           }
           @keyframes rydahParachuteDescent {
-            0%, 9% { opacity: 0; transform: translate(-30px,-170px) rotate(-8deg); }
-            14% { opacity: .9; }
-            30% { transform: translate(12px,12vh) rotate(5deg); }
-            48% { transform: translate(-7px,29vh) rotate(-4deg); }
-            65% { opacity: .85; transform: translate(18px,47vh) rotate(5deg); }
-            76% { opacity: 0; transform: translate(30px,58vh) rotate(-2deg); }
-            100% { opacity: 0; transform: translate(30px,58vh) rotate(-2deg); }
+            0% { opacity: 0; transform: perspective(460px) translate3d(-18px,-170px,0) rotateY(-22deg) rotateZ(-9deg); }
+            5% { opacity: .95; }
+            25% { transform: perspective(460px) translate3d(18px,20vh,16px) rotateY(18deg) rotateZ(7deg); }
+            50% { transform: perspective(460px) translate3d(-8px,49vh,28px) rotateY(-15deg) rotateZ(-6deg); }
+            75% { opacity: .95; transform: perspective(460px) translate3d(24px,78vh,12px) rotateY(14deg) rotateZ(6deg); }
+            96% { opacity: .95; }
+            100% { opacity: 0; transform: perspective(460px) translate3d(-8px,115vh,0) rotateY(-20deg) rotateZ(-8deg); }
           }
           @media (prefers-reduced-motion: reduce) {
             .rydah-parachute { animation: none; display: none; }
