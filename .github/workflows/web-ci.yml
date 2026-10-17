@@ -59,6 +59,9 @@ jobs:
       - name: Check Supabase Edge Functions
         run: deno check supabase/functions/*/index.ts
 
+      - name: Arrival PIN contract tests
+        run: node --test tests/arrival-pin-contract.test.mjs
+
       - name: Lint (advisory during stabilization)
         continue-on-error: true
         run: npm run lint
