@@ -18,10 +18,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://rydahlocal.online"),
   title: {
-    default: "Rydah Local | Trusted Local Professionals in Lagos, Abuja, Ibadan, Warri & Port Harcourt",
+    default: "Rydah Local | Local Services Marketplace Preparing for Launch",
     template: "%s | Rydah Local",
   },
-  description: "Book trusted local professionals, review quotes, verify provider arrival and manage secure Rydah jobs across Lagos, Abuja, Ibadan, Warri and Port Harcourt.",
+  description: "Explore Rydah Local's planned local-services marketplace. Provider availability depends on completed verification and onboarding. Lagos, Abuja, Ibadan, Warri and Port Harcourt are planned markets.",
   applicationName: "Rydah Local",
   manifest: "/manifest.webmanifest",
   icons: {
@@ -45,13 +45,13 @@ export const metadata: Metadata = {
     url: "https://rydahlocal.online",
     siteName: "Rydah Local",
     title: "Rydah Local | Move Smart. Move Rydah.",
-    description: "Trusted local professionals, real work and safer service bookings across Lagos, Abuja, Ibadan, Warri and Port Harcourt.",
+    description: "Rydah Local is preparing a marketplace for local services in Nigeria. Booking availability depends on verified providers being online.",
     images: [{ url: "/rydah-icon.svg", alt: "Rydah Local" }],
   },
   twitter: {
     card: "summary",
     title: "Rydah Local",
-    description: "Move Smart. Move Rydah. Trusted local professionals across Lagos, Abuja, Ibadan, Warri and Port Harcourt.",
+    description: "Move Smart. Move Rydah. Preparing local services for planned Nigerian markets; verified provider availability may vary.",
     images: ["/rydah-icon.svg"],
   },
   robots: {
